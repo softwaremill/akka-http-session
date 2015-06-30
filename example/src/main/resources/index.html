@@ -1,0 +1,84 @@
+<html>
+<head>
+</head>
+<body>
+<script src="jquery.min.js"></script>
+
+<h1>akka-http-session example</h1>
+
+<p>
+    Logged in as: <span id="current_login"></span>
+</p>
+<p>
+    Get login request status: <span id="current_login_status_code"></span>
+</p>
+
+<form id="login_form">
+    <p>
+        Login: <input type="text" name="login" id="login" />
+    </p>
+    <input type="submit" value="Login" id="do_login" />
+</form>
+
+<form id="logout_form">
+    <input type="submit" value="Logout" id="do_logout" />
+</form>
+
+<script>
+    var $loginForm = $("#login_form");
+    var $logoutForm = $("#logout_form");
+    var $currentLogin = $("#current_login");
+    var $currentLoginStatus = $("#current_login_status_code");
+    $loginForm.hide();
+    $logoutForm.hide();
+
+    function handleResponse(data, status) {
+        if (status == "success") {
+            $loginForm.hide();
+            $logoutForm.show();
+
+            $currentLogin.text(data);
+            $currentLoginStatus.text(status);
+        } else {
+            $loginForm.show();
+            $logoutForm.hide();
+
+            $currentLogin.text("");
+            $currentLoginStatus.text(status + " (" + data.status + ")");
+        }
+    }
+
+    function getCurrentLogin() {
+        $.ajax({
+            url: "/api/current_login",
+            type: "GET",
+            success: handleResponse,
+            error: handleResponse
+        });
+    }
+
+    getCurrentLogin();
+
+    $("#do_login").click(function(e) {
+        $.ajax({
+            url: "/api/do_login",
+            type: "POST",
+            data: $("#login").val(),
+            success: getCurrentLogin
+        });
+        e.preventDefault();
+        return false;
+    });
+
+    $("#do_logout").click(function(e) {
+        $.ajax({
+            url: "/api/do_logout",
+            type: "POST",
+            success: getCurrentLogin
+        });
+        e.preventDefault();
+        return false;
+    });
+</script>
+</body>
+</html>
