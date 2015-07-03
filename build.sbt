@@ -8,7 +8,7 @@ lazy val commonSettings = Seq(
 
 name := "akka-http-session"
 
-val akkaHttp = "com.typesafe.akka" %% "akka-http-experimental" % "1.0-RC4"
+val akkaHttpVersion = "1.0-RC4"
 
 lazy val rootProject = (project in file("."))
   .settings(commonSettings: _*)
@@ -18,9 +18,11 @@ lazy val impl: Project = (project in file("impl"))
   .settings(commonSettings: _*)
   .settings(
     libraryDependencies ++= Seq(
-      akkaHttp,
+      "com.typesafe.akka" %% "akka-http-experimental" % akkaHttpVersion,
+      "com.typesafe.akka" %% "akka-http-testkit-experimental" % akkaHttpVersion,
       "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2",
       "ch.qos.logback" % "logback-classic" % "1.1.3",
+      "org.scalacheck" %% "scalacheck" % "1.12.4" % "test",
       "org.scalatest" %% "scalatest" % "2.2.4" % "test"
     )
   )

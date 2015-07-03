@@ -5,6 +5,8 @@ import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.model.StatusCodes._
+import com.softwaremill.session.{SessionConfig, SessionManager}
+import com.softwaremill.session.SessionDirectives._
 import com.typesafe.scalalogging.slf4j.StrictLogging
 
 import scala.io.StdIn
@@ -13,7 +15,10 @@ object Example extends App with StrictLogging {
   implicit val system = ActorSystem("example")
   implicit val materializer = ActorMaterializer()
 
-  var currentLogin: Option[String] = None
+  val sessionConfig = SessionConfig.default("c05ll3lesrinf39t7mc5h6un6r0c69lgfno69dsak3vabeqamouq4328cuaekros401ajdpkh60rrtpd8ro24rbuqmgtnd1ebag6ljnb65i8a55d482ok7o0nch0bfbe")
+  implicit val sessionManager = new SessionManager(sessionConfig)
+
+  val UserKey = "user"
 
   val routes =
     path("") {
@@ -21,28 +26,33 @@ object Example extends App with StrictLogging {
     } ~
       pathPrefix("api") {
         path("do_login") {
-          entity(as[String]) { body =>
-            post { ctx =>
+          post {
+            entity(as[String]) { body =>
               logger.info(s"Logging in $body")
-              currentLogin = Some(body)
-              ctx.complete("ok")
+
+              setSession(Map(UserKey -> body)) { ctx =>
+                ctx.complete("ok")
+              }
             }
           }
         } ~
           // This should be protected and accessible only when logged in
           path("do_logout") {
-            post { ctx =>
-              logger.info(s"Logging out $currentLogin")
-              currentLogin = None
-              ctx.complete("ok")
+            post {
+              requiredSession() { session =>
+                invalidateSession() { ctx =>
+                  logger.info(s"Logging out ${session(UserKey)}")
+                  ctx.complete("ok")
+                }
+              }
             }
           } ~
           // This should be protected and accessible only when logged in
           path("current_login") {
-            get { ctx =>
-              currentLogin match {
-                case None => ctx.complete(Unauthorized)
-                case Some(login) => ctx.complete(login)
+            get {
+              requiredSession() { session => ctx =>
+                logger.info("Current session: " + session)
+                ctx.complete(session(UserKey))
               }
             }
           }

@@ -1,0 +1,54 @@
+package com.softwaremill.session
+
+import akka.http.scaladsl.server.{Directive1, Directive0}
+import akka.http.scaladsl.server.Directives._
+
+trait SessionDirectives {
+  def setSession(magnet: SessionManagerMagnet[SessionData]): Directive0 =
+    setCookie(magnet.manager.createCookie(magnet.input))
+
+  def optionalSession(magnet: SessionManagerMagnet[Unit]): Directive1[Option[SessionData]] =
+    optionalCookie(magnet.manager.sessionCookieName).map(_.flatMap(p => magnet.manager.decode(p.value)))
+
+  def requiredSession(magnet: SessionManagerMagnet[Unit]): Directive1[SessionData] =
+    optionalSession(magnet).flatMap {
+      case None => reject(magnet.manager.sessionCookieMissingRejection)
+      case Some(data) => provide(data)
+    }
+
+  def invalidateSession(magnet: SessionManagerMagnet[Unit]): Directive0 =
+    deleteCookie(magnet.manager.createCookieWithValue(""))
+
+  /**
+   * Sets the session cookie again with the same data. Useful when using the [[SessionConfig.sessionMaxAgeSeconds]]
+   * option, as it sets the expiry date anew.
+   */
+  def touchOptionalSession(magnet: SessionManagerMagnet[Unit]): Directive1[Option[SessionData]] = {
+    import magnet.manager
+    optionalSession(magnet).flatMap { d => d.fold(pass)(setSession(_)) & provide(d) }
+  }
+
+  /**
+   * Sets the session cookie again with the same data. Useful when using the [[SessionConfig.sessionMaxAgeSeconds]]
+   * option, as it sets the expiry date anew.
+   */
+  def touchRequiredSession(magnet: SessionManagerMagnet[Unit]): Directive1[SessionData] = {
+    import magnet.manager
+    requiredSession(magnet).flatMap { d => setSession(d) & provide(d) }
+  }
+}
+
+object SessionDirectives extends SessionDirectives
+
+trait SessionManagerMagnet[In] {
+  implicit def manager: SessionManager
+  def input: In
+}
+
+object SessionManagerMagnet {
+  implicit def apply[In](_input: In)(implicit _manager: SessionManager): SessionManagerMagnet[In] =
+    new SessionManagerMagnet[In] {
+      override val manager = _manager
+      override val input = _input
+    }
+}
