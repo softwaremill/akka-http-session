@@ -13,13 +13,19 @@ exception: session handling. This project aims to fill that gap.
 Session data is stored as a cookie on the client. The content of the cookie is signed using a server secret, so that
 it is not possible to alter the session data on the client side.
  
-All directives require an implicit instance of a `SessionManager`, which can be created by providing a server secret.
+All directives require an implicit instance of a `SessionManager[T]`, which can be created by providing a server secret.
 The secret should be a long, random string. You can generate one by running `SessionUtil.randomServerSecret()`. Note
 that when you change the secret, all sessions will become invalid.
 
+Sessions are typed, the `T` type parameter determines what data is stored in the session. Basic types like `String`,
+`Int`, `Long`, `Float`, `Double` and `Map[String, String]` are supported out-of-the box. Support for other types
+can be added by providing an implicit `SessionSerializer[T]`. For case classes, it's most convenient to implement
+`ToMapSessionSerializer[T]` which should convert the instance into a `String` map (nested types are not supported on
+purpose, as session data should be small & simple).
+
 ````scala
 val sessionConfig = SessionConfig.default("some_very_long_secret_and_random_string")
-implicit val sessionManager = new SessionManager(sessionConfig)
+implicit val sessionManager = new SessionManager[Long](sessionConfig)
 ````
 
 The basic directives enable you to set, read and invalidate the session. To create a new client-side session, that is,
@@ -29,7 +35,7 @@ send the cookie:
 path("login") {
   post {
     entity(as[String]) { body =>
-      setSession(Map("key1" -> "value1", "key2" -> "value2")) { ctx =>
+      setSession(812832L) { ctx =>
         ctx.complete("ok")
       }
     }
@@ -46,14 +52,14 @@ You can require a session to be present or optionally require a session:
 ````scala
 path("secret") {
   get {
-    requiredSession() { session => // type: Map[String, String]
+    requiredSession() { session => // type: Long, or whatever the T parameter is
       complete { "treasure" }
     }
   }
 } ~
 path("open") {
   get {
-    optionalSession() { session => // type: Option[Map[String, String]]
+    optionalSession() { session => // type: Option[Long] (Option[T])
       complete { "small treasure" }
     }
   }
