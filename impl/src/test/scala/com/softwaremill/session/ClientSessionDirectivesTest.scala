@@ -11,7 +11,7 @@ import com.softwaremill.session.ClientSessionDirectives._
 class ClientSessionDirectivesTest extends FlatSpec with ScalatestRouteTest with ShouldMatchers {
 
   import TestData._
-  val cookieName = sessionManager.sessionCookieName
+  val cookieName = sessionManager.clientSessionCookieName
 
   def routes(implicit sessionManager: SessionManager) = get {
     path("set") {
@@ -49,7 +49,7 @@ class ClientSessionDirectivesTest extends FlatSpec with ScalatestRouteTest with 
       sessionCookieOption should be ('defined)
       val Some(sessionCookie) = sessionCookieOption
 
-      sessionCookie.cookie.name should be (sessionManager.sessionCookieName)
+      sessionCookie.cookie.name should be (sessionManager.clientSessionCookieName)
     }
   }
 
@@ -105,7 +105,7 @@ class ClientSessionDirectivesTest extends FlatSpec with ScalatestRouteTest with 
   }
 
   it should "touch the session" in {
-    val cfg = sessionConfig.withSessionMaxAgeSeconds(Some(60))
+    val cfg = sessionConfig.withClientSessionMaxAgeSeconds(Some(60))
     val managerNow = new SessionManager(cfg) {
       override def nowMillis = 3028L * 1000L
     }

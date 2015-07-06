@@ -154,7 +154,7 @@ keys are:
 ````
 akka.http.session {
   serverSecret = "some_very_long_secret_and_random_string" // only required config key
-  sessionCookie {
+  clientSessionCookie {
     name = "_sessiondata"
     domain = "" 
     path = "" 
@@ -162,7 +162,7 @@ akka.http.session {
     secure = false 
     httpOnly = true 
   }
-  sessionMaxAgeSeconds = 0 
+  clientSessionMaxAgeSeconds = 0 
   encryptSessionData = false   
   
   csrfCookie {

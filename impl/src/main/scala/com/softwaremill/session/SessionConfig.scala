@@ -21,7 +21,7 @@ case class SessionConfig(
    * This should be a long random string.
    */
   serverSecret: String,
-  sessionCookieConfig: CookieConfig,
+  clientSessionCookieConfig: CookieConfig,
   /**
    * If you'd like session cookies to expire as well after a period of inactivity, you can optionally include an
    * expiration date in the cookie data (expiration will be validated on the server). The expiration date will be
@@ -30,12 +30,12 @@ case class SessionConfig(
    * For session cookies, **do not** set the [[CookieConfig.maxAge]], as this will turn it into a persistent cookie
    * (on the client).
    */
-  sessionMaxAgeSeconds: Option[Long],
+  clientSessionMaxAgeSeconds: Option[Long],
   /**
    * By default the session data won't be encrypted, only signed with a hash. Set this to true if you'd like the data
    * to be encrypted using a symmetrical key.
    */
-  encryptSessionData: Boolean,
+  encryptClientSessionData: Boolean,
   csrfCookieConfig: CookieConfig,
   /**
    * Name of the header or form field in which the CSRF token will be submitted.
@@ -43,18 +43,28 @@ case class SessionConfig(
   csrfSubmittedName: String
 ) {
 
-  def withServerSecret(serverSecret: String)              = copy(serverSecret = serverSecret)
+  def withServerSecret(serverSecret: String)                = copy(serverSecret = serverSecret)
 
-  def withSessionCookieConfig(config: CookieConfig)       = copy(sessionCookieConfig = config)
-  def withSessionCookieName(name: String)                 = copy(sessionCookieConfig = sessionCookieConfig.copy(name = name))
-  def withSessionCookieDomain(domain: Option[String])     = copy(sessionCookieConfig = sessionCookieConfig.copy(domain = domain))
-  def withSessionCookiePath(path: Option[String])         = copy(sessionCookieConfig = sessionCookieConfig.copy(path = path))
-  def withSessionCookieMaxAge(maxAge: Option[Long])       = copy(sessionCookieConfig = sessionCookieConfig.copy(maxAge = maxAge))
-  def withSessionCookieSecure(secure: Boolean)            = copy(sessionCookieConfig = sessionCookieConfig.copy(secure = secure))
-  def withSessionCookieHttpOnly(httpOnly: Boolean)        = copy(sessionCookieConfig = sessionCookieConfig.copy(httpOnly = httpOnly))
+  def withClientSessionCookieConfig(config: CookieConfig)   = copy(clientSessionCookieConfig = config)
+  def withClientSessionCookieName(name: String)             = copy(clientSessionCookieConfig = clientSessionCookieConfig.copy(name = name))
+  def withClientSessionCookieDomain(domain: Option[String]) = copy(clientSessionCookieConfig = clientSessionCookieConfig.copy(domain = domain))
+  def withClientSessionCookiePath(path: Option[String])     = copy(clientSessionCookieConfig = clientSessionCookieConfig.copy(path = path))
+  def withClientSessionCookieMaxAge(maxAge: Option[Long])   = copy(clientSessionCookieConfig = clientSessionCookieConfig.copy(maxAge = maxAge))
+  def withClientSessionCookieSecure(secure: Boolean)        = copy(clientSessionCookieConfig = clientSessionCookieConfig.copy(secure = secure))
+  def withClientSessionCookieHttpOnly(httpOnly: Boolean)    = copy(clientSessionCookieConfig = clientSessionCookieConfig.copy(httpOnly = httpOnly))
 
-  def withSessionMaxAgeSeconds(sessionMaxAgeSeconds: Option[Long]) = copy(sessionMaxAgeSeconds = sessionMaxAgeSeconds)
-  def withEncryptSessionData(encryptSessionData: Boolean) = copy(encryptSessionData = encryptSessionData)
+  def withClientSessionMaxAgeSeconds(maxAgeSeconds: Option[Long]) = copy(clientSessionMaxAgeSeconds = maxAgeSeconds)
+  def withEncryptClientSessionData(encryptSessionData: Boolean) = copy(encryptClientSessionData = encryptSessionData)
+
+  def withCsrfCookieConfig(config: CookieConfig)            = copy(csrfCookieConfig = config)
+  def withCsrfCookieName(name: String)                      = copy(csrfCookieConfig = csrfCookieConfig.copy(name = name))
+  def withCsrfCookieDomain(domain: Option[String])          = copy(csrfCookieConfig = csrfCookieConfig.copy(domain = domain))
+  def withCsrfCookiePath(path: Option[String])              = copy(csrfCookieConfig = csrfCookieConfig.copy(path = path))
+  def withCsrfCookieMaxAge(maxAge: Option[Long])            = copy(csrfCookieConfig = csrfCookieConfig.copy(maxAge = maxAge))
+  def withCsrfCookieSecure(secure: Boolean)                 = copy(csrfCookieConfig = csrfCookieConfig.copy(secure = secure))
+  def withCsrfCookieHttpOnly(httpOnly: Boolean)             = copy(csrfCookieConfig = csrfCookieConfig.copy(httpOnly = httpOnly))
+
+  def withCsrfSubmittedName(csrfSubmittedName: String)      = copy(csrfSubmittedName = csrfSubmittedName)
 }
 
 object SessionConfig {
@@ -62,16 +72,16 @@ object SessionConfig {
     val scopedConfig = config.getConfig("akka.http.session")
     SessionConfig(
       serverSecret = scopedConfig.getString("serverSecret"),
-      sessionCookieConfig = CookieConfig(
-        name = scopedConfig.getStringOption("sessionCookie.name").getOrElse("_sessiondata"),
-        domain = scopedConfig.getStringOption("sessionCookie.domain"),
-        path = scopedConfig.getStringOption("sessionCookie.path"),
-        maxAge = scopedConfig.getLongOption("sessionCookie.maxAge"),
-        secure = scopedConfig.getBooleanOption("sessionCookie.secure").getOrElse(false),
-        httpOnly = scopedConfig.getBooleanOption("sessionCookie.httpOnly").getOrElse(true)
+      clientSessionCookieConfig = CookieConfig(
+        name = scopedConfig.getStringOption("clientSessionCookie.name").getOrElse("_sessiondata"),
+        domain = scopedConfig.getStringOption("clientSessionCookie.domain"),
+        path = scopedConfig.getStringOption("clientSessionCookie.path"),
+        maxAge = scopedConfig.getLongOption("clientSessionCookie.maxAge"),
+        secure = scopedConfig.getBooleanOption("clientSessionCookie.secure").getOrElse(false),
+        httpOnly = scopedConfig.getBooleanOption("clientSessionCookie.httpOnly").getOrElse(true)
       ),
-      sessionMaxAgeSeconds = scopedConfig.getLongOption("sessionMaxAgeSeconds"),
-      encryptSessionData = scopedConfig.getBooleanOption("encryptSessionData").getOrElse(false),
+      clientSessionMaxAgeSeconds = scopedConfig.getLongOption("clientSessionMaxAgeSeconds"),
+      encryptClientSessionData = scopedConfig.getBooleanOption("encryptClientSessionData").getOrElse(false),
       csrfCookieConfig = CookieConfig(
         name = scopedConfig.getStringOption("csrfCookie.name").getOrElse("XSRF-TOKEN"),
         domain = scopedConfig.getStringOption("csrfCookie.domain"),
@@ -88,10 +98,10 @@ object SessionConfig {
    * Creates a default configuration using the given secret. Default values:
    *
    * <pre>
-   * sessionCookie.name = "_sessiondata"
-   * sessionCookie.secure = false
-   * sessionCookie.httpOnly = true
-   * encryptSessionData = false
+   * clientSessionCookie.name = "_sessiondata"
+   * clientSessionCookie.secure = false
+   * clientSessionCookie.httpOnly = true
+   * encryptClientSessionData = false
    *
    * csrfCookie.name = "XSRF-TOKEN"
    * csrfCookie.path = /

@@ -11,19 +11,19 @@ import akka.http.scaladsl.model.headers.HttpCookie
 // Partly based on the implementation from Play! [[https://github.com/playframework]]
 // see https://github.com/playframework/playframework/blob/master/framework/src/play/src/main/scala/play/api/mvc/Http.scala
 class SessionManager(config: SessionConfig, crypto: Crypto = DefaultCrypto) {
-  def sessionCookieName = config.sessionCookieConfig.name
+  def clientSessionCookieName = config.clientSessionCookieConfig.name
 
   def createClientSessionCookie(data: SessionData) = createClientSessionCookieWithValue(encode(data))
 
   def createClientSessionCookieWithValue(value: String) = HttpCookie(
-    name = config.sessionCookieConfig.name,
+    name = config.clientSessionCookieConfig.name,
     value = value,
     expires = None,
-    maxAge = config.sessionCookieConfig.maxAge,
-    domain = config.sessionCookieConfig.domain,
-    path = config.sessionCookieConfig.path,
-    secure = config.sessionCookieConfig.secure,
-    httpOnly = config.sessionCookieConfig.httpOnly)
+    maxAge = config.clientSessionCookieConfig.maxAge,
+    domain = config.clientSessionCookieConfig.domain,
+    path = config.clientSessionCookieConfig.path,
+    secure = config.clientSessionCookieConfig.secure,
+    httpOnly = config.clientSessionCookieConfig.httpOnly)
 
   def encode(data: SessionData): String = {
     // adding an "x" so that the string is never emtpy, even if there's no data
@@ -31,12 +31,12 @@ class SessionManager(config: SessionConfig, crypto: Crypto = DefaultCrypto) {
       .map { case (k, v) => URLEncoder.encode(k, "UTF-8")+"="+URLEncoder.encode(v, "UTF-8") }
       .mkString("&")
 
-    val withExpiry = config.sessionMaxAgeSeconds.fold(serialized) { maxAge =>
+    val withExpiry = config.clientSessionMaxAgeSeconds.fold(serialized) { maxAge =>
       val expiry = nowMillis + maxAge * 1000L
       s"$expiry-$serialized"
     }
 
-    val encrypted = if (config.encryptSessionData) crypto.encrypt(withExpiry, config.serverSecret) else withExpiry
+    val encrypted = if (config.encryptClientSessionData) crypto.encrypt(withExpiry, config.serverSecret) else withExpiry
 
     s"${crypto.sign(serialized, config.serverSecret)}-$encrypted"
   }
@@ -68,7 +68,7 @@ class SessionManager(config: SessionConfig, crypto: Crypto = DefaultCrypto) {
     }
 
     def extractExpiry(data: String): (Long, String) = {
-      config.sessionMaxAgeSeconds.fold((Long.MaxValue, data)) { maxAge =>
+      config.clientSessionMaxAgeSeconds.fold((Long.MaxValue, data)) { maxAge =>
         val splitted = data.split("-", 2)
         (splitted(0).toLong, splitted(1))
       }
@@ -76,7 +76,7 @@ class SessionManager(config: SessionConfig, crypto: Crypto = DefaultCrypto) {
 
     try {
       val splitted = data.split("-", 2)
-      val decrypted = if (config.encryptSessionData) crypto.decrypt(splitted(1), config.serverSecret) else splitted(1)
+      val decrypted = if (config.encryptClientSessionData) crypto.decrypt(splitted(1), config.serverSecret) else splitted(1)
 
       val (expiry, serialized) = extractExpiry(decrypted)
 

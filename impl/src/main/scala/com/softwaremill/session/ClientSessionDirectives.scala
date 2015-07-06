@@ -8,7 +8,7 @@ trait ClientSessionDirectives {
     setCookie(magnet.manager.createClientSessionCookie(magnet.input))
 
   def optionalSession(magnet: SessionManagerMagnet[Unit]): Directive1[Option[SessionData]] =
-    optionalCookie(magnet.manager.sessionCookieName).map(_.flatMap(p => magnet.manager.decode(p.value)))
+    optionalCookie(magnet.manager.clientSessionCookieName).map(_.flatMap(p => magnet.manager.decode(p.value)))
 
   def requiredSession(magnet: SessionManagerMagnet[Unit]): Directive1[SessionData] =
     optionalSession(magnet).flatMap {
@@ -20,7 +20,7 @@ trait ClientSessionDirectives {
     deleteCookie(magnet.manager.createClientSessionCookieWithValue(""))
 
   /**
-   * Sets the session cookie again with the same data. Useful when using the [[SessionConfig.sessionMaxAgeSeconds]]
+   * Sets the session cookie again with the same data. Useful when using the [[SessionConfig.clientSessionMaxAgeSeconds]]
    * option, as it sets the expiry date anew.
    */
   def touchOptionalSession(magnet: SessionManagerMagnet[Unit]): Directive1[Option[SessionData]] = {
@@ -29,7 +29,7 @@ trait ClientSessionDirectives {
   }
 
   /**
-   * Sets the session cookie again with the same data. Useful when using the [[SessionConfig.sessionMaxAgeSeconds]]
+   * Sets the session cookie again with the same data. Useful when using the [[SessionConfig.clientSessionMaxAgeSeconds]]
    * option, as it sets the expiry date anew.
    */
   def touchRequiredSession(magnet: SessionManagerMagnet[Unit]): Directive1[SessionData] = {
