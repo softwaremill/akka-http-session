@@ -14,7 +14,7 @@ Session data is stored as a cookie on the client. The content of the cookie is s
 it is not possible to alter the session data on the client side.
  
 All directives require an implicit instance of a `SessionManager`, which can be created by providing a server secret.
-The secret should be a long, random string. You can generate one by running `SessionConfig.randomServerSecret()`. Note
+The secret should be a long, random string. You can generate one by running `SessionUtil.randomServerSecret()`. Note
 that when you change the secret, all sessions will become invalid.
 
 ````scala
