@@ -13,7 +13,7 @@ object SessionManagerTest extends Properties("SessionManager")  {
       val config = SessionConfig.default(secret)
         .withEncryptClientSessionData(encrypt)
         .withClientSessionMaxAgeSeconds(if (useMaxAgeSeconds) Some(3600L) else None)
-      val manager = new SessionManager(config)
+      val manager = new SessionManager[Map[String, String]](config)
 
       manager.decode(manager.encode(data)).contains(data)
     }
@@ -24,10 +24,10 @@ object SessionManagerTest extends Properties("SessionManager")  {
       val config = SessionConfig.default(secret)
         .withEncryptClientSessionData(encrypt)
         .withClientSessionMaxAgeSeconds(Some(20L)) // expires after 20s
-      val managerPast = new SessionManager(config) {
+      val managerPast = new SessionManager[Map[String, String]](config) {
         override def nowMillis = 8172L * 1000L
       }
-      val managerFuture = new SessionManager(config) {
+      val managerFuture = new SessionManager[Map[String, String]](config) {
         override def nowMillis = (8172L + 600L) * 1000L // 600s later
       }
 

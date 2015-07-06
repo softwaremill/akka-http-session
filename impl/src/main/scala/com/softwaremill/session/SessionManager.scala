@@ -1,7 +1,5 @@
 package com.softwaremill.session
 
-import java.net.{URLDecoder, URLEncoder}
-
 import akka.http.scaladsl.server.AuthorizationFailedRejection
 
 import scala.util.control.NonFatal
@@ -10,10 +8,12 @@ import akka.http.scaladsl.model.headers.HttpCookie
 
 // Partly based on the implementation from Play! [[https://github.com/playframework]]
 // see https://github.com/playframework/playframework/blob/master/framework/src/play/src/main/scala/play/api/mvc/Http.scala
-class SessionManager(config: SessionConfig, crypto: Crypto = DefaultCrypto) {
+class SessionManager[T](config: SessionConfig, crypto: Crypto = DefaultCrypto)
+  (implicit sessionSerializer: SessionSerializer[T]) {
+
   def clientSessionCookieName = config.clientSessionCookieConfig.name
 
-  def createClientSessionCookie(data: SessionData) = createClientSessionCookieWithValue(encode(data))
+  def createClientSessionCookie(data: T) = createClientSessionCookieWithValue(encode(data))
 
   def createClientSessionCookieWithValue(value: String) = HttpCookie(
     name = config.clientSessionCookieConfig.name,
@@ -25,11 +25,9 @@ class SessionManager(config: SessionConfig, crypto: Crypto = DefaultCrypto) {
     secure = config.clientSessionCookieConfig.secure,
     httpOnly = config.clientSessionCookieConfig.httpOnly)
 
-  def encode(data: SessionData): String = {
-    // adding an "x" so that the string is never emtpy, even if there's no data
-    val serialized = "x" + data
-      .map { case (k, v) => URLEncoder.encode(k, "UTF-8")+"="+URLEncoder.encode(v, "UTF-8") }
-      .mkString("&")
+  def encode(data: T): String = {
+    // adding an "x" so that the string is never empty, even if there's no data
+    val serialized = "x" + sessionSerializer.serialize(data)
 
     val withExpiry = config.clientSessionMaxAgeSeconds.fold(serialized) { maxAge =>
       val expiry = nowMillis + maxAge * 1000L
@@ -41,17 +39,7 @@ class SessionManager(config: SessionConfig, crypto: Crypto = DefaultCrypto) {
     s"${crypto.sign(serialized, config.serverSecret)}-$encrypted"
   }
 
-  def decode(data: String): Option[SessionData] = {
-    def urldecode(data: String) = {
-      if (data == "") Map.empty[String, String] else {
-        data
-          .split("&")
-          .map(_.split("=", 2))
-          .map(p => URLDecoder.decode(p(0), "UTF-8") -> URLDecoder.decode(p(1), "UTF-8"))
-          .toMap
-      }
-    }
-
+  def decode(data: String): Option[T] = {
     // Do not change this unless you understand the security issues behind timing attacks.
     // This method intentionally runs in constant time if the two strings have the same length.
     // If it didn't, it would be vulnerable to a timing attack.
@@ -81,7 +69,7 @@ class SessionManager(config: SessionConfig, crypto: Crypto = DefaultCrypto) {
       val (expiry, serialized) = extractExpiry(decrypted)
 
       if (nowMillis < expiry && safeEquals(splitted(0), crypto.sign(serialized, config.serverSecret))) {
-        Some(urldecode(serialized.substring(1))) // removing the x
+        Some(sessionSerializer.deserialize(serialized.substring(1))) // removing the x
       } else None
     } catch {
       // fail gracefully is the session cookie is corrupted

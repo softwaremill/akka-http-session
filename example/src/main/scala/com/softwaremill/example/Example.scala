@@ -5,7 +5,7 @@ import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.model.StatusCodes._
-import com.softwaremill.session.{SessionConfig, SessionManager}
+import com.softwaremill.session.{SessionSerializer, ToMapSessionSerializer, SessionConfig, SessionManager}
 import com.softwaremill.session.SessionDirectives._
 import com.typesafe.scalalogging.slf4j.StrictLogging
 
@@ -16,9 +16,7 @@ object Example extends App with StrictLogging {
   implicit val materializer = ActorMaterializer()
 
   val sessionConfig = SessionConfig.default("c05ll3lesrinf39t7mc5h6un6r0c69lgfno69dsak3vabeqamouq4328cuaekros401ajdpkh60rrtpd8ro24rbuqmgtnd1ebag6ljnb65i8a55d482ok7o0nch0bfbe")
-  implicit val sessionManager = new SessionManager(sessionConfig)
-
-  val UserKey = "user"
+  implicit val sessionManager = new SessionManager[ExampleSession](sessionConfig)
 
   val routes =
     path("") {
@@ -31,7 +29,7 @@ object Example extends App with StrictLogging {
               entity(as[String]) { body =>
                 logger.info(s"Logging in $body")
 
-                setSession(Map(UserKey -> body)) {
+                setSession(ExampleSession(body)) {
                   setNewCsrfToken() { ctx => ctx.complete("ok") }
                 }
               }
@@ -42,7 +40,7 @@ object Example extends App with StrictLogging {
               post {
                 requiredSession() { session =>
                   invalidateSession() { ctx =>
-                    logger.info(s"Logging out ${session(UserKey)}")
+                    logger.info(s"Logging out $session")
                     ctx.complete("ok")
                   }
                 }
@@ -53,7 +51,7 @@ object Example extends App with StrictLogging {
               get {
                 requiredSession() { session => ctx =>
                   logger.info("Current session: " + session)
-                  ctx.complete(session(UserKey))
+                  ctx.complete(session.username)
                 }
               }
             }
@@ -74,5 +72,15 @@ object Example extends App with StrictLogging {
     .onComplete { _ =>
     system.shutdown()
     println("Server stopped")
+  }
+}
+
+case class ExampleSession(username: String)
+
+object ExampleSession {
+  implicit def serializer: SessionSerializer[ExampleSession] = new ToMapSessionSerializer[ExampleSession] {
+    private val Key = "u"
+    override def serializeToMap(t: ExampleSession) = Map(Key -> t.username)
+    override def deserializeFromMap(m: Map[String, String]) = ExampleSession(m(Key))
   }
 }

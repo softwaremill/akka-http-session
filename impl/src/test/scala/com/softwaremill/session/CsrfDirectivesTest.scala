@@ -13,7 +13,7 @@ class CsrfDirectivesTest extends FlatSpec with ScalatestRouteTest with ShouldMat
   val cookieName = sessionManager.csrfCookieName
   implicit val csrfCheckMode = CheckHeader
 
-  def routes(implicit sessionManager: SessionManager, checkMode: CsrfCheckMode) =
+  def routes[T](implicit sessionManager: SessionManager[T], checkMode: CsrfCheckMode) =
     randomTokenCsrfProtection(checkMode) {
       get {
         path("site") {

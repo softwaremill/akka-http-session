@@ -6,20 +6,20 @@ trait SessionDirectives
 
 object SessionDirectives extends SessionDirectives
 
-trait SessionManagerMagnet[In] {
-  implicit def manager: SessionManager
+trait SessionManagerMagnet[T, In] {
+  implicit def manager: SessionManager[T]
   def input: In
 }
 
 object SessionManagerMagnet {
-  implicit def apply[In](_input: In)(implicit _manager: SessionManager): SessionManagerMagnet[In] =
-    new SessionManagerMagnet[In] {
+  implicit def apply[T, In](_input: In)(implicit _manager: SessionManager[T]): SessionManagerMagnet[T, In] =
+    new SessionManagerMagnet[T, In] {
       override val manager = _manager
       override val input = _input
     }
 
-  implicit def apply(_input: Unit)(implicit _manager: SessionManager): SessionManagerMagnet[CsrfCheckMode] =
-    new SessionManagerMagnet[CsrfCheckMode] {
+  implicit def apply[T](_input: Unit)(implicit _manager: SessionManager[T]): SessionManagerMagnet[T, CsrfCheckMode] =
+    new SessionManagerMagnet[T, CsrfCheckMode] {
       override val manager = _manager
       override val input = CheckHeader
     }

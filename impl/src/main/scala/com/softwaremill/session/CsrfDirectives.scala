@@ -15,7 +15,7 @@ trait CsrfDirectives {
    *
    * See the documentation for more details.
    */
-  def randomTokenCsrfProtection(magnet: SessionManagerMagnet[CsrfCheckMode]): Directive0 = {
+  def randomTokenCsrfProtection[T](magnet: SessionManagerMagnet[T, CsrfCheckMode]): Directive0 = {
     import magnet.manager
     csrfTokenFromCookie(magnet).flatMap {
       case Some(cookie) =>
@@ -34,7 +34,7 @@ trait CsrfDirectives {
     }
   }
 
-  def submittedCsrfToken(magnet: SessionManagerMagnet[CsrfCheckMode]): Directive1[String] = {
+  def submittedCsrfToken[T](magnet: SessionManagerMagnet[T, CsrfCheckMode]): Directive1[String] = {
     headerValueByName(magnet.manager.csrfSubmittedName).recover { rejections =>
       magnet.input match {
         case c: CheckHeaderAndForm =>
@@ -45,10 +45,10 @@ trait CsrfDirectives {
     }
   }
 
-  def csrfTokenFromCookie(magnet: SessionManagerMagnet[CsrfCheckMode]): Directive1[Option[String]] =
+  def csrfTokenFromCookie[T](magnet: SessionManagerMagnet[T, CsrfCheckMode]): Directive1[Option[String]] =
     optionalCookie(magnet.manager.csrfCookieName).map(_.map(_.value))
 
-  def setNewCsrfToken(magnet: SessionManagerMagnet[Unit]): Directive0 =
+  def setNewCsrfToken[T](magnet: SessionManagerMagnet[T, Unit]): Directive0 =
     setCookie(magnet.manager.createCsrfCookie())
 }
 

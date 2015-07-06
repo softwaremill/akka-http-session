@@ -13,7 +13,7 @@ class ClientSessionDirectivesTest extends FlatSpec with ScalatestRouteTest with 
   import TestData._
   val cookieName = sessionManager.clientSessionCookieName
 
-  def routes(implicit sessionManager: SessionManager) = get {
+  def routes(implicit sessionManager: SessionManager[Map[String, String]]) = get {
     path("set") {
       setSession(Map("k1" -> "v1")) {
         complete { "ok" }
@@ -106,13 +106,13 @@ class ClientSessionDirectivesTest extends FlatSpec with ScalatestRouteTest with 
 
   it should "touch the session" in {
     val cfg = sessionConfig.withClientSessionMaxAgeSeconds(Some(60))
-    val managerNow = new SessionManager(cfg) {
+    val managerNow = new SessionManager[Map[String, String]](cfg) {
       override def nowMillis = 3028L * 1000L
     }
-    val managerPlus_30_seconds = new SessionManager(cfg) {
+    val managerPlus_30_seconds = new SessionManager[Map[String, String]](cfg) {
       override def nowMillis = (3028L + 30L) * 1000L
     }
-    val managerPlus_70_seconds = new SessionManager(cfg) {
+    val managerPlus_70_seconds = new SessionManager[Map[String, String]](cfg) {
       override def nowMillis = (3028L + 70L) * 1000L
     }
 
