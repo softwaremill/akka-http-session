@@ -35,7 +35,12 @@ case class SessionConfig(
    * By default the session data won't be encrypted, only signed with a hash. Set this to true if you'd like the data
    * to be encrypted using a symmetrical key.
    */
-  encryptSessionData: Boolean
+  encryptSessionData: Boolean,
+  csrfCookieConfig: CookieConfig,
+  /**
+   * Name of the header or form field in which the CSRF token will be submitted.
+   */
+  csrfSubmittedName: String
 ) {
 
   def withServerSecret(serverSecret: String)              = copy(serverSecret = serverSecret)
@@ -66,7 +71,16 @@ object SessionConfig {
         httpOnly = scopedConfig.getBooleanOption("sessionCookie.httpOnly").getOrElse(true)
       ),
       sessionMaxAgeSeconds = scopedConfig.getLongOption("sessionMaxAgeSeconds"),
-      encryptSessionData = scopedConfig.getBooleanOption("encryptSessionData").getOrElse(false)
+      encryptSessionData = scopedConfig.getBooleanOption("encryptSessionData").getOrElse(false),
+      csrfCookieConfig = CookieConfig(
+        name = scopedConfig.getStringOption("csrfCookie.name").getOrElse("XSRF-TOKEN"),
+        domain = scopedConfig.getStringOption("csrfCookie.domain"),
+        path = scopedConfig.getStringOption("csrfCookie.path").orElse(Some("/")),
+        maxAge = scopedConfig.getLongOption("csrfCookie.maxAge"),
+        secure = scopedConfig.getBooleanOption("csrfCookie.secure").getOrElse(false),
+        httpOnly = scopedConfig.getBooleanOption("csrfCookie.httpOnly").getOrElse(false)
+      ),
+      csrfSubmittedName = "X-XSRF-TOKEN"
     )
   }
 
@@ -78,6 +92,12 @@ object SessionConfig {
    * sessionCookie.secure = false
    * sessionCookie.httpOnly = true
    * encryptSessionData = false
+   *
+   * csrfCookie.name = "XSRF-TOKEN"
+   * csrfCookie.path = /
+   * csrfCookie.secure = false
+   * csrfCookie.httpOnly = false
+   * csrfSubmittedName = "X-XSRF-TOKEN"
    * </pre>
    *
    * Other attributes are `None`.

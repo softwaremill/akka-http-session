@@ -5,7 +5,7 @@ import akka.http.scaladsl.server.Directives._
 
 trait ClientSessionDirectives {
   def setSession(magnet: SessionManagerMagnet[SessionData]): Directive0 =
-    setCookie(magnet.manager.createCookie(magnet.input))
+    setCookie(magnet.manager.createClientSessionCookie(magnet.input))
 
   def optionalSession(magnet: SessionManagerMagnet[Unit]): Directive1[Option[SessionData]] =
     optionalCookie(magnet.manager.sessionCookieName).map(_.flatMap(p => magnet.manager.decode(p.value)))
@@ -17,7 +17,7 @@ trait ClientSessionDirectives {
     }
 
   def invalidateSession(magnet: SessionManagerMagnet[Unit]): Directive0 =
-    deleteCookie(magnet.manager.createCookieWithValue(""))
+    deleteCookie(magnet.manager.createClientSessionCookieWithValue(""))
 
   /**
    * Sets the session cookie again with the same data. Useful when using the [[SessionConfig.sessionMaxAgeSeconds]]

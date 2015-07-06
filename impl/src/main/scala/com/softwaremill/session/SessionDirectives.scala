@@ -2,6 +2,7 @@ package com.softwaremill.session
 
 trait SessionDirectives
   extends ClientSessionDirectives
+  with CsrfDirectives
 
 object SessionDirectives extends SessionDirectives
 
@@ -15,5 +16,11 @@ object SessionManagerMagnet {
     new SessionManagerMagnet[In] {
       override val manager = _manager
       override val input = _input
+    }
+
+  implicit def apply(_input: Unit)(implicit _manager: SessionManager): SessionManagerMagnet[CsrfCheckMode] =
+    new SessionManagerMagnet[CsrfCheckMode] {
+      override val manager = _manager
+      override val input = CheckHeader
     }
 }

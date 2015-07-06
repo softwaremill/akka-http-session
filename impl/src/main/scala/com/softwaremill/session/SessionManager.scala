@@ -13,9 +13,9 @@ import akka.http.scaladsl.model.headers.HttpCookie
 class SessionManager(config: SessionConfig, crypto: Crypto = DefaultCrypto) {
   def sessionCookieName = config.sessionCookieConfig.name
 
-  def createCookie(data: SessionData) = createCookieWithValue(encode(data))
+  def createClientSessionCookie(data: SessionData) = createClientSessionCookieWithValue(encode(data))
 
-  def createCookieWithValue(value: String) = HttpCookie(
+  def createClientSessionCookieWithValue(value: String) = HttpCookie(
     name = config.sessionCookieConfig.name,
     value = value,
     expires = None,
@@ -92,4 +92,19 @@ class SessionManager(config: SessionConfig, crypto: Crypto = DefaultCrypto) {
   def nowMillis = System.currentTimeMillis()
 
   def sessionCookieMissingRejection = AuthorizationFailedRejection
+
+  def csrfCookieName = config.csrfCookieConfig.name
+  def csrfSubmittedName = config.csrfSubmittedName
+  def csrfTokenInvalidRejection = AuthorizationFailedRejection
+  def createCsrfToken(): String = SessionUtil.randomString(64)
+
+  def createCsrfCookie() = HttpCookie(
+    name = config.csrfCookieConfig.name,
+    value = createCsrfToken(),
+    expires = None,
+    maxAge = config.csrfCookieConfig.maxAge,
+    domain = config.csrfCookieConfig.domain,
+    path = config.csrfCookieConfig.path,
+    secure = config.csrfCookieConfig.secure,
+    httpOnly = config.csrfCookieConfig.httpOnly)
 }

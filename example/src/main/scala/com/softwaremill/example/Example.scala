@@ -24,41 +24,43 @@ object Example extends App with StrictLogging {
     path("") {
       redirect("/site/index.html", Found)
     } ~
-      pathPrefix("api") {
-        path("do_login") {
-          post {
-            entity(as[String]) { body =>
-              logger.info(s"Logging in $body")
-
-              setSession(Map(UserKey -> body)) { ctx =>
-                ctx.complete("ok")
-              }
-            }
-          }
-        } ~
-          // This should be protected and accessible only when logged in
-          path("do_logout") {
+      randomTokenCsrfProtection() {
+        pathPrefix("api") {
+          path("do_login") {
             post {
-              requiredSession() { session =>
-                invalidateSession() { ctx =>
-                  logger.info(s"Logging out ${session(UserKey)}")
-                  ctx.complete("ok")
+              entity(as[String]) { body =>
+                logger.info(s"Logging in $body")
+
+                setSession(Map(UserKey -> body)) {
+                  setNewCsrfToken() { ctx => ctx.complete("ok") }
                 }
               }
             }
           } ~
-          // This should be protected and accessible only when logged in
-          path("current_login") {
-            get {
-              requiredSession() { session => ctx =>
-                logger.info("Current session: " + session)
-                ctx.complete(session(UserKey))
+            // This should be protected and accessible only when logged in
+            path("do_logout") {
+              post {
+                requiredSession() { session =>
+                  invalidateSession() { ctx =>
+                    logger.info(s"Logging out ${session(UserKey)}")
+                    ctx.complete("ok")
+                  }
+                }
+              }
+            } ~
+            // This should be protected and accessible only when logged in
+            path("current_login") {
+              get {
+                requiredSession() { session => ctx =>
+                  logger.info("Current session: " + session)
+                  ctx.complete(session(UserKey))
+                }
               }
             }
+        } ~
+          pathPrefix("site") {
+            getFromResourceDirectory("")
           }
-      } ~
-      pathPrefix("site") {
-        getFromResourceDirectory("")
       }
 
   val bindingFuture = Http().bindAndHandle(routes, "localhost", 8080)
