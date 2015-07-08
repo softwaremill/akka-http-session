@@ -11,7 +11,7 @@ object SessionManagerTest extends Properties("SessionManager")  {
   property("encode+decode") = forAllNoShrink(secretGen) { (secret: String) =>
     forAll { (encrypt: Boolean, useMaxAgeSeconds: Boolean, data: Map[String, String]) =>
       val config = SessionConfig.default(secret)
-        .withEncryptClientSessionData(encrypt)
+        .withClientSessionEncryptData(encrypt)
         .withClientSessionMaxAgeSeconds(if (useMaxAgeSeconds) Some(3600L) else None)
       val manager = new SessionManager[Map[String, String]](config)
 
@@ -22,7 +22,7 @@ object SessionManagerTest extends Properties("SessionManager")  {
   property("doesn't decode expired session") = forAllNoShrink(secretGen) { (secret: String) =>
     forAll { (encrypt: Boolean, data: Map[String, String]) =>
       val config = SessionConfig.default(secret)
-        .withEncryptClientSessionData(encrypt)
+        .withClientSessionEncryptData(encrypt)
         .withClientSessionMaxAgeSeconds(Some(20L)) // expires after 20s
       val managerPast = new SessionManager[Map[String, String]](config) {
         override def nowMillis = 8172L * 1000L

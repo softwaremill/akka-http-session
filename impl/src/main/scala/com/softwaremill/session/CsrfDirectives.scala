@@ -15,7 +15,7 @@ trait CsrfDirectives {
    *
    * See the documentation for more details.
    */
-  def randomTokenCsrfProtection[T](magnet: SessionManagerMagnet[T, CsrfCheckMode]): Directive0 = {
+  def randomTokenCsrfProtection[T](magnet: CsrfManagerMagnet[T, CsrfCheckMode]): Directive0 = {
     import magnet.manager
     csrfTokenFromCookie(magnet).flatMap {
       case Some(cookie) =>
@@ -34,21 +34,21 @@ trait CsrfDirectives {
     }
   }
 
-  def submittedCsrfToken[T](magnet: SessionManagerMagnet[T, CsrfCheckMode]): Directive1[String] = {
-    headerValueByName(magnet.manager.csrfSubmittedName).recover { rejections =>
+  def submittedCsrfToken[T](magnet: CsrfManagerMagnet[T, CsrfCheckMode]): Directive1[String] = {
+    headerValueByName(magnet.manager.config.csrfSubmittedName).recover { rejections =>
       magnet.input match {
         case c: CheckHeaderAndForm =>
           import c.materializer
-          formField(magnet.manager.csrfSubmittedName)
+          formField(magnet.manager.config.csrfSubmittedName)
         case _ => reject(rejections: _*)
       }
     }
   }
 
-  def csrfTokenFromCookie[T](magnet: SessionManagerMagnet[T, CsrfCheckMode]): Directive1[Option[String]] =
-    optionalCookie(magnet.manager.csrfCookieName).map(_.map(_.value))
+  def csrfTokenFromCookie[T](magnet: CsrfManagerMagnet[T, CsrfCheckMode]): Directive1[Option[String]] =
+    optionalCookie(magnet.manager.config.csrfCookieConfig.name).map(_.map(_.value))
 
-  def setNewCsrfToken[T](magnet: SessionManagerMagnet[T, Unit]): Directive0 =
+  def setNewCsrfToken[T](magnet: CsrfManagerMagnet[T, Unit]): Directive0 =
     setCookie(magnet.manager.createCsrfCookie())
 }
 
@@ -57,3 +57,22 @@ object CsrfDirectives extends CsrfDirectives
 sealed trait CsrfCheckMode
 case object CheckHeader extends CsrfCheckMode
 case class CheckHeaderAndForm(implicit val materializer: Materializer) extends CsrfCheckMode
+
+trait CsrfManagerMagnet[T, In] {
+  implicit def manager: CsrfManager[T]
+  def input: In
+}
+
+object CsrfManagerMagnet {
+  implicit def apply[T, In](_input: In)(implicit _manager: CsrfManager[T]): CsrfManagerMagnet[T, In] =
+    new CsrfManagerMagnet[T, In] {
+      override val manager = _manager
+      override val input = _input
+    }
+
+  implicit def apply[T](_input: Unit)(implicit _manager: CsrfManager[T]): CsrfManagerMagnet[T, CsrfCheckMode] =
+    new CsrfManagerMagnet[T, CsrfCheckMode] {
+      override val manager = _manager
+      override val input = CheckHeader
+    }
+}

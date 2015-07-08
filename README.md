@@ -160,27 +160,42 @@ keys are:
 ````
 akka.http.session {
   serverSecret = "some_very_long_secret_and_random_string" // only required config key
-  clientSessionCookie {
-    name = "_sessiondata"
-    domain = "" 
-    path = "" 
-    maxAge = 0 
-    secure = false 
-    httpOnly = true 
-  }
-  clientSessionMaxAgeSeconds = 0 
-  encryptSessionData = false   
-  
-  csrfCookie {
-    name = "XSRF-TOKEN" 
-    domain = "" 
-    path = "/" 
-    maxAge = 0 
-    secure = false 
-    httpOnly = false 
+  clientSession {
+    cookie {
+      name = "_sessiondata"
+      domain = "" 
+      path = "" 
+      maxAge = 0 
+      secure = false 
+      httpOnly = true 
+    }
+    maxAgeSeconds = 0 
+    encryptData = false
   }
   
-  csrfSubmittedName = "X-XSRF-TOKEN"
+  csrf {
+    cookie {
+      name = "XSRF-TOKEN" 
+      domain = "" 
+      path = "/" 
+      maxAge = 0 
+      secure = false 
+      httpOnly = false 
+    }
+    submittedName = "X-XSRF-TOKEN"
+  }
+  
+  rememberMe {
+    cookie {
+      name = "_rememberme" 
+      domain = "" 
+      path = "/" 
+      maxAge = 0 
+      secure = false 
+      httpOnly = true 
+    }
+    maxAgeSeconds = 30 days
+  }
 }
 ````
 
@@ -188,10 +203,6 @@ akka.http.session {
 
 If you'd like to change the signing algorithm, or the session data encryption/decryption code, you can provide a custom
 `Crypto` implementation when creating a `SessionManager`.
-
-## Future development
-
-* remember me
 
 ## Links
 

@@ -10,7 +10,7 @@ import org.scalatest.{ShouldMatchers, FlatSpec}
 class CsrfDirectivesTest extends FlatSpec with ScalatestRouteTest with ShouldMatchers {
 
   import TestData._
-  val cookieName = sessionManager.csrfCookieName
+  val cookieName = sessionManager.config.csrfCookieConfig.name
   implicit val csrfCheckMode = CheckHeader
 
   def routes[T](implicit sessionManager: SessionManager[T], checkMode: CsrfCheckMode) =
@@ -42,7 +42,7 @@ class CsrfDirectivesTest extends FlatSpec with ScalatestRouteTest with ShouldMat
       csrfCookieOption should be ('defined)
       val Some(csrfCookie) = csrfCookieOption
 
-      csrfCookie.cookie.name should be (sessionManager.csrfCookieName)
+      csrfCookie.cookie.name should be (cookieName)
 
       Get("/site") ~> addHeader(Cookie(cookieName, csrfCookie.cookie.value)) ~> routes ~> check {
         responseAs[String] should be ("ok")

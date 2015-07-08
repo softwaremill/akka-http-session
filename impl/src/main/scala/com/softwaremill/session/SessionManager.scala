@@ -8,10 +8,18 @@ import akka.http.scaladsl.model.headers.HttpCookie
 
 // Partly based on the implementation from Play! [[https://github.com/playframework]]
 // see https://github.com/playframework/playframework/blob/master/framework/src/play/src/main/scala/play/api/mvc/Http.scala
-class SessionManager[T](config: SessionConfig, crypto: Crypto = DefaultCrypto)
-  (implicit sessionSerializer: SessionSerializer[T]) {
+class SessionManager[T](val config: SessionConfig, val crypto: Crypto = DefaultCrypto)
+  (implicit val sessionSerializer: SessionSerializer[T])
+  extends ClientSessionManager[T] with CsrfManager[T] {
 
-  def clientSessionCookieName = config.clientSessionCookieConfig.name
+  def nowMillis = System.currentTimeMillis()
+}
+
+trait ClientSessionManager[T] {
+  def config: SessionConfig
+  def sessionSerializer: SessionSerializer[T]
+  def crypto: Crypto
+  def nowMillis: Long
 
   def createClientSessionCookie(data: T) = createClientSessionCookieWithValue(encode(data))
 
@@ -34,27 +42,12 @@ class SessionManager[T](config: SessionConfig, crypto: Crypto = DefaultCrypto)
       s"$expiry-$serialized"
     }
 
-    val encrypted = if (config.encryptClientSessionData) crypto.encrypt(withExpiry, config.serverSecret) else withExpiry
+    val encrypted = if (config.clientSessionEncryptData) crypto.encrypt(withExpiry, config.serverSecret) else withExpiry
 
     s"${crypto.sign(serialized, config.serverSecret)}-$encrypted"
   }
 
   def decode(data: String): Option[T] = {
-    // Do not change this unless you understand the security issues behind timing attacks.
-    // This method intentionally runs in constant time if the two strings have the same length.
-    // If it didn't, it would be vulnerable to a timing attack.
-    def safeEquals(a: String, b: String) = {
-      if (a.length != b.length) {
-        false
-      } else {
-        var equal = 0
-        for (i <- Array.range(0, a.length)) {
-          equal |= a(i) ^ b(i)
-        }
-        equal == 0
-      }
-    }
-
     def extractExpiry(data: String): (Long, String) = {
       config.clientSessionMaxAgeSeconds.fold((Long.MaxValue, data)) { maxAge =>
         val splitted = data.split("-", 2)
@@ -64,11 +57,11 @@ class SessionManager[T](config: SessionConfig, crypto: Crypto = DefaultCrypto)
 
     try {
       val splitted = data.split("-", 2)
-      val decrypted = if (config.encryptClientSessionData) crypto.decrypt(splitted(1), config.serverSecret) else splitted(1)
+      val decrypted = if (config.clientSessionEncryptData) crypto.decrypt(splitted(1), config.serverSecret) else splitted(1)
 
       val (expiry, serialized) = extractExpiry(decrypted)
 
-      if (nowMillis < expiry && safeEquals(splitted(0), crypto.sign(serialized, config.serverSecret))) {
+      if (nowMillis < expiry && SessionUtil.constantTimeEquals(splitted(0), crypto.sign(serialized, config.serverSecret))) {
         Some(sessionSerializer.deserialize(serialized.substring(1))) // removing the x
       } else None
     } catch {
@@ -77,12 +70,12 @@ class SessionManager[T](config: SessionConfig, crypto: Crypto = DefaultCrypto)
     }
   }
 
-  def nowMillis = System.currentTimeMillis()
+  def clientSessionCookieMissingRejection = AuthorizationFailedRejection
+}
 
-  def sessionCookieMissingRejection = AuthorizationFailedRejection
+trait CsrfManager[T] {
+  def config: SessionConfig
 
-  def csrfCookieName = config.csrfCookieConfig.name
-  def csrfSubmittedName = config.csrfSubmittedName
   def csrfTokenInvalidRejection = AuthorizationFailedRejection
   def createCsrfToken(): String = SessionUtil.randomString(64)
 
