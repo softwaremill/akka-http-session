@@ -141,7 +141,73 @@ randomTokenCsrfProtection() {
     // token already checked
   }
 }
-````             
+````        
+     
+## Remember me cookies
+
+If you'd like to implement persistent, "remember-me" sessions, you should use the `RememberMeDirectives`, which
+offer persistent variants of the directives found in `ClientSessionDirectives`. When using the remember me directives,
+in addition to an implicit `SessionManager` instance, you need to provide an implementation of `RememberMeStorage`
+trait. That trait has methods to lookup, store and delete remember me tokens. Typically this would use some persistent
+storage.
+
+The tokens are never stored directly, instead only token hashes are passed to the storage. That way even if the token
+database is leaked, it won't be possible to create sessions using the hashes. Moreover, in addition to the token hash,
+a selector value is stored. That value is used to lookup stored hashes; tokens are compared using using a special
+`equals` method, to prevent timing attacks.
+
+Using persistent sessions is almost the same as client-sessions described above, only the directives have the
+additional `persistent` part in their names:
+
+````scala
+path("login") {
+  post {
+    entity(as[String]) { body =>
+      setPersistentSession(812832L) { ctx =>
+        ctx.complete("ok")
+      }
+    }
+  }
+} ~
+path("logout") {
+  post {
+    requiredPersistentSession {
+      invalidatePersistentSession() { ctx =>
+        ctx.complete("ok")
+      }
+    }
+  }
+} ~
+path("secret") {
+  get {
+    requiredPersistentSession() { session => // type: Long, or whatever the T parameter is
+      complete { "treasure" }
+    }
+  }
+} ~
+path("open") {
+  get {
+    optionalPersistentSession() { session => // type: Option[Long] (Option[T])
+      complete { "small treasure" }
+    }
+  }
+} 
+````
+
+When a session expires or the session cookie is not present, but the remember me cookie is, a new session will be
+created (using the `RememberMeLookupResult.createSession` function), and a new remember me token will be created.
+
+Note that you can differentiate between sessions created from "remember me" cookies and from regular authentication
+by storing appropriate information in the session data. That way, you can force the user to re-authenticate 
+if the session was created by "remember me" before crucial operations.
+
+The semantics of `touch[Required|Optional]PersistentSession()` are a bit subtle. You can still use expiring client
+sessions when using "remember me". You will then have 2 stages of expiration: expiration of the client session
+(should be shorter), and expiry of the remember me cookie. That way you can have strongly-authenticated sessions
+which expire fast, and weaker-authenticated re-creatable sessions (as described in the paragraph above).
+
+When touching an existing session, the remember me cookie will not be re-generated and extended, only the session
+cookie.
 
 ## Customizing cookie parameters
 
@@ -214,3 +280,6 @@ code was taken
 * [Rails security guide](http://guides.rubyonrails.org/security.html#session-storage), a description of how sessions are
 stored in Rails
 * [Akka issue 16855](https://github.com/akka/akka/issues/16855) for implementing similar functionality straight in Akka
+* [Implementing remember me](https://paragonie.com/blog/2015/04/secure-authentication-php-with-long-term-persistence#title.2)
+* [The definitive guide to form-based website auhtorization](http://stackoverflow.com/questions/549/the-definitive-guide-to-form-based-website-authentication)
+* [Cookies vs tokens](https://auth0.com/blog/2014/01/07/angularjs-authentication-with-cookies-vs-token/)
