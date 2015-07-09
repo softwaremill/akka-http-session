@@ -15,7 +15,7 @@ object SessionManagerTest extends Properties("SessionManager")  {
         .withClientSessionMaxAgeSeconds(if (useMaxAgeSeconds) Some(3600L) else None)
       val manager = new SessionManager[Map[String, String]](config)
 
-      manager.decode(manager.encode(data)).contains(data)
+      manager.decodeClientSession(manager.encodeClientSession(data)).contains(data)
     }
   }
 
@@ -31,7 +31,7 @@ object SessionManagerTest extends Properties("SessionManager")  {
         override def nowMillis = (8172L + 600L) * 1000L // 600s later
       }
 
-      managerFuture.decode(managerPast.encode(data)).isEmpty
+      managerFuture.decodeClientSession(managerPast.encodeClientSession(data)).isEmpty
     }
   }
 }

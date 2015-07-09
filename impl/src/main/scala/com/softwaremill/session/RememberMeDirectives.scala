@@ -60,7 +60,7 @@ trait RememberMeDirectives {
     invalidateSession() & deleteCookie(magnet.manager.createRememberMeCookie("").copy(maxAge = None)) & {
       optionalCookie(magnet.manager.config.rememberMeCookieConfig.name).flatMap {
         case None => pass
-        case Some(cookie) => onSuccess(magnet.manager.removeToken(magnet.storage)(cookie.value))
+        case Some(cookie) => onSuccess(magnet.manager.removeRememberMeToken(magnet.storage)(cookie.value))
       }
     }
   }

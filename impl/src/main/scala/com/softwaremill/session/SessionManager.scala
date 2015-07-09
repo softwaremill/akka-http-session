@@ -22,7 +22,7 @@ trait ClientSessionManager[T] {
   def crypto: Crypto
   def nowMillis: Long
 
-  def createClientSessionCookie(data: T) = createClientSessionCookieWithValue(encode(data))
+  def createClientSessionCookie(data: T) = createClientSessionCookieWithValue(encodeClientSession(data))
 
   def createClientSessionCookieWithValue(value: String) = HttpCookie(
     name = config.clientSessionCookieConfig.name,
@@ -34,7 +34,7 @@ trait ClientSessionManager[T] {
     secure = config.clientSessionCookieConfig.secure,
     httpOnly = config.clientSessionCookieConfig.httpOnly)
 
-  def encode(data: T): String = {
+  def encodeClientSession(data: T): String = {
     // adding an "x" so that the string is never empty, even if there's no data
     val serialized = "x" + sessionSerializer.serialize(data)
 
@@ -48,7 +48,7 @@ trait ClientSessionManager[T] {
     s"${crypto.sign(serialized, config.serverSecret)}-$encrypted"
   }
 
-  def decode(data: String): Option[T] = {
+  def decodeClientSession(data: String): Option[T] = {
     def extractExpiry(data: String): (Long, String) = {
       config.clientSessionMaxAgeSeconds.fold((Long.MaxValue, data)) { maxAge =>
         val splitted = data.split("-", 2)
@@ -99,7 +99,7 @@ trait RememberMeManager[T] {
   def createRememberMeSelector(): String = SessionUtil.randomString(16)
   def createRememberMeToken(): String = SessionUtil.randomString(64)
 
-  def extractSelectorAndToken(cookieValue: String): Option[(String, String)] = {
+  def extractRememberMeSelectorAndToken(cookieValue: String): Option[(String, String)] = {
     val s = cookieValue.split(":", 2)
     if (s.length == 2) Some((s(0), s(1))) else None
   }
@@ -122,7 +122,7 @@ trait RememberMeManager[T] {
     existing match {
       case None => storeFuture
       case Some(cookieValue) =>
-        extractSelectorAndToken(cookieValue) match {
+        extractRememberMeSelectorAndToken(cookieValue) match {
           case Some((s, _)) => storeFuture.flatMap(v => storage.remove(s).map(_ => v))
           case None => storeFuture
         }
@@ -142,7 +142,7 @@ trait RememberMeManager[T] {
   def sessionFromRememberMeCookie(storage: RememberMeStorage[T])(cookieValue: String)
     (implicit ec: ExecutionContext): Future[Option[T]] = {
 
-    extractSelectorAndToken(cookieValue) match {
+    extractRememberMeSelectorAndToken(cookieValue) match {
       case Some((selector, token)) =>
         storage.lookup(selector).map(_.flatMap { lookupResult =>
           if (SessionUtil.constantTimeEquals(crypto.hash(token), lookupResult.tokenHash) &&
@@ -156,8 +156,8 @@ trait RememberMeManager[T] {
     }
   }
   
-  def removeToken(storage: RememberMeStorage[T])(cookieValue: String)(implicit ec: ExecutionContext): Future[Unit] = {
-    extractSelectorAndToken(cookieValue) match {
+  def removeRememberMeToken(storage: RememberMeStorage[T])(cookieValue: String)(implicit ec: ExecutionContext): Future[Unit] = {
+    extractRememberMeSelectorAndToken(cookieValue) match {
       case Some((s, _)) => storage.remove(s)
       case None => Future.successful(())
     }

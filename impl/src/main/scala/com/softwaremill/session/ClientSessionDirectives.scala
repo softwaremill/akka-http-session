@@ -16,7 +16,7 @@ trait ClientSessionDirectives {
    */
   def optionalSession[T](magnet: ClientSessionManagerMagnet[T, Unit]): Directive1[Option[T]] =
     optionalCookie(magnet.manager.config.clientSessionCookieConfig.name)
-      .map(_.flatMap(p => magnet.manager.decode(p.value)))
+      .map(_.flatMap(p => magnet.manager.decodeClientSession(p.value)))
 
   /**
    * Read a required session from the session cookie.
