@@ -97,8 +97,9 @@ The key used for encrypting will be calculated basing on the server secret.
 ### Session timeout
 
 By default the cookie sent to the user will be a session cookie, however it is possible that the client will have the
-browser open for a very long time, or if an attacker steals the cookie, it can be re-used. It is possible to include
-an expiry date checked on the server-side by setting the session timeout:
+browser open for a very long time, [uses Chrome or FF](http://stackoverflow.com/questions/10617954/chrome-doesnt-delete-session-cookies), 
+or if an attacker steals the cookie, it can be re-used. It is possible to include an expiry date checked on the 
+server-side by setting the session timeout:
 
 ````scala
 val sessionConfig = SessionConfig
