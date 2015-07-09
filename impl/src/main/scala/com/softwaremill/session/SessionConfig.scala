@@ -105,7 +105,7 @@ object SessionConfig {
         name = rememberMeConfig.getStringOption("cookie.name").getOrElse("_rememberme"),
         domain = rememberMeConfig.getStringOption("cookie.domain"),
         path = rememberMeConfig.getStringOption("cookie.path").orElse(Some("/")),
-        maxAge = rememberMeConfig.getDurationSecondsOption("cookie.maxAge"),
+        maxAge = rememberMeConfig.getDurationSecondsOption("cookie.maxAge").orElse(Some(60L * 60L * 24L * 30L)),
         secure = rememberMeConfig.getBooleanOption("cookie.secure").getOrElse(false),
         httpOnly = rememberMeConfig.getBooleanOption("cookie.httpOnly").getOrElse(true)
       )

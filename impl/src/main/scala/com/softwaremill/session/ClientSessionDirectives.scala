@@ -31,7 +31,7 @@ trait ClientSessionDirectives {
    * Invalidate the session cookie
    */
   def invalidateSession[T](magnet: ClientSessionManagerMagnet[T, Unit]): Directive0 =
-    deleteCookie(magnet.manager.createClientSessionCookieWithValue(""))
+    deleteCookie(magnet.manager.createClientSessionCookieWithValue("").copy(maxAge = None))
 
   /**
    * Sets the session cookie again with the same data. Useful when using the [[SessionConfig.clientSessionMaxAgeSeconds]]

@@ -2,6 +2,7 @@ package com.softwaremill.session
 
 import akka.http.scaladsl.server.AuthorizationFailedRejection
 
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 import akka.http.scaladsl.model.headers.HttpCookie
@@ -10,7 +11,7 @@ import akka.http.scaladsl.model.headers.HttpCookie
 // see https://github.com/playframework/playframework/blob/master/framework/src/play/src/main/scala/play/api/mvc/Http.scala
 class SessionManager[T](val config: SessionConfig, val crypto: Crypto = DefaultCrypto)
   (implicit val sessionSerializer: SessionSerializer[T])
-  extends ClientSessionManager[T] with CsrfManager[T] {
+  extends ClientSessionManager[T] with CsrfManager[T] with RememberMeManager[T] {
 
   def nowMillis = System.currentTimeMillis()
 }
@@ -88,4 +89,70 @@ trait CsrfManager[T] {
     path = config.csrfCookieConfig.path,
     secure = config.csrfCookieConfig.secure,
     httpOnly = config.csrfCookieConfig.httpOnly)
+}
+
+trait RememberMeManager[T] {
+  def config: SessionConfig
+  def crypto: Crypto
+  def nowMillis: Long
+
+  def createRememberMeSelector(): String = SessionUtil.randomString(16)
+  def createRememberMeToken(): String = SessionUtil.randomString(64)
+
+  def extractSelectorAndToken(cookieValue: String): (String, String) = {
+    val s = cookieValue.split(":", 2)
+    (s(0), s(1))
+  }
+
+  def createRememberMeCookieValue(selector: String, token: String): String = s"$selector:$token"
+
+  def createNewRememberMeToken(storage: RememberMeStorage[T])(session: T, existing: Option[String])
+    (implicit ec: ExecutionContext): Future[String] = {
+
+    val selector = createRememberMeSelector()
+    val token = createRememberMeToken()
+
+    val storeFuture = storage.store(new RememberMeData[T](
+      forSession = session,
+      selector = selector,
+      tokenHash = crypto.hash(token),
+      expires = nowMillis + config.rememberMeCookieConfig.maxAge.getOrElse(0L) * 1000L
+    )).map(_ => createRememberMeCookieValue(selector, token))
+
+    existing match {
+      case None => storeFuture
+      case Some(cookieValue) =>
+        val (selector, _) = extractSelectorAndToken(cookieValue)
+        storeFuture.flatMap(v => storage.remove(selector).map(_ => v))
+    }
+  }
+
+  def createRememberMeCookie(value: String) = HttpCookie(
+    name = config.rememberMeCookieConfig.name,
+    value = value,
+    expires = None,
+    maxAge = config.rememberMeCookieConfig.maxAge,
+    domain = config.rememberMeCookieConfig.domain,
+    path = config.rememberMeCookieConfig.path,
+    secure = config.rememberMeCookieConfig.secure,
+    httpOnly = config.rememberMeCookieConfig.httpOnly)
+
+  def sessionFromRememberMeCookie(storage: RememberMeStorage[T])(cookieValue: String)
+    (implicit ec: ExecutionContext): Future[Option[T]] = {
+
+    val (selector, token) = extractSelectorAndToken(cookieValue)
+    storage.lookup(selector).map(_.flatMap { lookupResult =>
+      if (SessionUtil.constantTimeEquals(crypto.hash(token), lookupResult.tokenHash) &&
+        lookupResult.expires > nowMillis) {
+        Some(lookupResult.createSession())
+      } else {
+        None
+      }
+    })
+  }
+  
+  def removeToken(storage: RememberMeStorage[T])(cookieValue: String)(implicit ec: ExecutionContext): Future[Unit] = {
+    val (selector, token) = extractSelectorAndToken(cookieValue)
+    storage.remove(selector)
+  }
 }
