@@ -86,7 +86,7 @@ trait RememberMeDirectives {
   def setRememberMeCookie[T](magnet: RememberMeStorageMagnet[T, T]): Directive0 = {
     import magnet.ec
     optionalCookie(magnet.manager.config.rememberMeCookieConfig.name).flatMap { existing =>
-      val createCookie = magnet.manager.createNewRememberMeToken(magnet.storage)(magnet.input, existing.map(_.value))
+      val createCookie = magnet.manager.createAndStoreRememberMeToken(magnet.storage)(magnet.input, existing.map(_.value))
         .map(magnet.manager.createRememberMeCookie)
 
       onSuccess(createCookie).flatMap(c => setCookie(c))

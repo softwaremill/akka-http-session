@@ -106,7 +106,7 @@ trait RememberMeManager[T] {
 
   def createRememberMeCookieValue(selector: String, token: String): String = s"$selector:$token"
 
-  def createNewRememberMeToken(storage: RememberMeStorage[T])(session: T, existing: Option[String])
+  def createAndStoreRememberMeToken(storage: RememberMeStorage[T])(session: T, existing: Option[String])
     (implicit ec: ExecutionContext): Future[String] = {
 
     val selector = createRememberMeSelector()
