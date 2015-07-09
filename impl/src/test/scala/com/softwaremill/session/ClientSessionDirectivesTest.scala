@@ -11,9 +11,9 @@ import com.softwaremill.session.ClientSessionDirectives._
 class ClientSessionDirectivesTest extends FlatSpec with ScalatestRouteTest with ShouldMatchers {
 
   import TestData._
-  val cookieName = sessionManager.config.clientSessionCookieConfig.name
+  val cookieName = manager.config.clientSessionCookieConfig.name
 
-  def routes(implicit sessionManager: SessionManager[Map[String, String]]) = get {
+  def routes(implicit manager: SessionManager[Map[String, String]]) = get {
     path("set") {
       setSession(Map("k1" -> "v1")) {
         complete { "ok" }
@@ -79,7 +79,7 @@ class ClientSessionDirectivesTest extends FlatSpec with ScalatestRouteTest with 
     }
   }
 
-  it should "invalide a session" in {
+  it should "invalidate a session" in {
     Get("/set") ~> routes ~> check {
       val Some(sessionCookie1) = header[`Set-Cookie`]
 
@@ -105,36 +105,32 @@ class ClientSessionDirectivesTest extends FlatSpec with ScalatestRouteTest with 
   }
 
   it should "touch the session" in {
-    val cfg = sessionConfig.withClientSessionMaxAgeSeconds(Some(60))
-    val managerNow = new SessionManager[Map[String, String]](cfg) {
-      override def nowMillis = 3028L * 1000L
-    }
-    val managerPlus_30_seconds = new SessionManager[Map[String, String]](cfg) {
-      override def nowMillis = (3028L + 30L) * 1000L
-    }
-    val managerPlus_70_seconds = new SessionManager[Map[String, String]](cfg) {
-      override def nowMillis = (3028L + 70L) * 1000L
-    }
-
-    Get("/set") ~> routes(managerNow) ~> check {
+    Get("/set") ~> routes(manager_expires60_fixedTime) ~> check {
       val Some(sessionCookie1) = header[`Set-Cookie`]
 
-      Get("/touchReq") ~> addHeader(Cookie(cookieName, sessionCookie1.cookie.value)) ~> routes(managerPlus_30_seconds) ~> check {
-        responseAs[String] should be ("Map(k1 -> v1)")
-
-        val Some(sessionCookie2) = header[`Set-Cookie`]
-
-        // The session cookie should be modified with a new expiry date
-        sessionCookie1.cookie.value should not be (sessionCookie2.cookie.value)
-
-        // 70 seconds from the initial cookie, only the touched one should work
-        Get("/touchReq") ~> addHeader(Cookie(cookieName, sessionCookie1.cookie.value)) ~> routes(managerPlus_70_seconds) ~> check {
-          rejection should be (AuthorizationFailedRejection)
-        }
-        Get("/touchReq") ~> addHeader(Cookie(cookieName, sessionCookie2.cookie.value)) ~> routes(managerPlus_70_seconds) ~> check {
+      Get("/touchReq") ~>
+        addHeader(Cookie(cookieName, sessionCookie1.cookie.value)) ~>
+        routes(manager_expires60_fixedTime_plus30s) ~>
+        check {
           responseAs[String] should be ("Map(k1 -> v1)")
+
+          val Some(sessionCookie2) = header[`Set-Cookie`]
+
+          // The session cookie should be modified with a new expiry date
+          sessionCookie1.cookie.value should not be (sessionCookie2.cookie.value)
+
+          // 70 seconds from the initial cookie, only the touched one should work
+          Get("/touchReq") ~> addHeader(Cookie(cookieName, sessionCookie1.cookie.value)) ~>
+            routes(manager_expires60_fixedTime_plus70s) ~>
+            check {
+              rejection should be (AuthorizationFailedRejection)
+            }
+          Get("/touchReq") ~> addHeader(Cookie(cookieName, sessionCookie2.cookie.value)) ~>
+            routes(manager_expires60_fixedTime_plus70s) ~>
+            check {
+              responseAs[String] should be ("Map(k1 -> v1)")
+            }
         }
-      }
     }
   }
 }

@@ -99,9 +99,9 @@ trait RememberMeManager[T] {
   def createRememberMeSelector(): String = SessionUtil.randomString(16)
   def createRememberMeToken(): String = SessionUtil.randomString(64)
 
-  def extractSelectorAndToken(cookieValue: String): (String, String) = {
+  def extractSelectorAndToken(cookieValue: String): Option[(String, String)] = {
     val s = cookieValue.split(":", 2)
-    (s(0), s(1))
+    if (s.length == 2) Some((s(0), s(1))) else None
   }
 
   def createRememberMeCookieValue(selector: String, token: String): String = s"$selector:$token"
@@ -122,8 +122,10 @@ trait RememberMeManager[T] {
     existing match {
       case None => storeFuture
       case Some(cookieValue) =>
-        val (selector, _) = extractSelectorAndToken(cookieValue)
-        storeFuture.flatMap(v => storage.remove(selector).map(_ => v))
+        extractSelectorAndToken(cookieValue) match {
+          case Some((s, _)) => storeFuture.flatMap(v => storage.remove(s).map(_ => v))
+          case None => storeFuture
+        }
     }
   }
 
@@ -140,19 +142,24 @@ trait RememberMeManager[T] {
   def sessionFromRememberMeCookie(storage: RememberMeStorage[T])(cookieValue: String)
     (implicit ec: ExecutionContext): Future[Option[T]] = {
 
-    val (selector, token) = extractSelectorAndToken(cookieValue)
-    storage.lookup(selector).map(_.flatMap { lookupResult =>
-      if (SessionUtil.constantTimeEquals(crypto.hash(token), lookupResult.tokenHash) &&
-        lookupResult.expires > nowMillis) {
-        Some(lookupResult.createSession())
-      } else {
-        None
-      }
-    })
+    extractSelectorAndToken(cookieValue) match {
+      case Some((selector, token)) =>
+        storage.lookup(selector).map(_.flatMap { lookupResult =>
+          if (SessionUtil.constantTimeEquals(crypto.hash(token), lookupResult.tokenHash) &&
+            lookupResult.expires > nowMillis) {
+            Some(lookupResult.createSession())
+          } else {
+            None
+          }
+        })
+      case None => Future.successful(None)
+    }
   }
   
   def removeToken(storage: RememberMeStorage[T])(cookieValue: String)(implicit ec: ExecutionContext): Future[Unit] = {
-    val (selector, token) = extractSelectorAndToken(cookieValue)
-    storage.remove(selector)
+    extractSelectorAndToken(cookieValue) match {
+      case Some((s, _)) => storage.remove(s)
+      case None => Future.successful(())
+    }
   }
 }

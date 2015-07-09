@@ -66,14 +66,17 @@ trait RememberMeDirectives {
   }
 
   /**
-   * @see [[ClientSessionDirectives.touchOptionalSession]]
+   * Same as [[ClientSessionDirectives.touchOptionalSession]]; if the user session is already present, keeps the same
+   * remember me token if one is present.
    */
   def touchOptionalPersistentSession[T](magnet: RememberMeStorageMagnet[T, Unit]): Directive1[Option[T]] = {
     import magnet.manager
     optionalPersistentSession(magnet).flatMap { d => d.fold(pass)(setSession(_)) & provide(d) }
   }
+
   /**
-   * @see [[ClientSessionDirectives.touchRequiredSession]]
+   * Same as [[ClientSessionDirectives.touchRequiredSession]]; if the user session is already present, keeps the same
+   * remember me token if one is present.
    */
   def touchRequiredPersistentSession[T](magnet: RememberMeStorageMagnet[T, Unit]): Directive1[T] = {
     import magnet.manager
