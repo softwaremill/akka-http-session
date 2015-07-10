@@ -229,7 +229,7 @@ It is possible to create a `SessionConfig` from a `Config` object (coming from
 [Typesafe config](https://github.com/typesafehub/config)). Just use the `SessionConfig.fromConfig` method. The config
 keys are:
 
-````json
+````
 akka.http.session {
   // The only required config key. All other are optional, and the values below are defaults.
   serverSecret = "some_very_long_secret_and_random_string" 
