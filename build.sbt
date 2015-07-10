@@ -2,7 +2,7 @@ import scalariform.formatter.preferences._
 
 lazy val commonSettings = scalariformSettings ++ Seq(
   organization := "com.softwaremill",
-  version := "0.1",
+  version := "0.1.1",
   scalaVersion := "2.11.6",
   scalacOptions ++= Seq("-unchecked", "-deprecation"),
   ScalariformKeys.preferences := ScalariformKeys.preferences.value
@@ -51,9 +51,7 @@ lazy val impl: Project = (project in file("impl"))
     name := "akka-http-session",
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-http-experimental" % akkaHttpVersion,
-      "com.typesafe.akka" %% "akka-http-testkit-experimental" % akkaHttpVersion,
-      "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2",
-      "ch.qos.logback" % "logback-classic" % "1.1.3",
+      "com.typesafe.akka" %% "akka-http-testkit-experimental" % akkaHttpVersion % "test",
       "org.scalacheck" %% "scalacheck" % "1.12.4" % "test",
       "org.scalatest" %% "scalatest" % "2.2.4" % "test"
     )
@@ -61,5 +59,10 @@ lazy val impl: Project = (project in file("impl"))
 
 lazy val example: Project = (project in file("example"))
   .settings(commonSettings: _*)
-  .settings(publishArtifact := false)
+  .settings(
+    publishArtifact := false,
+    libraryDependencies ++= Seq(
+      "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2",
+      "ch.qos.logback" % "logback-classic" % "1.1.3"
+    ))
   .dependsOn(impl)

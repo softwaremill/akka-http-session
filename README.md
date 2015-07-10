@@ -297,5 +297,5 @@ stored in Rails
 Currently depends on `akka-http` version `1.0-RC4`.
 
 ````scala
-libraryDependencies += "com.softwaremill" %% "akka-http-session" % "0.1-SNAPSHOT"
+libraryDependencies += "com.softwaremill" %% "akka-http-session" % "0.1.1"
 ````
