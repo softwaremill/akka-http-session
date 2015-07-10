@@ -3,20 +3,46 @@ lazy val commonSettings = Seq(
   organization := "com.softwaremill",
   version := "0.1-SNAPSHOT",
   scalaVersion := "2.11.6",
-  scalacOptions ++= Seq("-unchecked", "-deprecation")
+  scalacOptions ++= Seq("-unchecked", "-deprecation"),
+  // Sonatype OSS deployment
+  publishTo <<= version { (v: String) =>
+    val nexus = "https://oss.sonatype.org/"
+    if (v.trim.endsWith("SNAPSHOT"))
+      Some("snapshots" at nexus + "content/repositories/snapshots")
+    else
+      Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+  },
+  credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),publishMavenStyle := true,
+  pomIncludeRepository := { _ => false },pomExtra := (
+    <scm>
+      <url>git@gihub.com/softwaremill/akka-http-session.git</url>
+      <connection>scm:git:git@github.com/softwaremill/akka-http-session.git</connection>
+    </scm>
+      <developers>
+        <developer>
+          <id>adamw</id>
+          <name>Adam Warski</name>
+          <url>http://www.warski.org</url>
+        </developer>
+      </developers>
+    ),
+  licenses := ("Apache2", new java.net.URL("http://www.apache.org/licenses/LICENSE-2.0.txt")) :: Nil,
+  homepage := Some(new java.net.URL("http://softwaremill.com"))
 )
-
-name := "akka-http-session"
 
 val akkaHttpVersion = "1.0-RC4"
 
 lazy val rootProject = (project in file("."))
   .settings(commonSettings: _*)
+  .settings(
+    publishArtifact := false,
+    name := "akka-http-session-root")
   .aggregate(impl, example)
 
 lazy val impl: Project = (project in file("impl"))
   .settings(commonSettings: _*)
   .settings(
+    name := "akka-http-session",
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-http-experimental" % akkaHttpVersion,
       "com.typesafe.akka" %% "akka-http-testkit-experimental" % akkaHttpVersion,
@@ -29,4 +55,5 @@ lazy val impl: Project = (project in file("impl"))
 
 lazy val example: Project = (project in file("example"))
   .settings(commonSettings: _*)
+  .settings(publishArtifact := false)
   .dependsOn(impl)

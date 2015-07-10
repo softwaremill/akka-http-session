@@ -284,3 +284,11 @@ stored in Rails
 * [Implementing remember me](https://paragonie.com/blog/2015/04/secure-authentication-php-with-long-term-persistence#title.2)
 * [The definitive guide to form-based website auhtorization](http://stackoverflow.com/questions/549/the-definitive-guide-to-form-based-website-authentication)
 * [Cookies vs tokens](https://auth0.com/blog/2014/01/07/angularjs-authentication-with-cookies-vs-token/)
+
+## Using from SBT
+
+Currently depends on `akka-http` version `1.0-RC4`.
+
+````scala
+libraryDependencies += "com.softwaremill" %% "akka-http-session" % "0.1-SNAPSHOT"
+````
