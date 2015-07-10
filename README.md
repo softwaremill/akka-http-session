@@ -177,7 +177,7 @@ path("login") {
 } ~
 path("logout") {
   post {
-    requiredPersistentSession {
+    requiredPersistentSession() {
       invalidatePersistentSession() { ctx =>
         ctx.complete("ok")
       }
