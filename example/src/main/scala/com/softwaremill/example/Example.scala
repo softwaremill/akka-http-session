@@ -20,26 +20,8 @@ object Example extends App with StrictLogging {
 
   val sessionConfig = SessionConfig.default("c05ll3lesrinf39t7mc5h6un6r0c69lgfno69dsak3vabeqamouq4328cuaekros401ajdpkh60rrtpd8ro24rbuqmgtnd1ebag6ljnb65i8a55d482ok7o0nch0bfbe")
   implicit val sessionManager = new SessionManager[ExampleSession](sessionConfig)
-  implicit val rememberMeStorage = new RememberMeStorage[ExampleSession] {
-    case class Store(username: String, tokenHash: String, expires: Long)
-    private val store = mutable.Map[String, Store]()
-    override def lookup(selector: String) = {
-      Future.successful {
-        val r = store.get(selector).map(s => RememberMeLookupResult[ExampleSession](s.tokenHash, s.expires,
-          () => ExampleSession(s.username)))
-        logger.info(s"Looking up token for selector: $selector, found: ${r.isDefined}")
-        r
-      }
-    }
-    override def store(data: RememberMeData[ExampleSession]) = {
-      logger.info(s"Storing token for selector: ${data.selector}, user: ${data.forSession.username}, " +
-        s"expires: ${data.expires}, now: ${System.currentTimeMillis()}")
-      Future.successful(store.put(data.selector, Store(data.forSession.username, data.tokenHash, data.expires)))
-    }
-    override def remove(selector: String) = {
-      logger.info(s"Removing token for selector: $selector")
-      Future.successful(store.remove(selector))
-    }
+  implicit val rememberMeStorage = new InMemoryRememberMeStorage[ExampleSession] {
+    def log(msg: String) = logger.info(msg)
   }
 
   val routes =

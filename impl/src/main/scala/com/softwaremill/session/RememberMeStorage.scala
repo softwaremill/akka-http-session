@@ -29,7 +29,7 @@ case class RememberMeLookupResult[T](
 )
 
 /**
- * In-memory remember me storage implementation. Useful for testing.
+ * Useful for testing.
  */
 trait InMemoryRememberMeStorage[T] extends RememberMeStorage[T] {
   case class Store(session: T, tokenHash: String, expires: Long)

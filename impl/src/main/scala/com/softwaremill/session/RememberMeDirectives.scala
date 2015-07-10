@@ -9,7 +9,7 @@ import scala.concurrent.ExecutionContext
 /**
  * Contains directives analogous to the ones from [[ClientSessionDirectives]], but in a *persistent* variant.
  * A persistent session consists of a regular, session-cookie-based session and a cookie containing a
- * remember-me-token.
+ * remember-me token.
  */
 trait RememberMeDirectives {
   /**
@@ -53,7 +53,7 @@ trait RememberMeDirectives {
 
   /**
    * Same as [[ClientSessionDirectives.invalidateSession)]], but also removes the remember me cookie and the remember
-   * me token.
+   * me token (from the client and token store).
    */
   def invalidatePersistentSession[T](magnet: RememberMeStorageMagnet[T, Unit]): Directive0 = {
     import magnet._
@@ -86,7 +86,7 @@ trait RememberMeDirectives {
   def setRememberMeCookie[T](magnet: RememberMeStorageMagnet[T, T]): Directive0 = {
     import magnet._
     optionalCookie(magnet.rememberMeManager.config.rememberMeCookieConfig.name).flatMap { existing =>
-      val createCookie = magnet.rememberMeManager.createAndStoreToken(magnet.input, existing.map(_.value))
+      val createCookie = magnet.rememberMeManager.rotateToken(magnet.input, existing.map(_.value))
         .map(magnet.rememberMeManager.createCookie)
 
       onSuccess(createCookie).flatMap(c => setCookie(c))

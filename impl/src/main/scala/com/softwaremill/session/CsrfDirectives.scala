@@ -11,7 +11,7 @@ trait CsrfDirectives {
    * match the value in the custom header (or request body, if `checkFormBody` is `true`).
    *
    * Note that this scheme can be broken when not all subdomains are protected or not using HTTPS and secure cookies,
-   * and the token is placed in the request body.
+   * and the token is placed in the request body (not in the header).
    *
    * See the documentation for more details.
    */
