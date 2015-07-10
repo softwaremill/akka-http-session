@@ -20,10 +20,11 @@ class SessionManager[T](val config: SessionConfig, crypto: Crypto = DefaultCrypt
     override def config = manager.config
   }
 
-  val rememberMe: RememberMeManager[T] = new RememberMeManager[T] {
+  def rememberMe(_storage: RememberMeStorage[T]): RememberMeManager[T] = new RememberMeManager[T] {
     override def config = manager.config
     override def nowMillis = manager.nowMillis
     override def crypto = manager.crypto
+    override def storage = _storage
   }
 
   def nowMillis = System.currentTimeMillis()
@@ -114,6 +115,7 @@ trait RememberMeManager[T] {
   def config: SessionConfig
   def crypto: Crypto
   def nowMillis: Long
+  def storage: RememberMeStorage[T]
 
   def createSelector(): String = SessionUtil.randomString(16)
   def createToken(): String = SessionUtil.randomString(64)
@@ -125,7 +127,7 @@ trait RememberMeManager[T] {
 
   def createCookieValue(selector: String, token: String): String = s"$selector:$token"
 
-  def createAndStoreToken(storage: RememberMeStorage[T])(session: T, existing: Option[String])(implicit ec: ExecutionContext): Future[String] = {
+  def createAndStoreToken(session: T, existing: Option[String])(implicit ec: ExecutionContext): Future[String] = {
 
     val selector = createSelector()
     val token = createToken()
@@ -158,7 +160,7 @@ trait RememberMeManager[T] {
     httpOnly = config.rememberMeCookieConfig.httpOnly
   )
 
-  def sessionFromCookie(storage: RememberMeStorage[T])(cookieValue: String)(implicit ec: ExecutionContext): Future[Option[T]] = {
+  def sessionFromCookie(cookieValue: String)(implicit ec: ExecutionContext): Future[Option[T]] = {
 
     extractSelectorAndToken(cookieValue) match {
       case Some((selector, token)) =>
@@ -175,7 +177,7 @@ trait RememberMeManager[T] {
     }
   }
 
-  def removeToken(storage: RememberMeStorage[T])(cookieValue: String)(implicit ec: ExecutionContext): Future[Unit] = {
+  def removeToken(cookieValue: String)(implicit ec: ExecutionContext): Future[Unit] = {
     extractSelectorAndToken(cookieValue) match {
       case Some((s, _)) => storage.remove(s)
       case None => Future.successful(())

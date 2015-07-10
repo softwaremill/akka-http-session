@@ -32,7 +32,7 @@ trait RememberMeDirectives {
       case None => optionalCookie(magnet.rememberMeManager.config.rememberMeCookieConfig.name).flatMap {
         case None => provide(None)
         case Some(cookie) =>
-          onSuccess(magnet.rememberMeManager.sessionFromCookie(magnet.storage)(cookie.value))
+          onSuccess(magnet.rememberMeManager.sessionFromCookie(cookie.value))
             .flatMap {
               case None => provide(None)
               case s @ Some(session) => setPersistentSession(session) & provide(s: Option[T])
@@ -60,7 +60,7 @@ trait RememberMeDirectives {
     invalidateSession() & deleteCookie(magnet.rememberMeManager.createCookie("").copy(maxAge = None)) & {
       optionalCookie(magnet.rememberMeManager.config.rememberMeCookieConfig.name).flatMap {
         case None => pass
-        case Some(cookie) => onSuccess(magnet.rememberMeManager.removeToken(magnet.storage)(cookie.value))
+        case Some(cookie) => onSuccess(magnet.rememberMeManager.removeToken(cookie.value))
       }
     }
   }
@@ -86,7 +86,7 @@ trait RememberMeDirectives {
   def setRememberMeCookie[T](magnet: RememberMeStorageMagnet[T, T]): Directive0 = {
     import magnet._
     optionalCookie(magnet.rememberMeManager.config.rememberMeCookieConfig.name).flatMap { existing =>
-      val createCookie = magnet.rememberMeManager.createAndStoreToken(magnet.storage)(magnet.input, existing.map(_.value))
+      val createCookie = magnet.rememberMeManager.createAndStoreToken(magnet.input, existing.map(_.value))
         .map(magnet.rememberMeManager.createCookie)
 
       onSuccess(createCookie).flatMap(c => setCookie(c))
@@ -97,7 +97,6 @@ trait RememberMeDirectives {
 object RememberMeDirectives extends RememberMeDirectives
 
 trait RememberMeStorageMagnet[T, In] {
-  implicit def storage: RememberMeStorage[T]
   implicit def rememberMeManager: RememberMeManager[T]
   implicit def clientSessionManager: ClientSessionManager[T]
   implicit def ec: ExecutionContext
@@ -106,12 +105,10 @@ trait RememberMeStorageMagnet[T, In] {
 
 object RememberMeStorageMagnet {
   implicit def forSeparateManagers[T, In](_input: In)(implicit
-    _storage: RememberMeStorage[T],
     _rememberMeManager: RememberMeManager[T],
     _clientSessionManager: ClientSessionManager[T],
     _ec: ExecutionContext): RememberMeStorageMagnet[T, In] =
     new RememberMeStorageMagnet[T, In] {
-      override val storage = _storage
       override val rememberMeManager = _rememberMeManager
       override val clientSessionManager = _clientSessionManager
       override val ec = _ec
@@ -123,8 +120,7 @@ object RememberMeStorageMagnet {
     _manager: SessionManager[T],
     _ec: ExecutionContext): RememberMeStorageMagnet[T, In] =
     new RememberMeStorageMagnet[T, In] {
-      override val storage = _storage
-      override val rememberMeManager = _manager.rememberMe
+      override val rememberMeManager = _manager.rememberMe(_storage)
       override val clientSessionManager = _manager.clientSession
       override val ec = _ec
       override val input = _input
