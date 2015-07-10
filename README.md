@@ -3,8 +3,8 @@
 [akka-http](http://doc.akka.io/docs/akka-stream-and-http-experimental/1.0-M4/scala/http/) is an experimental Akka 
 module, originating from [spray.io](http://spray.io), for building *reactive* REST services with an elegant DSL.
 
-It has almost all of the required functionalities to serve as a backend for e.g. a single-page-application, with one
-exception: session handling. This project aims to fill that gap.
+`akka-http` has almost all of the required functionalities to serve as a backend for e.g. a single-page-application, 
+with one exception: session handling. This project aims to fill that gap.
 
 ## Client-side sessions
 
@@ -13,23 +13,26 @@ exception: session handling. This project aims to fill that gap.
 Session data is stored as a cookie on the client. The content of the cookie is signed using a server secret, so that
 it is not possible to alter the session data on the client side.
  
-All directives require an implicit instance of a `SessionManager[T]`, which can be created by providing a server secret.
-The secret should be a long, random string. You can generate one by running `SessionUtil.randomServerSecret()`. Note
-that when you change the secret, all sessions will become invalid.
+All directives require an implicit instance of a `SessionManager[T]`, which can be created by providing a server 
+secret (via a `SessionConfig`). The secret should be a long, random string unique to each environment your app is
+running in. You can generate one with `SessionUtil.randomServerSecret()`. Note that when you change the secret, 
+all sessions will become invalid.
 
-Sessions are typed, the `T` type parameter determines what data is stored in the session. Basic types like `String`,
-`Int`, `Long`, `Float`, `Double` and `Map[String, String]` are supported out-of-the box. Support for other types
-can be added by providing an implicit `SessionSerializer[T]`. For case classes, it's most convenient to implement
-`ToMapSessionSerializer[T]` which should convert the instance into a `String` map (nested types are not supported on
-purpose, as session data should be small & simple).
+Sessions are typed; the `T` type parameter in `SessionManager[T]` determines what data is stored in the session. 
+Basic types like `String`, `Int`, `Long`, `Float`, `Double` and `Map[String, String]` are supported out-of-the box. 
+Support for other types can be added by providing an implicit `SessionSerializer[T]`. For case classes, it's most 
+convenient to implement `ToMapSessionSerializer[T]` which should convert the instance into a `String` map (nested 
+types are not supported on purpose, as session data should be small & simple).
+
+Here we are creating a manager where the session content will be a single `Long` number:
 
 ````scala
 val sessionConfig = SessionConfig.default("some_very_long_secret_and_random_string")
 implicit val sessionManager = new SessionManager[Long](sessionConfig)
 ````
 
-The basic directives enable you to set, read and invalidate the session. To create a new client-side session, that is,
-send the cookie:
+The basic directives enable you to set, read and invalidate the session. To create a new client-side session (create
+and set a new session cookie), you need to use the `setSession` directive:
 
 ````scala
 path("login") {
@@ -44,8 +47,8 @@ path("login") {
 ````
 
 Note that the size of the cookie is limited to 4KB, so you shouldn't put too much data in there (the signature takes
-about 50 characters). Typically the session will contain the user id, username or a token, and the rest will be read
-on the server (from a database, memcache server etc.)
+about 50 characters). Typically the session contains a user id, username or a token, and the rest is read on the 
+server (from a database, memcache server etc.).
 
 You can require a session to be present or optionally require a session:
 
@@ -111,11 +114,12 @@ The expiry will be appended to the session data (and taken into account in the s
 
 ## CSRF protection
 
-CSRF is an attack where an attacker can construct issue `GET` or `POST` requests on behalf of a user, if the user e.g.
+CSRF is an attack where an attacker issues a `GET` or `POST` request on behalf of a user, if the user e.g.
 clicks on a specially constructed link. See the [OWASP page](https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet)
 or the [Play! docs](https://www.playframework.com/documentation/2.2.x/JavaCsrf) for a thorough introduction.
 
 All web apps should be protected against CSRF attacks. This implementation:
+
 * assumes that `GET` requests are non-mutating (have no side effects)
 * uses double-submit cookies to verify requests
 * requires the token to be set in a custom header or (optionally) in a form field
@@ -123,9 +127,9 @@ All web apps should be protected against CSRF attacks. This implementation:
 
 Note that if the token is passed in a form field, the website isn't protected by HTTPS or you don't control all 
 subdomains, this scheme [can be broken](http://security.stackexchange.com/questions/59470/double-submit-cookies-vulnerabilities/61039#61039).
-Currently, setting a custom header seems to be a secure solution, and is what a number of projects do (
+Currently, setting a custom header seems to be a secure solution, and is what a number of projects do.
 
-It is recommended that a new CSRF token is generated after logging in, see [this SO question](http://security.stackexchange.com/questions/22903/why-refresh-csrf-token-per-form-request).
+It is recommended to generate a new CSRF token after logging in, see [this SO question](http://security.stackexchange.com/questions/22903/why-refresh-csrf-token-per-form-request).
 A new token can be generated using the `setNewCsrfToken` directive.
 
 By default the name of the CSRF cookie and the custom header matches what [AngularJS expects and sets](https://docs.angularjs.org/api/ng/service/$http).
@@ -148,14 +152,14 @@ randomTokenCsrfProtection() {
 
 If you'd like to implement persistent, "remember-me" sessions, you should use the `RememberMeDirectives`, which
 offer persistent variants of the directives found in `ClientSessionDirectives`. When using the remember me directives,
-in addition to an implicit `SessionManager` instance, you need to provide an implementation of `RememberMeStorage`
-trait. That trait has methods to lookup, store and delete remember me tokens. Typically this would use some persistent
+in addition to an implicit `SessionManager` instance, you need to provide an implementation of the `RememberMeStorage`
+trait. This trait has methods to lookup, store and delete remember me tokens. Typically it would use some persistent
 storage.
 
 The tokens are never stored directly, instead only token hashes are passed to the storage. That way even if the token
 database is leaked, it won't be possible to create sessions using the hashes. Moreover, in addition to the token hash,
 a selector value is stored. That value is used to lookup stored hashes; tokens are compared using using a special
-`equals` method, to prevent timing attacks.
+constant-time comparison method, to prevent timing attacks.
 
 Using persistent sessions is almost the same as client-sessions described above, only the directives have the
 additional `persistent` part in their names:
@@ -230,9 +234,9 @@ akka.http.session {
   clientSession {
     cookie {
       name = "_sessiondata"
-      domain = "" 
-      path = "" 
-      maxAge = 0 
+      // domain = "..." 
+      path = "/" 
+      // maxAge = 0 
       secure = false 
       httpOnly = true 
     }
@@ -243,9 +247,9 @@ akka.http.session {
   csrf {
     cookie {
       name = "XSRF-TOKEN" 
-      domain = "" 
+      // domain = "..." 
       path = "/" 
-      maxAge = 0 
+      // maxAge = 0 
       secure = false 
       httpOnly = false 
     }
@@ -255,9 +259,9 @@ akka.http.session {
   rememberMe {
     cookie {
       name = "_rememberme" 
-      domain = "" 
+      // domain = "..." 
       path = "/" 
-      maxAge = 0 
+      // maxAge = 0 
       secure = false 
       httpOnly = true 
     }
