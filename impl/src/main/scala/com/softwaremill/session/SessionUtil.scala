@@ -2,6 +2,7 @@ package com.softwaremill.session
 
 import java.math.BigInteger
 import java.util.concurrent.{TimeUnit, ThreadLocalRandom}
+import javax.xml.bind.DatatypeConverter
 
 import com.typesafe.config.Config
 
@@ -38,5 +39,13 @@ object SessionUtil {
       }
       equal == 0
     }
+  }
+
+  def toHexString(array: Array[Byte]): String = {
+    DatatypeConverter.printHexBinary(array)
+  }
+
+  def hexStringToByte(hexString: String): Array[Byte] = {
+    DatatypeConverter.parseHexBinary(hexString)
   }
 }

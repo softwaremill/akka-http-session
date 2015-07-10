@@ -3,7 +3,7 @@ package com.softwaremill.session
 import java.security.MessageDigest
 import javax.crypto.{Cipher, Mac}
 import javax.crypto.spec.SecretKeySpec
-import javax.xml.bind.DatatypeConverter
+import com.softwaremill.session.SessionUtil._
 
 trait Crypto {
   def sign(message: String, secret: String): String
@@ -18,7 +18,7 @@ object DefaultCrypto extends Crypto {
     val key = secret.getBytes("UTF-8")
     val mac = Mac.getInstance("HmacSHA1")
     mac.init(new SecretKeySpec(key, "HmacSHA1"))
-    Codecs.toHexString(mac.doFinal(message.getBytes("utf-8")))
+    toHexString(mac.doFinal(message.getBytes("utf-8")))
   }
 
   def encrypt(value: String, secret: String): String = {
@@ -27,7 +27,7 @@ object DefaultCrypto extends Crypto {
     val skeySpec = new SecretKeySpec(raw, "AES")
     val cipher = Cipher.getInstance("AES")
     cipher.init(Cipher.ENCRYPT_MODE, skeySpec)
-    Codecs.toHexString(cipher.doFinal(value.getBytes("utf-8")))
+    toHexString(cipher.doFinal(value.getBytes("utf-8")))
   }
 
   def decrypt(value: String, secret: String): String = {
@@ -36,21 +36,11 @@ object DefaultCrypto extends Crypto {
     val skeySpec = new SecretKeySpec(raw, "AES")
     val cipher = Cipher.getInstance("AES")
     cipher.init(Cipher.DECRYPT_MODE, skeySpec)
-    new String(cipher.doFinal(Codecs.hexStringToByte(value)))
+    new String(cipher.doFinal(hexStringToByte(value)))
   }
 
   def hash(value: String): String = {
     val digest = MessageDigest.getInstance("SHA-256")
-    Codecs.toHexString(digest.digest(value.getBytes("UTF-8")))
-  }
-}
-
-object Codecs {
-  def toHexString(array: Array[Byte]): String = {
-    DatatypeConverter.printHexBinary(array)
-  }
-
-  def hexStringToByte(hexString: String): Array[Byte] = {
-    DatatypeConverter.parseHexBinary(hexString)
+    toHexString(digest.digest(value.getBytes("UTF-8")))
   }
 }

@@ -7,8 +7,6 @@ import scala.util.control.NonFatal
 
 import akka.http.scaladsl.model.headers.HttpCookie
 
-// Partly based on the implementation from Play! [[https://github.com/playframework]]
-// see https://github.com/playframework/playframework/blob/master/framework/src/play/src/main/scala/play/api/mvc/Http.scala
 class SessionManager[T](val config: SessionConfig, val crypto: Crypto = DefaultCrypto)
   (implicit val sessionSerializer: SessionSerializer[T])
   extends ClientSessionManager[T] with CsrfManager[T] with RememberMeManager[T] {
@@ -16,6 +14,8 @@ class SessionManager[T](val config: SessionConfig, val crypto: Crypto = DefaultC
   def nowMillis = System.currentTimeMillis()
 }
 
+// Partially based on the implementation from Play! [[https://github.com/playframework]]
+// see https://github.com/playframework/playframework/blob/master/framework/src/play/src/main/scala/play/api/mvc/Http.scala
 trait ClientSessionManager[T] {
   def config: SessionConfig
   def sessionSerializer: SessionSerializer[T]
