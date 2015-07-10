@@ -25,12 +25,12 @@ trait CsrfDirectives {
           if (submitted == cookie) {
             pass
           } else {
-            reject(magnet.manager.csrfTokenInvalidRejection).toDirective[Unit]
+            reject(magnet.manager.tokenInvalidRejection).toDirective[Unit]
           }
         }
       case None =>
         // if a cookie is not set, generating a new one for get requests, rejecting other
-        (get & setNewCsrfToken()).recover(_ => reject(magnet.manager.csrfTokenInvalidRejection))
+        (get & setNewCsrfToken()).recover(_ => reject(magnet.manager.tokenInvalidRejection))
     }
   }
 
@@ -49,7 +49,7 @@ trait CsrfDirectives {
     optionalCookie(magnet.manager.config.csrfCookieConfig.name).map(_.map(_.value))
 
   def setNewCsrfToken[T](magnet: CsrfManagerMagnet[T, Unit]): Directive0 =
-    setCookie(magnet.manager.createCsrfCookie())
+    setCookie(magnet.manager.createCookie())
 }
 
 object CsrfDirectives extends CsrfDirectives
@@ -64,15 +64,27 @@ trait CsrfManagerMagnet[T, In] {
 }
 
 object CsrfManagerMagnet {
-  implicit def apply[T, In](_input: In)(implicit _manager: CsrfManager[T]): CsrfManagerMagnet[T, In] =
+  implicit def forCsrfManager[T, In](_input: In)(implicit _manager: CsrfManager[T]): CsrfManagerMagnet[T, In] =
     new CsrfManagerMagnet[T, In] {
       override val manager = _manager
       override val input = _input
     }
 
-  implicit def apply[T](_input: Unit)(implicit _manager: CsrfManager[T]): CsrfManagerMagnet[T, CsrfCheckMode] =
+  implicit def forCsrfManager[T](_input: Unit)(implicit _manager: CsrfManager[T]): CsrfManagerMagnet[T, CsrfCheckMode] =
     new CsrfManagerMagnet[T, CsrfCheckMode] {
       override val manager = _manager
+      override val input = CheckHeader
+    }
+
+  implicit def forSessionManager[T, In](_input: In)(implicit _manager: SessionManager[T]): CsrfManagerMagnet[T, In] =
+    new CsrfManagerMagnet[T, In] {
+      override val manager = _manager.csrf
+      override val input = _input
+    }
+
+  implicit def forSessionManager[T](_input: Unit)(implicit _manager: SessionManager[T]): CsrfManagerMagnet[T, CsrfCheckMode] =
+    new CsrfManagerMagnet[T, CsrfCheckMode] {
+      override val manager = _manager.csrf
       override val input = CheckHeader
     }
 }

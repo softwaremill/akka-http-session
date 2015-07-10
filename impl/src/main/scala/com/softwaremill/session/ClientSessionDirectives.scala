@@ -9,21 +9,21 @@ trait ClientSessionDirectives {
    * an optional expiry date.
    */
   def setSession[T](magnet: ClientSessionManagerMagnet[T, T]): Directive0 =
-    setCookie(magnet.manager.createClientSessionCookie(magnet.input))
+    setCookie(magnet.manager.createCookie(magnet.input))
 
   /**
    * Read an optional session from the session cookie.
    */
   def optionalSession[T](magnet: ClientSessionManagerMagnet[T, Unit]): Directive1[Option[T]] =
     optionalCookie(magnet.manager.config.clientSessionCookieConfig.name)
-      .map(_.flatMap(p => magnet.manager.decodeClientSession(p.value)))
+      .map(_.flatMap(p => magnet.manager.decode(p.value)))
 
   /**
    * Read a required session from the session cookie.
    */
   def requiredSession[T](magnet: ClientSessionManagerMagnet[T, Unit]): Directive1[T] =
     optionalSession(magnet).flatMap {
-      case None => reject(magnet.manager.clientSessionCookieMissingRejection)
+      case None => reject(magnet.manager.cookieMissingRejection)
       case Some(data) => provide(data)
     }
 
@@ -31,7 +31,7 @@ trait ClientSessionDirectives {
    * Invalidate the session cookie
    */
   def invalidateSession[T](magnet: ClientSessionManagerMagnet[T, Unit]): Directive0 =
-    deleteCookie(magnet.manager.createClientSessionCookieWithValue("").copy(maxAge = None))
+    deleteCookie(magnet.manager.createCookieWithValue("").copy(maxAge = None))
 
   /**
    * Sets the session cookie again with the same data. Useful when using the [[SessionConfig.clientSessionMaxAgeSeconds]]
@@ -60,9 +60,15 @@ trait ClientSessionManagerMagnet[T, In] {
 }
 
 object ClientSessionManagerMagnet {
-  implicit def apply[T, In](_input: In)(implicit _manager: ClientSessionManager[T]): ClientSessionManagerMagnet[T, In] =
+  implicit def forClientManager[T, In](_input: In)(implicit _manager: ClientSessionManager[T]): ClientSessionManagerMagnet[T, In] =
     new ClientSessionManagerMagnet[T, In] {
       override val manager = _manager
+      override val input = _input
+    }
+
+  implicit def forSessionManager[T, In](_input: In)(implicit _manager: SessionManager[T]): ClientSessionManagerMagnet[T, In] =
+    new ClientSessionManagerMagnet[T, In] {
+      override val manager = _manager.clientSession
       override val input = _input
     }
 }
