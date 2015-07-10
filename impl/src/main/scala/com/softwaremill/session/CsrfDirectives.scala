@@ -24,7 +24,8 @@ trait CsrfDirectives {
         get | submittedCsrfToken(magnet).flatMap { submitted =>
           if (submitted == cookie) {
             pass
-          } else {
+          }
+          else {
             reject(magnet.manager.tokenInvalidRejection).toDirective[Unit]
           }
         }

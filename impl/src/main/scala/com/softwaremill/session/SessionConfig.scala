@@ -10,67 +10,68 @@ case class CookieConfig(
   path: Option[String],
   maxAge: Option[Long],
   secure: Boolean,
-  httpOnly: Boolean)
+  httpOnly: Boolean
+)
 
 case class SessionConfig(
-  /**
-   * Should be different on each environment and **kept secret!**. It's used to sign and encrypt cookie data.
-   * This should be a long random string.
-   */
-  serverSecret: String,
-  clientSessionCookieConfig: CookieConfig,
-  /**
-   * If you'd like session cookies to expire as well after a period of inactivity, you can optionally include an
-   * expiration date in the cookie data (expiration will be validated on the server). The expiration date will be
-   * calculated by adding the given number of seconds to the time at which the session is last updated.
-   *
-   * For session cookies, **do not** set the [[CookieConfig.maxAge]], as this will turn it into a persistent cookie
-   * (on the client).
-   */
-  clientSessionMaxAgeSeconds: Option[Long],
-  /**
-   * By default the session data won't be encrypted, only signed with a hash. Set this to true if you'd like the data
-   * to be encrypted using a symmetrical key.
-   */
-  clientSessionEncryptData: Boolean,
-  csrfCookieConfig: CookieConfig,
-  /**
-   * Name of the header or form field in which the CSRF token will be submitted.
-   */
-  csrfSubmittedName: String,
-  rememberMeCookieConfig: CookieConfig
+    /**
+     * Should be different on each environment and **kept secret!**. It's used to sign and encrypt cookie data.
+     * This should be a long random string.
+     */
+    serverSecret: String,
+    clientSessionCookieConfig: CookieConfig,
+    /**
+     * If you'd like session cookies to expire as well after a period of inactivity, you can optionally include an
+     * expiration date in the cookie data (expiration will be validated on the server). The expiration date will be
+     * calculated by adding the given number of seconds to the time at which the session is last updated.
+     *
+     * For session cookies, **do not** set the [[CookieConfig.maxAge]], as this will turn it into a persistent cookie
+     * (on the client).
+     */
+    clientSessionMaxAgeSeconds: Option[Long],
+    /**
+     * By default the session data won't be encrypted, only signed with a hash. Set this to true if you'd like the data
+     * to be encrypted using a symmetrical key.
+     */
+    clientSessionEncryptData: Boolean,
+    csrfCookieConfig: CookieConfig,
+    /**
+     * Name of the header or form field in which the CSRF token will be submitted.
+     */
+    csrfSubmittedName: String,
+    rememberMeCookieConfig: CookieConfig
 ) {
 
-  def withServerSecret(serverSecret: String)                = copy(serverSecret = serverSecret)
+  def withServerSecret(serverSecret: String) = copy(serverSecret = serverSecret)
 
-  def withClientSessionCookieConfig(config: CookieConfig)   = copy(clientSessionCookieConfig = config)
-  def withClientSessionCookieName(name: String)             = copy(clientSessionCookieConfig = clientSessionCookieConfig.copy(name = name))
+  def withClientSessionCookieConfig(config: CookieConfig) = copy(clientSessionCookieConfig = config)
+  def withClientSessionCookieName(name: String) = copy(clientSessionCookieConfig = clientSessionCookieConfig.copy(name = name))
   def withClientSessionCookieDomain(domain: Option[String]) = copy(clientSessionCookieConfig = clientSessionCookieConfig.copy(domain = domain))
-  def withClientSessionCookiePath(path: Option[String])     = copy(clientSessionCookieConfig = clientSessionCookieConfig.copy(path = path))
-  def withClientSessionCookieMaxAge(maxAge: Option[Long])   = copy(clientSessionCookieConfig = clientSessionCookieConfig.copy(maxAge = maxAge))
-  def withClientSessionCookieSecure(secure: Boolean)        = copy(clientSessionCookieConfig = clientSessionCookieConfig.copy(secure = secure))
-  def withClientSessionCookieHttpOnly(httpOnly: Boolean)    = copy(clientSessionCookieConfig = clientSessionCookieConfig.copy(httpOnly = httpOnly))
+  def withClientSessionCookiePath(path: Option[String]) = copy(clientSessionCookieConfig = clientSessionCookieConfig.copy(path = path))
+  def withClientSessionCookieMaxAge(maxAge: Option[Long]) = copy(clientSessionCookieConfig = clientSessionCookieConfig.copy(maxAge = maxAge))
+  def withClientSessionCookieSecure(secure: Boolean) = copy(clientSessionCookieConfig = clientSessionCookieConfig.copy(secure = secure))
+  def withClientSessionCookieHttpOnly(httpOnly: Boolean) = copy(clientSessionCookieConfig = clientSessionCookieConfig.copy(httpOnly = httpOnly))
 
   def withClientSessionMaxAgeSeconds(maxAgeSeconds: Option[Long]) = copy(clientSessionMaxAgeSeconds = maxAgeSeconds)
-  def withClientSessionEncryptData(encryptData: Boolean)    = copy(clientSessionEncryptData = encryptData)
+  def withClientSessionEncryptData(encryptData: Boolean) = copy(clientSessionEncryptData = encryptData)
 
-  def withCsrfCookieConfig(config: CookieConfig)            = copy(csrfCookieConfig = config)
-  def withCsrfCookieName(name: String)                      = copy(csrfCookieConfig = csrfCookieConfig.copy(name = name))
-  def withCsrfCookieDomain(domain: Option[String])          = copy(csrfCookieConfig = csrfCookieConfig.copy(domain = domain))
-  def withCsrfCookiePath(path: Option[String])              = copy(csrfCookieConfig = csrfCookieConfig.copy(path = path))
-  def withCsrfCookieMaxAge(maxAge: Option[Long])            = copy(csrfCookieConfig = csrfCookieConfig.copy(maxAge = maxAge))
-  def withCsrfCookieSecure(secure: Boolean)                 = copy(csrfCookieConfig = csrfCookieConfig.copy(secure = secure))
-  def withCsrfCookieHttpOnly(httpOnly: Boolean)             = copy(csrfCookieConfig = csrfCookieConfig.copy(httpOnly = httpOnly))
+  def withCsrfCookieConfig(config: CookieConfig) = copy(csrfCookieConfig = config)
+  def withCsrfCookieName(name: String) = copy(csrfCookieConfig = csrfCookieConfig.copy(name = name))
+  def withCsrfCookieDomain(domain: Option[String]) = copy(csrfCookieConfig = csrfCookieConfig.copy(domain = domain))
+  def withCsrfCookiePath(path: Option[String]) = copy(csrfCookieConfig = csrfCookieConfig.copy(path = path))
+  def withCsrfCookieMaxAge(maxAge: Option[Long]) = copy(csrfCookieConfig = csrfCookieConfig.copy(maxAge = maxAge))
+  def withCsrfCookieSecure(secure: Boolean) = copy(csrfCookieConfig = csrfCookieConfig.copy(secure = secure))
+  def withCsrfCookieHttpOnly(httpOnly: Boolean) = copy(csrfCookieConfig = csrfCookieConfig.copy(httpOnly = httpOnly))
 
-  def withCsrfSubmittedName(csrfSubmittedName: String)      = copy(csrfSubmittedName = csrfSubmittedName)
+  def withCsrfSubmittedName(csrfSubmittedName: String) = copy(csrfSubmittedName = csrfSubmittedName)
 
-  def withRememberMeCookieConfig(config: CookieConfig)      = copy(rememberMeCookieConfig = config)
-  def withRememberMeCookieName(name: String)                = copy(rememberMeCookieConfig = rememberMeCookieConfig.copy(name = name))
-  def withRememberMeCookieDomain(domain: Option[String])    = copy(rememberMeCookieConfig = rememberMeCookieConfig.copy(domain = domain))
-  def withRememberMeCookiePath(path: Option[String])        = copy(rememberMeCookieConfig = rememberMeCookieConfig.copy(path = path))
-  def withRememberMeCookieMaxAge(maxAge: Option[Long])      = copy(rememberMeCookieConfig = rememberMeCookieConfig.copy(maxAge = maxAge))
-  def withRememberMeCookieSecure(secure: Boolean)           = copy(rememberMeCookieConfig = rememberMeCookieConfig.copy(secure = secure))
-  def withRememberMeCookieHttpOnly(httpOnly: Boolean)       = copy(rememberMeCookieConfig = rememberMeCookieConfig.copy(httpOnly = httpOnly))
+  def withRememberMeCookieConfig(config: CookieConfig) = copy(rememberMeCookieConfig = config)
+  def withRememberMeCookieName(name: String) = copy(rememberMeCookieConfig = rememberMeCookieConfig.copy(name = name))
+  def withRememberMeCookieDomain(domain: Option[String]) = copy(rememberMeCookieConfig = rememberMeCookieConfig.copy(domain = domain))
+  def withRememberMeCookiePath(path: Option[String]) = copy(rememberMeCookieConfig = rememberMeCookieConfig.copy(path = path))
+  def withRememberMeCookieMaxAge(maxAge: Option[Long]) = copy(rememberMeCookieConfig = rememberMeCookieConfig.copy(maxAge = maxAge))
+  def withRememberMeCookieSecure(secure: Boolean) = copy(rememberMeCookieConfig = rememberMeCookieConfig.copy(secure = secure))
+  def withRememberMeCookieHttpOnly(httpOnly: Boolean) = copy(rememberMeCookieConfig = rememberMeCookieConfig.copy(httpOnly = httpOnly))
 }
 
 object SessionConfig {

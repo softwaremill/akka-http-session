@@ -7,8 +7,7 @@ import scala.util.control.NonFatal
 
 import akka.http.scaladsl.model.headers.HttpCookie
 
-class SessionManager[T](val config: SessionConfig, crypto: Crypto = DefaultCrypto)
-  (implicit val sessionSerializer: SessionSerializer[T]) { manager =>
+class SessionManager[T](val config: SessionConfig, crypto: Crypto = DefaultCrypto)(implicit val sessionSerializer: SessionSerializer[T]) { manager =>
 
   val clientSession: ClientSessionManager[T] = new ClientSessionManager[T] {
     override def config = manager.config
@@ -48,7 +47,8 @@ trait ClientSessionManager[T] {
     domain = config.clientSessionCookieConfig.domain,
     path = config.clientSessionCookieConfig.path,
     secure = config.clientSessionCookieConfig.secure,
-    httpOnly = config.clientSessionCookieConfig.httpOnly)
+    httpOnly = config.clientSessionCookieConfig.httpOnly
+  )
 
   def encode(data: T): String = {
     // adding an "x" so that the string is never empty, even if there's no data
@@ -80,8 +80,10 @@ trait ClientSessionManager[T] {
 
       if (nowMillis < expiry && SessionUtil.constantTimeEquals(splitted(0), crypto.sign(serialized, config.serverSecret))) {
         Some(sessionSerializer.deserialize(serialized.substring(1))) // removing the x
-      } else None
-    } catch {
+      }
+      else None
+    }
+    catch {
       // fail gracefully is the session cookie is corrupted
       case NonFatal(_) => None
     }
@@ -104,7 +106,8 @@ trait CsrfManager[T] {
     domain = config.csrfCookieConfig.domain,
     path = config.csrfCookieConfig.path,
     secure = config.csrfCookieConfig.secure,
-    httpOnly = config.csrfCookieConfig.httpOnly)
+    httpOnly = config.csrfCookieConfig.httpOnly
+  )
 }
 
 trait RememberMeManager[T] {
@@ -122,8 +125,7 @@ trait RememberMeManager[T] {
 
   def createCookieValue(selector: String, token: String): String = s"$selector:$token"
 
-  def createAndStoreToken(storage: RememberMeStorage[T])(session: T, existing: Option[String])
-    (implicit ec: ExecutionContext): Future[String] = {
+  def createAndStoreToken(storage: RememberMeStorage[T])(session: T, existing: Option[String])(implicit ec: ExecutionContext): Future[String] = {
 
     val selector = createSelector()
     val token = createToken()
@@ -153,10 +155,10 @@ trait RememberMeManager[T] {
     domain = config.rememberMeCookieConfig.domain,
     path = config.rememberMeCookieConfig.path,
     secure = config.rememberMeCookieConfig.secure,
-    httpOnly = config.rememberMeCookieConfig.httpOnly)
+    httpOnly = config.rememberMeCookieConfig.httpOnly
+  )
 
-  def sessionFromCookie(storage: RememberMeStorage[T])(cookieValue: String)
-    (implicit ec: ExecutionContext): Future[Option[T]] = {
+  def sessionFromCookie(storage: RememberMeStorage[T])(cookieValue: String)(implicit ec: ExecutionContext): Future[Option[T]] = {
 
     extractSelectorAndToken(cookieValue) match {
       case Some((selector, token)) =>
@@ -164,14 +166,15 @@ trait RememberMeManager[T] {
           if (SessionUtil.constantTimeEquals(crypto.hash(token), lookupResult.tokenHash) &&
             lookupResult.expires > nowMillis) {
             Some(lookupResult.createSession())
-          } else {
+          }
+          else {
             None
           }
         })
       case None => Future.successful(None)
     }
   }
-  
+
   def removeToken(storage: RememberMeStorage[T])(cookieValue: String)(implicit ec: ExecutionContext): Future[Unit] = {
     extractSelectorAndToken(cookieValue) match {
       case Some((s, _)) => storage.remove(s)

@@ -94,9 +94,9 @@ object Example extends App with StrictLogging {
   bindingFuture
     .flatMap(_.unbind())
     .onComplete { _ =>
-    system.shutdown()
-    println("Server stopped")
-  }
+      system.shutdown()
+      println("Server stopped")
+    }
 }
 
 case class ExampleSession(username: String)

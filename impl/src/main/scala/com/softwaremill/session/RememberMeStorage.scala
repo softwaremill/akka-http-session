@@ -16,7 +16,8 @@ case class RememberMeData[T](
   /**
    * Timestamp
    */
-  expires: Long)
+  expires: Long
+)
 
 case class RememberMeLookupResult[T](
   tokenHash: String,
@@ -24,7 +25,8 @@ case class RememberMeLookupResult[T](
    * Timestamp
    */
   expires: Long,
-  createSession: () => T)
+  createSession: () => T
+)
 
 /**
  * In-memory remember me storage implementation. Useful for testing.

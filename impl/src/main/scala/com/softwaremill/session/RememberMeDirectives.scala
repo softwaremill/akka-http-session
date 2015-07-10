@@ -28,15 +28,15 @@ trait RememberMeDirectives {
   def optionalPersistentSession[T](magnet: RememberMeStorageMagnet[T, Unit]): Directive1[Option[T]] = {
     import magnet._
     optionalSession().flatMap {
-      case s@Some(_) => provide(s)
+      case s @ Some(_) => provide(s)
       case None => optionalCookie(magnet.rememberMeManager.config.rememberMeCookieConfig.name).flatMap {
         case None => provide(None)
         case Some(cookie) =>
           onSuccess(magnet.rememberMeManager.sessionFromCookie(magnet.storage)(cookie.value))
             .flatMap {
-            case None => provide(None)
-            case s@Some(session) => setPersistentSession(session) & provide(s: Option[T])
-          }
+              case None => provide(None)
+              case s @ Some(session) => setPersistentSession(session) & provide(s: Option[T])
+            }
       }
     }
   }
@@ -105,11 +105,11 @@ trait RememberMeStorageMagnet[T, In] {
 }
 
 object RememberMeStorageMagnet {
-  implicit def forSeparateManagers[T, In](_input: In)
-    (implicit _storage: RememberMeStorage[T],
-      _rememberMeManager: RememberMeManager[T],
-      _clientSessionManager: ClientSessionManager[T],
-      _ec: ExecutionContext): RememberMeStorageMagnet[T, In] =
+  implicit def forSeparateManagers[T, In](_input: In)(implicit
+    _storage: RememberMeStorage[T],
+    _rememberMeManager: RememberMeManager[T],
+    _clientSessionManager: ClientSessionManager[T],
+    _ec: ExecutionContext): RememberMeStorageMagnet[T, In] =
     new RememberMeStorageMagnet[T, In] {
       override val storage = _storage
       override val rememberMeManager = _rememberMeManager
@@ -118,10 +118,10 @@ object RememberMeStorageMagnet {
       override val input = _input
     }
 
-  implicit def forSessionManager[T, In](_input: In)
-    (implicit _storage: RememberMeStorage[T],
-      _manager: SessionManager[T],
-      _ec: ExecutionContext): RememberMeStorageMagnet[T, In] =
+  implicit def forSessionManager[T, In](_input: In)(implicit
+    _storage: RememberMeStorage[T],
+    _manager: SessionManager[T],
+    _ec: ExecutionContext): RememberMeStorageMagnet[T, In] =
     new RememberMeStorageMagnet[T, In] {
       override val storage = _storage
       override val rememberMeManager = _manager.rememberMe

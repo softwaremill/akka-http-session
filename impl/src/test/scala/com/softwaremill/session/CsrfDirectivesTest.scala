@@ -28,9 +28,9 @@ class CsrfDirectivesTest extends FlatSpec with ScalatestRouteTest with ShouldMat
               complete { "ok" }
             }
           } ~
-          path("transfer_money") {
-            complete { "ok" }
-          }
+            path("transfer_money") {
+              complete { "ok" }
+            }
         }
     }
 

@@ -1,9 +1,15 @@
+import scalariform.formatter.preferences._
 
-lazy val commonSettings = Seq(
+lazy val commonSettings = scalariformSettings ++ Seq(
   organization := "com.softwaremill",
   version := "0.1-SNAPSHOT",
   scalaVersion := "2.11.6",
   scalacOptions ++= Seq("-unchecked", "-deprecation"),
+  ScalariformKeys.preferences := ScalariformKeys.preferences.value
+    .setPreference(DoubleIndentClassDeclaration, true)
+    .setPreference(PreserveSpaceBeforeArguments, true)
+    .setPreference(CompactControlReadability, true)
+    .setPreference(SpacesAroundMultiImports, false),
   // Sonatype OSS deployment
   publishTo <<= version { (v: String) =>
     val nexus = "https://oss.sonatype.org/"
