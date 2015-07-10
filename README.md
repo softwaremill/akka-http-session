@@ -83,7 +83,8 @@ path("logout") {
 }
 ````
 
-You can try out a running example by running `com.softwaremill.example.Example` in the `example` project.
+You can try out a running example by running `com.softwaremill.example.Example` in the `example` project, or
+[browse the source](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/Example.scala).
 
 ### Encrypting the session
 

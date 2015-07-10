@@ -69,7 +69,7 @@ object Example extends App with StrictLogging {
 
   val bindingFuture = Http().bindAndHandle(routes, "localhost", 8080)
 
-  println("Server started, press enter to stop")
+  println("Server started, press enter to stop. Visit http://localhost:8080 to see the demo.")
   StdIn.readLine()
 
   import system.dispatcher
