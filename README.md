@@ -231,7 +231,8 @@ keys are:
 
 ````
 akka.http.session {
-  // The only required config key. All other are optional, and the values below are defaults.
+  // The only required config key. 
+  // All other are optional, and the values below are defaults.
   serverSecret = "some_very_long_secret_and_random_string" 
   clientSession {
     cookie {
