@@ -215,6 +215,22 @@ which expire fast, and weaker-authenticated re-creatable sessions (as described 
 When touching an existing session, the remember me cookie will not be re-generated and extended, only the session
 cookie.
 
+### Conditional persistent sessions
+
+Usually you want to use persistent session conditionally, depending on user choice, if e.g. a "remember me" checkbox
+is ticked. If that's the case, you should use the `persistent` directive variants for reading sessions (they work
+the same for persistent and normal sessions), taking care to use the correct variant when creating the sessions,
+so that the remember-me cookie is created conditionally (so using either `setSession` or `setPersistentSession`).
+
+As the way of specifying if a session should be persistent is app-specific, you should implement that directive
+yourself. If, for example, you are using a boolean query parameter, the directive may look like this:
+
+````scala
+def myAppSetSession(d: MySessionData) = parameter("remember_me".as[Boolean]).flatMap {
+  rm => if (rm) setPersistentSession(d) else setSession(d)
+}
+````
+
 ## Customizing cookie parameters
 
 The default config has reasonable defaults concerning the cookie that is generated, you can however customize it by
