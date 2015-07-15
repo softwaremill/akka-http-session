@@ -310,8 +310,8 @@ stored in Rails
 
 ## Using from SBT
 
-Currently depends on `akka-http` version `1.0-RC4`.
+Currently depends on `akka-http` version `1.0`.
 
 ````scala
-libraryDependencies += "com.softwaremill" %% "akka-http-session" % "0.1.1"
+libraryDependencies += "com.softwaremill" %% "akka-http-session" % "0.1.2"
 ````
