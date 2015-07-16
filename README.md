@@ -1,5 +1,7 @@
 # Client-side HTTP sessions for akka-http
 
+[![Join the chat at https://gitter.im/softwaremill/akka-http-session](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/softwaremill/akka-http-session?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 [akka-http](http://doc.akka.io/docs/akka-stream-and-http-experimental/1.0-M4/scala/http/) is an experimental Akka 
 module, originating from [spray.io](http://spray.io), for building *reactive* REST services with an elegant DSL.
 
