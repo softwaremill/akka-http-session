@@ -52,7 +52,8 @@ Note that the size of the cookie is limited to 4KB, so you shouldn't put too muc
 about 50 characters). Typically the session contains a user id, username or a token, and the rest is read on the 
 server (from a database, memcache server etc.).
 
-You can require a session to be present or optionally require a session:
+You can require a session to be present, optionally require a session or get a full description of possible session 
+decode outcomes:
 
 ````scala
 path("secret") {
@@ -65,6 +66,15 @@ path("secret") {
 path("open") {
   get {
     optionalSession() { session => // type: Option[Long] (Option[T])
+      complete { "small treasure" }
+    }
+  }
+} ~
+path("detail") {
+  get {
+    // type: SessionResult[Long] (SessionResult[T])
+    // which can be: DecodedFromCookie, Expired, Corrupt, NoSession
+    session() { session => 
       complete { "small treasure" }
     }
   }
@@ -199,7 +209,16 @@ path("open") {
       complete { "small treasure" }
     }
   }
-} 
+} ~
+path("detail") {
+  get {         
+    // type: SessionResult[Long] (SessionResult[T])
+    // which can be: DecodedFromCookie, CreatedFromToken, Expired, Corrupt, TokenNotFound, NoSession
+    persistentSession() { session => 
+      complete { "small treasure" }
+    }
+  }
+}
 ````
 
 When a session expires or the session cookie is not present, but the remember me cookie is, a new session will be
@@ -315,5 +334,5 @@ stored in Rails
 Currently depends on `akka-http` version `1.0`.
 
 ````scala
-libraryDependencies += "com.softwaremill" %% "akka-http-session" % "0.1.2"
+libraryDependencies += "com.softwaremill" %% "akka-http-session" % "0.1.3"
 ````

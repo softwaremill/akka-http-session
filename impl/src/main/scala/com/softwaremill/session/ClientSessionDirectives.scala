@@ -12,11 +12,21 @@ trait ClientSessionDirectives {
     setCookie(magnet.manager.createCookie(magnet.input))
 
   /**
+   * Read a session from the session cookie, wrapped in [[SessionResult]] describing the possible
+   * success/failure outcomes.
+   */
+  def session[T](magnet: ClientSessionManagerMagnet[T, Unit]): Directive1[SessionResult[T]] =
+    optionalCookie(magnet.manager.config.clientSessionCookieConfig.name)
+      .map {
+        case Some(cookie) => magnet.manager.decode(cookie.value)
+        case None => SessionResult.NoSession
+      }
+
+  /**
    * Read an optional session from the session cookie.
    */
   def optionalSession[T](magnet: ClientSessionManagerMagnet[T, Unit]): Directive1[Option[T]] =
-    optionalCookie(magnet.manager.config.clientSessionCookieConfig.name)
-      .map(_.flatMap(p => magnet.manager.decode(p.value)))
+    session(magnet).map(_.toOption)
 
   /**
    * Read a required session from the session cookie.

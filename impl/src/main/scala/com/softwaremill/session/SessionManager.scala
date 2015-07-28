@@ -65,7 +65,7 @@ trait ClientSessionManager[T] {
     s"${crypto.sign(serialized, config.serverSecret)}-$encrypted"
   }
 
-  def decode(data: String): Option[T] = {
+  def decode(data: String): SessionResult[T] = {
     def extractExpiry(data: String): (Long, String) = {
       config.clientSessionMaxAgeSeconds.fold((Long.MaxValue, data)) { maxAge =>
         val splitted = data.split("-", 2)
@@ -79,14 +79,19 @@ trait ClientSessionManager[T] {
 
       val (expiry, serialized) = extractExpiry(decrypted)
 
-      if (nowMillis < expiry && SessionUtil.constantTimeEquals(splitted(0), crypto.sign(serialized, config.serverSecret))) {
-        Some(sessionSerializer.deserialize(serialized.substring(1))) // removing the x
+      if (nowMillis > expiry) {
+        SessionResult.Expired
       }
-      else None
+      else if (!SessionUtil.constantTimeEquals(splitted(0), crypto.sign(serialized, config.serverSecret))) {
+        SessionResult.Corrupt
+      }
+      else {
+        SessionResult.DecodedFromCookie(sessionSerializer.deserialize(serialized.substring(1))) // removing the x
+      }
     }
     catch {
       // fail gracefully is the session cookie is corrupted
-      case NonFatal(_) => None
+      case NonFatal(_) => SessionResult.Corrupt
     }
   }
 
@@ -163,19 +168,25 @@ trait RememberMeManager[T] {
     httpOnly = config.rememberMeCookieConfig.httpOnly
   )
 
-  def sessionFromCookie(cookieValue: String)(implicit ec: ExecutionContext): Future[Option[T]] = {
+  def sessionFromCookie(cookieValue: String)(implicit ec: ExecutionContext): Future[SessionResult[T]] = {
     decodeSelectorAndToken(cookieValue) match {
       case Some((selector, token)) =>
-        storage.lookup(selector).map(_.flatMap { lookupResult =>
-          if (SessionUtil.constantTimeEquals(crypto.hash(token), lookupResult.tokenHash) &&
-            lookupResult.expires > nowMillis) {
-            Some(lookupResult.createSession())
-          }
-          else {
-            None
-          }
-        })
-      case None => Future.successful(None)
+        storage.lookup(selector).map {
+          case Some(lookupResult) =>
+            if (lookupResult.expires < nowMillis) {
+              SessionResult.Expired
+            }
+            else if (!SessionUtil.constantTimeEquals(crypto.hash(token), lookupResult.tokenHash)) {
+              SessionResult.Corrupt
+            }
+            else {
+              SessionResult.CreatedFromToken(lookupResult.createSession())
+            }
+
+          case None =>
+            SessionResult.TokenNotFound
+        }
+      case None => Future.successful(SessionResult.Corrupt)
     }
   }
 
@@ -185,4 +196,26 @@ trait RememberMeManager[T] {
       case None => Future.successful(())
     }
   }
+}
+
+sealed trait SessionResult[+T] {
+  def toOption: Option[T]
+}
+
+object SessionResult {
+  trait SessionValue[T] extends SessionResult[T] {
+    def session: T
+    def toOption: Option[T] = Some(session)
+  }
+  trait NoSessionValue[T] extends SessionResult[T] {
+    def toOption: Option[T] = None
+  }
+
+  case class DecodedFromCookie[T](session: T) extends SessionResult[T] with SessionValue[T]
+  case class CreatedFromToken[T](session: T) extends SessionResult[T] with SessionValue[T]
+
+  case object NoSession extends SessionResult[Nothing] with NoSessionValue[Nothing]
+  case object TokenNotFound extends SessionResult[Nothing] with NoSessionValue[Nothing]
+  case object Expired extends SessionResult[Nothing] with NoSessionValue[Nothing]
+  case object Corrupt extends SessionResult[Nothing] with NoSessionValue[Nothing]
 }

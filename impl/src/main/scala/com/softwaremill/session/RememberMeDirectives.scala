@@ -22,24 +22,33 @@ trait RememberMeDirectives {
   }
 
   /**
+   * Same as [[ClientSessionDirectives.session]], but also tries to create a new session based on the remember
+   * me cookie, if no session is present. Results are wrapped in a [[SessionResult]] describing the possible
+   * success/failure outcomes.
+   */
+  def persistentSession[T](magnet: RememberMeStorageMagnet[T, Unit]): Directive1[SessionResult[T]] = {
+    import magnet._
+    session().flatMap {
+      case SessionResult.NoSession =>
+        optionalCookie(magnet.rememberMeManager.config.rememberMeCookieConfig.name).flatMap {
+          case None => provide(SessionResult.NoSession)
+          case Some(cookie) =>
+            onSuccess(magnet.rememberMeManager.sessionFromCookie(cookie.value))
+              .flatMap {
+                case s @ SessionResult.CreatedFromToken(session) => setPersistentSession(session) & provide(s: SessionResult[T])
+                case s => provide(s)
+              }
+        }
+      case s => provide(s)
+    }
+  }
+
+  /**
    * Same as [[ClientSessionDirectives.optionalSession]], but also tries to create a new session based on the remember
    * me cookie, if no session is present.
    */
-  def optionalPersistentSession[T](magnet: RememberMeStorageMagnet[T, Unit]): Directive1[Option[T]] = {
-    import magnet._
-    optionalSession().flatMap {
-      case s @ Some(_) => provide(s)
-      case None => optionalCookie(magnet.rememberMeManager.config.rememberMeCookieConfig.name).flatMap {
-        case None => provide(None)
-        case Some(cookie) =>
-          onSuccess(magnet.rememberMeManager.sessionFromCookie(cookie.value))
-            .flatMap {
-              case None => provide(None)
-              case s @ Some(session) => setPersistentSession(session) & provide(s: Option[T])
-            }
-      }
-    }
-  }
+  def optionalPersistentSession[T](magnet: RememberMeStorageMagnet[T, Unit]): Directive1[Option[T]] =
+    persistentSession(magnet).map(_.toOption)
 
   /**
    * Same as [[ClientSessionDirectives.requiredSession]], but also tries to create a new session based on the remember
