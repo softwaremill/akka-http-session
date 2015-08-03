@@ -2,11 +2,13 @@ package com.softwaremill.session
 
 import scala.collection.mutable
 import scala.concurrent.Future
+import scala.concurrent.duration.Duration
 
 trait RememberMeStorage[T] {
   def lookup(selector: String): Future[Option[RememberMeLookupResult[T]]]
   def store(data: RememberMeData[T]): Future[Unit]
   def remove(selector: String): Future[Unit]
+  def schedule[S](after: Duration)(op: => Future[S]): Unit
 }
 
 case class RememberMeData[T](
@@ -55,6 +57,12 @@ trait InMemoryRememberMeStorage[T] extends RememberMeStorage[T] {
   override def remove(selector: String) = {
     log(s"Removing token for selector: $selector")
     Future.successful(_store.remove(selector))
+  }
+
+  override def schedule[S](after: Duration)(op: => Future[S]) = {
+    log("Running scheduled operation immediately")
+    op
+    Future.successful(())
   }
 
   def log(msg: String): Unit

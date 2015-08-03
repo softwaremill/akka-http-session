@@ -301,11 +301,11 @@ akka.http.session {
       name = "_rememberme" 
       // domain = "..." 
       path = "/" 
-      // maxAge = 0 
+      maxAge = 30 days 
       secure = false 
       httpOnly = true 
     }
-    maxAgeSeconds = 30 days
+    removeUsedTokenAfter = 5 seconds
   }
 }
 ````
@@ -334,5 +334,5 @@ stored in Rails
 Currently depends on `akka-http` version `1.0`.
 
 ````scala
-libraryDependencies += "com.softwaremill" %% "akka-http-session" % "0.1.3"
+libraryDependencies += "com.softwaremill" %% "akka-http-session" % "0.1.4"
 ````

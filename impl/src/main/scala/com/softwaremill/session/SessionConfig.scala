@@ -39,7 +39,12 @@ case class SessionConfig(
      * Name of the header or form field in which the CSRF token will be submitted.
      */
     csrfSubmittedName: String,
-    rememberMeCookieConfig: CookieConfig
+    rememberMeCookieConfig: CookieConfig,
+    /**
+     * When a remember me token is used to log in, a new one is generated. The old one should be deleted with a delay,
+     * to properly serve concurrent requests using the old token.
+     */
+    rememberMeRemoveUsedTokenAfter: Long
 ) {
 
   def withServerSecret(serverSecret: String) = copy(serverSecret = serverSecret)
@@ -72,6 +77,7 @@ case class SessionConfig(
   def withRememberMeCookieMaxAge(maxAge: Option[Long]) = copy(rememberMeCookieConfig = rememberMeCookieConfig.copy(maxAge = maxAge))
   def withRememberMeCookieSecure(secure: Boolean) = copy(rememberMeCookieConfig = rememberMeCookieConfig.copy(secure = secure))
   def withRememberMeCookieHttpOnly(httpOnly: Boolean) = copy(rememberMeCookieConfig = rememberMeCookieConfig.copy(httpOnly = httpOnly))
+  def withRememberMeRemoveUsedTokenAfter(rememberMeRemoveUsedTokenAfter: Long) = copy(rememberMeRemoveUsedTokenAfter = rememberMeRemoveUsedTokenAfter)
 }
 
 object SessionConfig {
@@ -109,7 +115,8 @@ object SessionConfig {
         maxAge = rememberMeConfig.getDurationSecondsOption("cookie.maxAge").orElse(Some(60L * 60L * 24L * 30L)),
         secure = rememberMeConfig.getBooleanOption("cookie.secure").getOrElse(false),
         httpOnly = rememberMeConfig.getBooleanOption("cookie.httpOnly").getOrElse(true)
-      )
+      ),
+      rememberMeRemoveUsedTokenAfter = rememberMeConfig.getDurationSecondsOption("removeUsedTokenAfter").getOrElse(5L)
     )
   }
 
@@ -145,6 +152,7 @@ object SessionConfig {
    *     secure = false
    *     httpOnly = true
    *   }
+   *   removeUsedTokenAfter = 5 seconds
    * }
    * </pre>
    *

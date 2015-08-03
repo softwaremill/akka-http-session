@@ -1,7 +1,10 @@
 package com.softwaremill.session
 
+import java.util.concurrent.TimeUnit
+
 import akka.http.scaladsl.server.AuthorizationFailedRejection
 
+import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
@@ -133,7 +136,7 @@ trait RememberMeManager[T] {
   def encodeSelectorAndToken(selector: String, token: String): String = s"$selector:$token"
 
   /**
-   * Creates and stores a new token, removing the old one, if it exists.
+   * Creates and stores a new token, removing the old one after a configured period of time, if it exists.
    */
   def rotateToken(session: T, existing: Option[String])(implicit ec: ExecutionContext): Future[String] = {
 
@@ -147,14 +150,14 @@ trait RememberMeManager[T] {
       expires = nowMillis + config.rememberMeCookieConfig.maxAge.getOrElse(0L) * 1000L
     )).map(_ => encodeSelectorAndToken(selector, token))
 
-    existing match {
-      case None => storeFuture
-      case Some(cookieValue) =>
-        decodeSelectorAndToken(cookieValue) match {
-          case Some((s, _)) => storeFuture.flatMap(v => storage.remove(s).map(_ => v))
-          case None => storeFuture
+    existing.flatMap(decodeSelectorAndToken).foreach {
+      case (s, _) =>
+        storage.schedule(Duration(config.rememberMeRemoveUsedTokenAfter, TimeUnit.SECONDS)) {
+          storage.remove(s)
         }
     }
+
+    storeFuture
   }
 
   def createCookie(value: String) = HttpCookie(
@@ -171,20 +174,20 @@ trait RememberMeManager[T] {
   def sessionFromCookie(cookieValue: String)(implicit ec: ExecutionContext): Future[SessionResult[T]] = {
     decodeSelectorAndToken(cookieValue) match {
       case Some((selector, token)) =>
-        storage.lookup(selector).map {
+        storage.lookup(selector).flatMap {
           case Some(lookupResult) =>
             if (lookupResult.expires < nowMillis) {
-              SessionResult.Expired
+              storage.remove(selector).map(_ => SessionResult.Expired)
             }
             else if (!SessionUtil.constantTimeEquals(crypto.hash(token), lookupResult.tokenHash)) {
-              SessionResult.Corrupt
+              storage.remove(selector).map(_ => SessionResult.Corrupt)
             }
             else {
-              SessionResult.CreatedFromToken(lookupResult.createSession())
+              Future.successful(SessionResult.CreatedFromToken(lookupResult.createSession()))
             }
 
           case None =>
-            SessionResult.TokenNotFound
+            Future.successful(SessionResult.TokenNotFound)
         }
       case None => Future.successful(SessionResult.Corrupt)
     }
