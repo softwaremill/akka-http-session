@@ -2,8 +2,8 @@ import scalariform.formatter.preferences._
 
 lazy val commonSettings = scalariformSettings ++ Seq(
   organization := "com.softwaremill",
-  version := "0.1.4",
-  scalaVersion := "2.11.6",
+  version := "0.1.4-2.0-M1",
+  scalaVersion := "2.11.7",
   scalacOptions ++= Seq("-unchecked", "-deprecation"),
   ScalariformKeys.preferences := ScalariformKeys.preferences.value
     .setPreference(DoubleIndentClassDeclaration, true)
@@ -36,7 +36,7 @@ lazy val commonSettings = scalariformSettings ++ Seq(
   homepage := Some(new java.net.URL("http://softwaremill.com"))
 )
 
-val akkaHttpVersion = "1.0"
+val akkaHttpVersion = "2.0-M1"
 
 lazy val rootProject = (project in file("."))
   .settings(commonSettings: _*)
