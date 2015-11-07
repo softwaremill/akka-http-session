@@ -35,7 +35,7 @@ object Example extends App with StrictLogging {
               entity(as[String]) { body =>
                 logger.info(s"Logging in $body")
 
-                setPersistentSession(ExampleSession(body)) {
+                setSession(refreshable, ExampleSession(body)) {
                   setNewCsrfToken() { ctx => ctx.complete("ok") }
                 }
               }
@@ -44,8 +44,8 @@ object Example extends App with StrictLogging {
             // This should be protected and accessible only when logged in
             path("do_logout") {
               post {
-                requiredPersistentSession() { session =>
-                  invalidatePersistentSession() { ctx =>
+                requiredSession(refreshable) { session =>
+                  invalidateSession(refreshable) { ctx =>
                     logger.info(s"Logging out $session")
                     ctx.complete("ok")
                   }
@@ -55,7 +55,7 @@ object Example extends App with StrictLogging {
             // This should be protected and accessible only when logged in
             path("current_login") {
               get {
-                requiredPersistentSession() { session => ctx =>
+                requiredSession(refreshable) { session => ctx =>
                   logger.info("Current session: " + session)
                   ctx.complete(session.username)
                 }

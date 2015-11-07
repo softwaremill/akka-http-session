@@ -5,14 +5,14 @@ import akka.http.scaladsl.model.headers.{Cookie, `Set-Cookie`}
 import akka.http.scaladsl.server.AuthorizationFailedRejection
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import com.softwaremill.session.RememberMeDirectives._
+import com.softwaremill.session.ClientSessionDirectives._
 import org.scalatest.{ShouldMatchers, FlatSpec}
 
 class RememberMeDirectivesTest extends FlatSpec with ScalatestRouteTest with ShouldMatchers {
 
   import TestData._
-  val sessionCookieName = manager.config.clientSessionCookieConfig.name
-  val cookieName = manager.config.rememberMeCookieConfig.name
+  val sessionCookieName = sessionConfig.clientSessionCookieConfig.name
+  val cookieName = sessionConfig.rememberMeCookieConfig.name
 
   implicit val storage = new InMemoryRememberMeStorage[Map[String, String]] {
     override def log(msg: String) = println(msg)
@@ -20,27 +20,27 @@ class RememberMeDirectivesTest extends FlatSpec with ScalatestRouteTest with Sho
 
   def routes(implicit manager: SessionManager[Map[String, String]]) = get {
     path("set") {
-      setPersistentSession(Map("k1" -> "v1")) {
+      setSession(refreshable, Map("k1" -> "v1")) {
         complete { "ok" }
       }
     } ~
       path("getOpt") {
-        optionalPersistentSession() { session =>
+        optionalSession(refreshable) { session =>
           complete { session.toString }
         }
       } ~
       path("getReq") {
-        requiredPersistentSession() { session =>
+        requiredSession(refreshable) { session =>
           complete { session.toString }
         }
       } ~
       path("touchReq") {
-        touchRequiredPersistentSession() { session =>
+        touchRequiredSession(refreshable) { session =>
           complete { session.toString }
         }
       } ~
       path("invalidate") {
-        invalidatePersistentSession() {
+        invalidateSession(refreshable) {
           complete { "ok" }
         }
       }

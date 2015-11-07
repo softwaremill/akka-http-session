@@ -10,7 +10,7 @@ import scala.util.control.NonFatal
 
 import akka.http.scaladsl.model.headers.HttpCookie
 
-class SessionManager[T](val config: SessionConfig, crypto: Crypto = DefaultCrypto)(implicit val sessionSerializer: SessionSerializer[T]) { manager =>
+class SessionManager[T](val config: SessionConfig, crypto: Crypto = DefaultCrypto)(implicit sessionSerializer: SessionSerializer[T]) { manager =>
 
   val clientSession: ClientSessionManager[T] = new ClientSessionManager[T] {
     override def config = manager.config

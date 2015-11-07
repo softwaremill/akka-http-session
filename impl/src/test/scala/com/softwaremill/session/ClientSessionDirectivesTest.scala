@@ -11,31 +11,31 @@ import com.softwaremill.session.ClientSessionDirectives._
 class ClientSessionDirectivesTest extends FlatSpec with ScalatestRouteTest with ShouldMatchers {
 
   import TestData._
-  val cookieName = manager.config.clientSessionCookieConfig.name
+  val cookieName = sessionConfig.clientSessionCookieConfig.name
 
   def routes(implicit manager: SessionManager[Map[String, String]]) = get {
     path("set") {
-      setSession(Map("k1" -> "v1")) {
+      setSession(oneOff, Map("k1" -> "v1")) {
         complete { "ok" }
       }
     } ~
       path("getOpt") {
-        optionalSession() { session =>
+        optionalSession(oneOff) { session =>
           complete { session.toString }
         }
       } ~
       path("getReq") {
-        requiredSession() { session =>
+        requiredSession(oneOff) { session =>
           complete { session.toString }
         }
       } ~
       path("touchReq") {
-        touchRequiredSession() { session =>
+        touchRequiredSession(oneOff) { session =>
           complete { session.toString }
         }
       } ~
       path("invalidate") {
-        invalidateSession() {
+        invalidateSession(oneOff) {
           complete { "ok" }
         }
       }
