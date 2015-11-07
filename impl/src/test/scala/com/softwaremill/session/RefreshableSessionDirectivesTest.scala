@@ -11,7 +11,7 @@ import org.scalatest.{ShouldMatchers, FlatSpec}
 class RefreshableSessionDirectivesTest extends FlatSpec with ScalatestRouteTest with ShouldMatchers {
 
   import TestData._
-  val sessionCookieName = sessionConfig.clientSessionCookieConfig.name
+  val sessionCookieName = sessionConfig.sessionCookieConfig.name
   val cookieName = sessionConfig.refreshTokenCookieConfig.name
 
   implicit val storage = new InMemoryRefreshTokenStorage[Map[String, String]] {

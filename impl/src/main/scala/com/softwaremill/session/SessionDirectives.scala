@@ -63,7 +63,7 @@ trait SessionDirectives extends OneOffSessionDirectives with RefreshableSessionD
     }
 
   /**
-   * Sets the session cookie again with the same data. Useful when using the [[SessionConfig.clientSessionMaxAgeSeconds]]
+   * Sets the session cookie again with the same data. Useful when using the [[SessionConfig.sessionMaxAgeSeconds]]
    * option, as it sets the expiry date anew.
    */
   def touchOptionalSession[T](sc: SessionContinuity[T]): Directive1[Option[T]] = {
@@ -71,7 +71,7 @@ trait SessionDirectives extends OneOffSessionDirectives with RefreshableSessionD
   }
 
   /**
-   * Sets the session cookie again with the same data. Useful when using the [[SessionConfig.clientSessionMaxAgeSeconds]]
+   * Sets the session cookie again with the same data. Useful when using the [[SessionConfig.sessionMaxAgeSeconds]]
    * option, as it sets the expiry date anew.
    */
   def touchRequiredSession[T](sc: SessionContinuity[T]): Directive1[T] = {
@@ -94,7 +94,7 @@ trait OneOffSessionDirectives {
     setCookie(sc.manager.clientSession.createCookie(v))
 
   private[session] def oneOffSession[T](sc: SessionContinuity[T]): Directive1[SessionResult[T]] =
-    optionalCookie(sc.manager.config.clientSessionCookieConfig.name)
+    optionalCookie(sc.manager.config.sessionCookieConfig.name)
       .map {
         case Some(cookie) => sc.manager.clientSession.decode(cookie.value)
         case None => SessionResult.NoSession

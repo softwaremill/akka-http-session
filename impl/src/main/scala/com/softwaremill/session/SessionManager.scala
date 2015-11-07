@@ -44,33 +44,33 @@ trait ClientSessionManager[T] {
   def createCookie(data: T) = createCookieWithValue(encode(data))
 
   def createCookieWithValue(value: String) = HttpCookie(
-    name = config.clientSessionCookieConfig.name,
+    name = config.sessionCookieConfig.name,
     value = value,
     expires = None,
-    maxAge = config.clientSessionCookieConfig.maxAge,
-    domain = config.clientSessionCookieConfig.domain,
-    path = config.clientSessionCookieConfig.path,
-    secure = config.clientSessionCookieConfig.secure,
-    httpOnly = config.clientSessionCookieConfig.httpOnly
+    maxAge = config.sessionCookieConfig.maxAge,
+    domain = config.sessionCookieConfig.domain,
+    path = config.sessionCookieConfig.path,
+    secure = config.sessionCookieConfig.secure,
+    httpOnly = config.sessionCookieConfig.httpOnly
   )
 
   def encode(data: T): String = {
     // adding an "x" so that the string is never empty, even if there's no data
     val serialized = "x" + sessionSerializer.serialize(data)
 
-    val withExpiry = config.clientSessionMaxAgeSeconds.fold(serialized) { maxAge =>
+    val withExpiry = config.sessionMaxAgeSeconds.fold(serialized) { maxAge =>
       val expiry = nowMillis + maxAge * 1000L
       s"$expiry-$serialized"
     }
 
-    val encrypted = if (config.clientSessionEncryptData) crypto.encrypt(withExpiry, config.serverSecret) else withExpiry
+    val encrypted = if (config.sessionEncryptData) crypto.encrypt(withExpiry, config.serverSecret) else withExpiry
 
     s"${crypto.sign(serialized, config.serverSecret)}-$encrypted"
   }
 
   def decode(data: String): SessionResult[T] = {
     def extractExpiry(data: String): (Long, String) = {
-      config.clientSessionMaxAgeSeconds.fold((Long.MaxValue, data)) { maxAge =>
+      config.sessionMaxAgeSeconds.fold((Long.MaxValue, data)) { maxAge =>
         val splitted = data.split("-", 2)
         (splitted(0).toLong, splitted(1))
       }
@@ -78,7 +78,7 @@ trait ClientSessionManager[T] {
 
     try {
       val splitted = data.split("-", 2)
-      val decrypted = if (config.clientSessionEncryptData) crypto.decrypt(splitted(1), config.serverSecret) else splitted(1)
+      val decrypted = if (config.sessionEncryptData) crypto.decrypt(splitted(1), config.serverSecret) else splitted(1)
 
       val (expiry, serialized) = extractExpiry(decrypted)
 

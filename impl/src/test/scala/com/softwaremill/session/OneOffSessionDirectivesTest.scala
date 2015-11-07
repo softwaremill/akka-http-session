@@ -11,7 +11,7 @@ import com.softwaremill.session.SessionDirectives._
 class OneOffSessionDirectivesTest extends FlatSpec with ScalatestRouteTest with ShouldMatchers {
 
   import TestData._
-  val cookieName = sessionConfig.clientSessionCookieConfig.name
+  val cookieName = sessionConfig.sessionCookieConfig.name
 
   def routes(implicit manager: SessionManager[Map[String, String]]) = get {
     path("set") {
