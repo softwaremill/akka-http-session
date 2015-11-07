@@ -13,7 +13,7 @@ trait SessionDirectives extends OneOffSessionDirectives with RefreshableSessionD
    * Set the session cookie with the session content. The content is signed, optionally encrypted and with
    * an optional expiry date.
    *
-   * If refreshable, generates a new token (removing old ones) and stores it in the remember me cookie.
+   * If refreshable, generates a new token (removing old ones) and stores it in the refresh token cookie.
    */
   def setSession[T](sc: SessionContinuity[T], v: T): Directive0 = {
     sc match {
@@ -26,7 +26,7 @@ trait SessionDirectives extends OneOffSessionDirectives with RefreshableSessionD
    * Read a session from the session cookie, wrapped in [[SessionResult]] describing the possible
    * success/failure outcomes.
    *
-   * If refreshable, tries to create a new session based on the remember me cookie.
+   * If refreshable, tries to create a new session based on the refresh token cookie.
    */
   def session[T](sc: SessionContinuity[T]): Directive1[SessionResult[T]] = {
     sc match {
@@ -38,7 +38,7 @@ trait SessionDirectives extends OneOffSessionDirectives with RefreshableSessionD
   /**
    * Invalidate the session cookie.
    *
-   * If refreshable, also removes the remember me cookie and the remember me token (from the client and token store).
+   * If refreshable, also removes the refresh token cookie and the refresh token token (from the client and token store).
    */
   def invalidateSession[T](sc: SessionContinuity[T]): Directive0 = {
     sc match {
@@ -82,9 +82,9 @@ trait SessionDirectives extends OneOffSessionDirectives with RefreshableSessionD
 
   def refreshable[T](implicit
     manager: SessionManager[T],
-    rememberMeStorage: RememberMeStorage[T],
+    refreshTokenStorage: RefreshTokenStorage[T],
     ec: ExecutionContext): Refreshable[T] =
-    new Refreshable[T]()(manager, rememberMeStorage, ec)
+    new Refreshable[T]()(manager, refreshTokenStorage, ec)
 }
 
 object SessionDirectives extends SessionDirectives
@@ -106,17 +106,17 @@ trait OneOffSessionDirectives {
 
 trait RefreshableSessionDirectives { this: OneOffSessionDirectives =>
   private[session] def setRefreshableSession[T](sc: Refreshable[T], v: T): Directive0 = {
-    setOneOffSession(sc, v) & setRememberMeCookie(sc, v)
+    setOneOffSession(sc, v) & setRefreshTokenCookie(sc, v)
   }
 
   private[session] def refreshableSession[T](sc: Refreshable[T]): Directive1[SessionResult[T]] = {
     import sc.ec
     oneOffSession(sc).flatMap {
       case SessionResult.NoSession =>
-        optionalCookie(sc.rememberMeManager.config.rememberMeCookieConfig.name).flatMap {
+        optionalCookie(sc.refreshTokenManager.config.refreshTokenCookieConfig.name).flatMap {
           case None => provide(SessionResult.NoSession)
           case Some(cookie) =>
-            onSuccess(sc.rememberMeManager.sessionFromCookie(cookie.value))
+            onSuccess(sc.refreshTokenManager.sessionFromCookie(cookie.value))
               .flatMap {
                 case s @ SessionResult.CreatedFromToken(session) =>
                   setRefreshableSession(sc, session) & provide(s: SessionResult[T])
@@ -129,19 +129,19 @@ trait RefreshableSessionDirectives { this: OneOffSessionDirectives =>
 
   private[session] def invalidateRefreshableSession[T](sc: Refreshable[T]): Directive0 = {
     import sc.ec
-    invalidateOneOffSession(sc) & deleteCookie(sc.rememberMeManager.createCookie("").copy(maxAge = None)) & {
-      optionalCookie(sc.rememberMeManager.config.rememberMeCookieConfig.name).flatMap {
+    invalidateOneOffSession(sc) & deleteCookie(sc.refreshTokenManager.createCookie("").copy(maxAge = None)) & {
+      optionalCookie(sc.refreshTokenManager.config.refreshTokenCookieConfig.name).flatMap {
         case None => pass
-        case Some(cookie) => onSuccess(sc.rememberMeManager.removeToken(cookie.value))
+        case Some(cookie) => onSuccess(sc.refreshTokenManager.removeToken(cookie.value))
       }
     }
   }
 
-  private def setRememberMeCookie[T](sc: Refreshable[T], v: T): Directive0 = {
+  private def setRefreshTokenCookie[T](sc: Refreshable[T], v: T): Directive0 = {
     import sc.ec
-    optionalCookie(sc.rememberMeManager.config.rememberMeCookieConfig.name).flatMap { existing =>
-      val createCookie = sc.rememberMeManager.rotateToken(v, existing.map(_.value))
-        .map(sc.rememberMeManager.createCookie)
+    optionalCookie(sc.refreshTokenManager.config.refreshTokenCookieConfig.name).flatMap { existing =>
+      val createCookie = sc.refreshTokenManager.rotateToken(v, existing.map(_.value))
+        .map(sc.refreshTokenManager.createCookie)
 
       onSuccess(createCookie).flatMap(c => setCookie(c))
     }

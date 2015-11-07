@@ -39,12 +39,12 @@ case class SessionConfig(
      * Name of the header or form field in which the CSRF token will be submitted.
      */
     csrfSubmittedName: String,
-    rememberMeCookieConfig: CookieConfig,
+    refreshTokenCookieConfig: CookieConfig,
     /**
-     * When a remember me token is used to log in, a new one is generated. The old one should be deleted with a delay,
+     * When a refresh token is used to log in, a new one is generated. The old one should be deleted with a delay,
      * to properly serve concurrent requests using the old token.
      */
-    rememberMeRemoveUsedTokenAfter: Long
+    removeUsedRefreshTokenAfter: Long
 ) {
 
   def withServerSecret(serverSecret: String) = copy(serverSecret = serverSecret)
@@ -70,14 +70,14 @@ case class SessionConfig(
 
   def withCsrfSubmittedName(csrfSubmittedName: String) = copy(csrfSubmittedName = csrfSubmittedName)
 
-  def withRememberMeCookieConfig(config: CookieConfig) = copy(rememberMeCookieConfig = config)
-  def withRememberMeCookieName(name: String) = copy(rememberMeCookieConfig = rememberMeCookieConfig.copy(name = name))
-  def withRememberMeCookieDomain(domain: Option[String]) = copy(rememberMeCookieConfig = rememberMeCookieConfig.copy(domain = domain))
-  def withRememberMeCookiePath(path: Option[String]) = copy(rememberMeCookieConfig = rememberMeCookieConfig.copy(path = path))
-  def withRememberMeCookieMaxAge(maxAge: Option[Long]) = copy(rememberMeCookieConfig = rememberMeCookieConfig.copy(maxAge = maxAge))
-  def withRememberMeCookieSecure(secure: Boolean) = copy(rememberMeCookieConfig = rememberMeCookieConfig.copy(secure = secure))
-  def withRememberMeCookieHttpOnly(httpOnly: Boolean) = copy(rememberMeCookieConfig = rememberMeCookieConfig.copy(httpOnly = httpOnly))
-  def withRememberMeRemoveUsedTokenAfter(rememberMeRemoveUsedTokenAfter: Long) = copy(rememberMeRemoveUsedTokenAfter = rememberMeRemoveUsedTokenAfter)
+  def withRefreshTokenCookieConfig(config: CookieConfig) = copy(refreshTokenCookieConfig = config)
+  def withRefreshTokenCookieName(name: String) = copy(refreshTokenCookieConfig = refreshTokenCookieConfig.copy(name = name))
+  def withRefreshTokenCookieDomain(domain: Option[String]) = copy(refreshTokenCookieConfig = refreshTokenCookieConfig.copy(domain = domain))
+  def withRefreshTokenCookiePath(path: Option[String]) = copy(refreshTokenCookieConfig = refreshTokenCookieConfig.copy(path = path))
+  def withRefreshTokenCookieMaxAge(maxAge: Option[Long]) = copy(refreshTokenCookieConfig = refreshTokenCookieConfig.copy(maxAge = maxAge))
+  def withRefreshTokenCookieSecure(secure: Boolean) = copy(refreshTokenCookieConfig = refreshTokenCookieConfig.copy(secure = secure))
+  def withRefreshTokenCookieHttpOnly(httpOnly: Boolean) = copy(refreshTokenCookieConfig = refreshTokenCookieConfig.copy(httpOnly = httpOnly))
+  def withRefreshTokenRemoveUsedTokenAfter(RefreshTokenRemoveUsedTokenAfter: Long) = copy(removeUsedRefreshTokenAfter = RefreshTokenRemoveUsedTokenAfter)
 }
 
 object SessionConfig {
@@ -85,7 +85,7 @@ object SessionConfig {
     val scopedConfig = config.getConfig("akka.http.session")
     val clientSessionConfig = scopedConfig.getConfigOption("clientSession").getOrElse(ConfigFactory.empty())
     val csrfConfig = scopedConfig.getConfigOption("csrf").getOrElse(ConfigFactory.empty())
-    val rememberMeConfig = scopedConfig.getConfigOption("rememberMe").getOrElse(ConfigFactory.empty())
+    val refreshTokenConfig = scopedConfig.getConfigOption("refreshToken").getOrElse(ConfigFactory.empty())
 
     SessionConfig(
       serverSecret = scopedConfig.getString("serverSecret"),
@@ -108,15 +108,15 @@ object SessionConfig {
         httpOnly = csrfConfig.getBooleanOption("cookie.httpOnly").getOrElse(false)
       ),
       csrfSubmittedName = csrfConfig.getStringOption("submittedName").getOrElse("X-XSRF-TOKEN"),
-      rememberMeCookieConfig = CookieConfig(
-        name = rememberMeConfig.getStringOption("cookie.name").getOrElse("_rememberme"),
-        domain = rememberMeConfig.getStringOption("cookie.domain"),
-        path = rememberMeConfig.getStringOption("cookie.path").orElse(Some("/")),
-        maxAge = rememberMeConfig.getDurationSecondsOption("cookie.maxAge").orElse(Some(60L * 60L * 24L * 30L)),
-        secure = rememberMeConfig.getBooleanOption("cookie.secure").getOrElse(false),
-        httpOnly = rememberMeConfig.getBooleanOption("cookie.httpOnly").getOrElse(true)
+      refreshTokenCookieConfig = CookieConfig(
+        name = refreshTokenConfig.getStringOption("cookie.name").getOrElse("_refreshtoken"),
+        domain = refreshTokenConfig.getStringOption("cookie.domain"),
+        path = refreshTokenConfig.getStringOption("cookie.path").orElse(Some("/")),
+        maxAge = refreshTokenConfig.getDurationSecondsOption("cookie.maxAge").orElse(Some(60L * 60L * 24L * 30L)),
+        secure = refreshTokenConfig.getBooleanOption("cookie.secure").getOrElse(false),
+        httpOnly = refreshTokenConfig.getBooleanOption("cookie.httpOnly").getOrElse(true)
       ),
-      rememberMeRemoveUsedTokenAfter = rememberMeConfig.getDurationSecondsOption("removeUsedTokenAfter").getOrElse(5L)
+      removeUsedRefreshTokenAfter = refreshTokenConfig.getDurationSecondsOption("removeUsedTokenAfter").getOrElse(5L)
     )
   }
 
@@ -144,9 +144,9 @@ object SessionConfig {
    *   submittedName = "X-XSRF-TOKEN"
    * }
    *
-   * rememberMe {
+   * refreshToken {
    *   cookie {
-   *     name = "_rememberme"
+   *     name = "_refreshtoken"
    *     path = /
    *     maxAge = 30 days
    *     secure = false

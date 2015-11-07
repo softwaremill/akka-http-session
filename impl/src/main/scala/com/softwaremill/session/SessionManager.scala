@@ -23,7 +23,7 @@ class SessionManager[T](val config: SessionConfig, crypto: Crypto = DefaultCrypt
     override def config = manager.config
   }
 
-  def rememberMe(_storage: RememberMeStorage[T]): RememberMeManager[T] = new RememberMeManager[T] {
+  def refreshToken(_storage: RefreshTokenStorage[T]): RefreshTokenManager[T] = new RefreshTokenManager[T] {
     override def config = manager.config
     override def nowMillis = manager.nowMillis
     override def crypto = manager.crypto
@@ -119,11 +119,11 @@ trait CsrfManager[T] {
   )
 }
 
-trait RememberMeManager[T] {
+trait RefreshTokenManager[T] {
   def config: SessionConfig
   def crypto: Crypto
   def nowMillis: Long
-  def storage: RememberMeStorage[T]
+  def storage: RefreshTokenStorage[T]
 
   def createSelector(): String = SessionUtil.randomString(16)
   def createToken(): String = SessionUtil.randomString(64)
@@ -143,16 +143,16 @@ trait RememberMeManager[T] {
     val selector = createSelector()
     val token = createToken()
 
-    val storeFuture = storage.store(new RememberMeData[T](
+    val storeFuture = storage.store(new RefreshTokenData[T](
       forSession = session,
       selector = selector,
       tokenHash = crypto.hash(token),
-      expires = nowMillis + config.rememberMeCookieConfig.maxAge.getOrElse(0L) * 1000L
+      expires = nowMillis + config.refreshTokenCookieConfig.maxAge.getOrElse(0L) * 1000L
     )).map(_ => encodeSelectorAndToken(selector, token))
 
     existing.flatMap(decodeSelectorAndToken).foreach {
       case (s, _) =>
-        storage.schedule(Duration(config.rememberMeRemoveUsedTokenAfter, TimeUnit.SECONDS)) {
+        storage.schedule(Duration(config.removeUsedRefreshTokenAfter, TimeUnit.SECONDS)) {
           storage.remove(s)
         }
     }
@@ -161,14 +161,14 @@ trait RememberMeManager[T] {
   }
 
   def createCookie(value: String) = HttpCookie(
-    name = config.rememberMeCookieConfig.name,
+    name = config.refreshTokenCookieConfig.name,
     value = value,
     expires = None,
-    maxAge = config.rememberMeCookieConfig.maxAge,
-    domain = config.rememberMeCookieConfig.domain,
-    path = config.rememberMeCookieConfig.path,
-    secure = config.rememberMeCookieConfig.secure,
-    httpOnly = config.rememberMeCookieConfig.httpOnly
+    maxAge = config.refreshTokenCookieConfig.maxAge,
+    domain = config.refreshTokenCookieConfig.domain,
+    path = config.refreshTokenCookieConfig.path,
+    secure = config.refreshTokenCookieConfig.secure,
+    httpOnly = config.refreshTokenCookieConfig.httpOnly
   )
 
   def sessionFromCookie(cookieValue: String)(implicit ec: ExecutionContext): Future[SessionResult[T]] = {

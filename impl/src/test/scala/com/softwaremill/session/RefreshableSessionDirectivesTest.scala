@@ -8,13 +8,13 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.softwaremill.session.SessionDirectives._
 import org.scalatest.{ShouldMatchers, FlatSpec}
 
-class RememberMeDirectivesTest extends FlatSpec with ScalatestRouteTest with ShouldMatchers {
+class RefreshableSessionDirectivesTest extends FlatSpec with ScalatestRouteTest with ShouldMatchers {
 
   import TestData._
   val sessionCookieName = sessionConfig.clientSessionCookieConfig.name
-  val cookieName = sessionConfig.rememberMeCookieConfig.name
+  val cookieName = sessionConfig.refreshTokenCookieConfig.name
 
-  implicit val storage = new InMemoryRememberMeStorage[Map[String, String]] {
+  implicit val storage = new InMemoryRefreshTokenStorage[Map[String, String]] {
     override def log(msg: String) = println(msg)
   }
 
@@ -48,7 +48,7 @@ class RememberMeDirectivesTest extends FlatSpec with ScalatestRouteTest with Sho
 
   def cookiesMap = headers.collect { case `Set-Cookie`(cookie) => cookie.name -> cookie.value }.toMap
 
-  it should "set both the session and remember me cookies" in {
+  it should "set both the session and refresh token cookies" in {
     Get("/set") ~> routes ~> check {
       responseAs[String] should be ("ok")
 
@@ -57,7 +57,7 @@ class RememberMeDirectivesTest extends FlatSpec with ScalatestRouteTest with Sho
     }
   }
 
-  it should "set the remember me cookie to expire" in {
+  it should "set the refresh token cookie to expire" in {
     Get("/set") ~> routes ~> check {
       responseAs[String] should be ("ok")
 
@@ -66,7 +66,7 @@ class RememberMeDirectivesTest extends FlatSpec with ScalatestRouteTest with Sho
     }
   }
 
-  it should "set a new remember me cookie when the session is set again" in {
+  it should "set a new refresh token cookie when the session is set again" in {
     Get("/set") ~> routes ~> check {
       val cookies1 = cookiesMap
 
@@ -79,7 +79,7 @@ class RememberMeDirectivesTest extends FlatSpec with ScalatestRouteTest with Sho
     }
   }
 
-  it should "read an optional session when both the session and remember me cookies are set" in {
+  it should "read an optional session when both the session and refresh token cookies are set" in {
     Get("/set") ~> routes ~> check {
       val cookies = cookiesMap
 
@@ -112,7 +112,7 @@ class RememberMeDirectivesTest extends FlatSpec with ScalatestRouteTest with Sho
     }
   }
 
-  it should "read an optional session when only the remember me cookie is set (re-create the session)" in {
+  it should "read an optional session when only the refresh token cookie is set (re-create the session)" in {
     Get("/set") ~> routes ~> check {
       val cookies = cookiesMap
 
@@ -125,7 +125,7 @@ class RememberMeDirectivesTest extends FlatSpec with ScalatestRouteTest with Sho
     }
   }
 
-  it should "set a new remember me cookie after the session is re-created" in {
+  it should "set a new refresh token cookie after the session is re-created" in {
     Get("/set") ~> routes ~> check {
       val cookies1 = cookiesMap
 
@@ -139,7 +139,7 @@ class RememberMeDirectivesTest extends FlatSpec with ScalatestRouteTest with Sho
     }
   }
 
-  it should "read a required session when both the session and remember me cookies are set" in {
+  it should "read a required session when both the session and refresh token cookies are set" in {
     Get("/set") ~> routes ~> check {
       val cookies = cookiesMap
 
@@ -181,13 +181,13 @@ class RememberMeDirectivesTest extends FlatSpec with ScalatestRouteTest with Sho
     }
   }
 
-  it should "reject the request if the remember me cookie is invalid" in {
+  it should "reject the request if the refresh token cookie is invalid" in {
     Get("/getReq") ~> addHeader(Cookie(cookieName, "invalid")) ~> routes ~> check {
       rejection should be (AuthorizationFailedRejection)
     }
   }
 
-  it should "touch the session, keeping the remember me token intact" in {
+  it should "touch the session, keeping the refresh token token intact" in {
     Get("/set") ~> routes(manager_expires60_fixedTime) ~> check {
       val cookies1 = cookiesMap
 
@@ -203,7 +203,7 @@ class RememberMeDirectivesTest extends FlatSpec with ScalatestRouteTest with Sho
           // The session cookie should be modified with a new expiry date
           cookies1(sessionCookieName) should not be (cookies2(sessionCookieName))
 
-          // But the remember me token should remain the same; no new cookie should be set
+          // But the refresh token token should remain the same; no new cookie should be set
           cookies2.get(cookieName) should be (None)
 
           // 70 seconds from the initial cookie, only the touched one should work
@@ -220,7 +220,7 @@ class RememberMeDirectivesTest extends FlatSpec with ScalatestRouteTest with Sho
             check {
               rejection should be (AuthorizationFailedRejection)
             }
-          // When sending the expired cookie and remember me token, a new session should start
+          // When sending the expired cookie and refresh token token, a new session should start
           Get("/touchReq") ~>
             addHeader(Cookie(sessionCookieName, cookies2(sessionCookieName))) ~>
             addHeader(Cookie(cookieName, cookies1(cookieName))) ~>
