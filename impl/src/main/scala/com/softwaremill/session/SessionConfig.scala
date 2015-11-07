@@ -1,8 +1,8 @@
 package com.softwaremill.session
 
-import com.typesafe.config.{ConfigValueFactory, ConfigFactory, Config}
+import java.util.concurrent.TimeUnit
 
-import SessionUtil._
+import com.typesafe.config.{ConfigValueFactory, ConfigFactory, Config}
 
 case class CookieConfig(
   name: String,
@@ -14,150 +14,93 @@ case class CookieConfig(
 )
 
 case class SessionConfig(
-    /**
-     * Should be different on each environment and **kept secret!**. It's used to sign and encrypt cookie data.
-     * This should be a long random string.
-     */
-    serverSecret: String,
-    clientSessionCookieConfig: CookieConfig,
-    /**
-     * If you'd like session cookies to expire as well after a period of inactivity, you can optionally include an
-     * expiration date in the cookie data (expiration will be validated on the server). The expiration date will be
-     * calculated by adding the given number of seconds to the time at which the session is last updated.
-     *
-     * For session cookies, **do not** set the [[CookieConfig.maxAge]], as this will turn it into a persistent cookie
-     * (on the client).
-     */
-    clientSessionMaxAgeSeconds: Option[Long],
-    /**
-     * By default the session data won't be encrypted, only signed with a hash. Set this to true if you'd like the data
-     * to be encrypted using a symmetrical key.
-     */
-    clientSessionEncryptData: Boolean,
-    csrfCookieConfig: CookieConfig,
-    /**
-     * Name of the header or form field in which the CSRF token will be submitted.
-     */
-    csrfSubmittedName: String,
-    refreshTokenCookieConfig: CookieConfig,
-    /**
-     * When a refresh token is used to log in, a new one is generated. The old one should be deleted with a delay,
-     * to properly serve concurrent requests using the old token.
-     */
-    removeUsedRefreshTokenAfter: Long
-) {
-
-  def withServerSecret(serverSecret: String) = copy(serverSecret = serverSecret)
-
-  def withClientSessionCookieConfig(config: CookieConfig) = copy(clientSessionCookieConfig = config)
-  def withClientSessionCookieName(name: String) = copy(clientSessionCookieConfig = clientSessionCookieConfig.copy(name = name))
-  def withClientSessionCookieDomain(domain: Option[String]) = copy(clientSessionCookieConfig = clientSessionCookieConfig.copy(domain = domain))
-  def withClientSessionCookiePath(path: Option[String]) = copy(clientSessionCookieConfig = clientSessionCookieConfig.copy(path = path))
-  def withClientSessionCookieMaxAge(maxAge: Option[Long]) = copy(clientSessionCookieConfig = clientSessionCookieConfig.copy(maxAge = maxAge))
-  def withClientSessionCookieSecure(secure: Boolean) = copy(clientSessionCookieConfig = clientSessionCookieConfig.copy(secure = secure))
-  def withClientSessionCookieHttpOnly(httpOnly: Boolean) = copy(clientSessionCookieConfig = clientSessionCookieConfig.copy(httpOnly = httpOnly))
-
-  def withClientSessionMaxAgeSeconds(maxAgeSeconds: Option[Long]) = copy(clientSessionMaxAgeSeconds = maxAgeSeconds)
-  def withClientSessionEncryptData(encryptData: Boolean) = copy(clientSessionEncryptData = encryptData)
-
-  def withCsrfCookieConfig(config: CookieConfig) = copy(csrfCookieConfig = config)
-  def withCsrfCookieName(name: String) = copy(csrfCookieConfig = csrfCookieConfig.copy(name = name))
-  def withCsrfCookieDomain(domain: Option[String]) = copy(csrfCookieConfig = csrfCookieConfig.copy(domain = domain))
-  def withCsrfCookiePath(path: Option[String]) = copy(csrfCookieConfig = csrfCookieConfig.copy(path = path))
-  def withCsrfCookieMaxAge(maxAge: Option[Long]) = copy(csrfCookieConfig = csrfCookieConfig.copy(maxAge = maxAge))
-  def withCsrfCookieSecure(secure: Boolean) = copy(csrfCookieConfig = csrfCookieConfig.copy(secure = secure))
-  def withCsrfCookieHttpOnly(httpOnly: Boolean) = copy(csrfCookieConfig = csrfCookieConfig.copy(httpOnly = httpOnly))
-
-  def withCsrfSubmittedName(csrfSubmittedName: String) = copy(csrfSubmittedName = csrfSubmittedName)
-
-  def withRefreshTokenCookieConfig(config: CookieConfig) = copy(refreshTokenCookieConfig = config)
-  def withRefreshTokenCookieName(name: String) = copy(refreshTokenCookieConfig = refreshTokenCookieConfig.copy(name = name))
-  def withRefreshTokenCookieDomain(domain: Option[String]) = copy(refreshTokenCookieConfig = refreshTokenCookieConfig.copy(domain = domain))
-  def withRefreshTokenCookiePath(path: Option[String]) = copy(refreshTokenCookieConfig = refreshTokenCookieConfig.copy(path = path))
-  def withRefreshTokenCookieMaxAge(maxAge: Option[Long]) = copy(refreshTokenCookieConfig = refreshTokenCookieConfig.copy(maxAge = maxAge))
-  def withRefreshTokenCookieSecure(secure: Boolean) = copy(refreshTokenCookieConfig = refreshTokenCookieConfig.copy(secure = secure))
-  def withRefreshTokenCookieHttpOnly(httpOnly: Boolean) = copy(refreshTokenCookieConfig = refreshTokenCookieConfig.copy(httpOnly = httpOnly))
-  def withRefreshTokenRemoveUsedTokenAfter(RefreshTokenRemoveUsedTokenAfter: Long) = copy(removeUsedRefreshTokenAfter = RefreshTokenRemoveUsedTokenAfter)
-}
+  /**
+   * Should be different on each environment and **kept secret!**. It's used to sign and encrypt cookie data.
+   * This should be a long random string.
+   */
+  serverSecret: String,
+  clientSessionCookieConfig: CookieConfig,
+  /**
+   * If you'd like session cookies to expire as well after a period of inactivity, you can optionally include an
+   * expiration date in the cookie data (expiration will be validated on the server). The expiration date will be
+   * calculated by adding the given number of seconds to the time at which the session is last updated.
+   *
+   * For session cookies, **do not** set the [[CookieConfig.maxAge]], as this will turn it into a persistent cookie
+   * (on the client).
+   */
+  clientSessionMaxAgeSeconds: Option[Long],
+  /**
+   * By default the session data won't be encrypted, only signed with a hash. Set this to true if you'd like the data
+   * to be encrypted using a symmetrical key.
+   */
+  clientSessionEncryptData: Boolean,
+  csrfCookieConfig: CookieConfig,
+  /**
+   * Name of the header or form field in which the CSRF token will be submitted.
+   */
+  csrfSubmittedName: String,
+  refreshTokenCookieConfig: CookieConfig,
+  /**
+   * When a refresh token is used to log in, a new one is generated. The old one should be deleted with a delay,
+   * to properly serve concurrent requests using the old token.
+   */
+  removeUsedRefreshTokenAfter: Long
+)
 
 object SessionConfig {
-  def fromConfig(config: Config): SessionConfig = {
+  private implicit class PimpedConfig(config: Config) {
+    val noneValue = "none"
+
+    def getOptionalString(path: String) = if (config.getAnyRef(path) == noneValue) None else
+      Some(config.getString(path))
+    def getOptionalLong(path: String) = if (config.getAnyRef(path) == noneValue) None else
+      Some(config.getLong(path))
+    def getOptionalDurationSeconds(path: String) = if (config.getAnyRef(path) == noneValue) None else
+      Some(config.getDuration(path, TimeUnit.SECONDS))
+  }
+
+  def fromConfig(config: Config = ConfigFactory.load()): SessionConfig = {
     val scopedConfig = config.getConfig("akka.http.session")
-    val clientSessionConfig = scopedConfig.getConfigOption("clientSession").getOrElse(ConfigFactory.empty())
-    val csrfConfig = scopedConfig.getConfigOption("csrf").getOrElse(ConfigFactory.empty())
-    val refreshTokenConfig = scopedConfig.getConfigOption("refreshToken").getOrElse(ConfigFactory.empty())
+    val clientSessionConfig = scopedConfig.getConfig("client-session")
+    val csrfConfig = scopedConfig.getConfig("csrf")
+    val refreshTokenConfig = scopedConfig.getConfig("refresh-token")
 
     SessionConfig(
-      serverSecret = scopedConfig.getString("serverSecret"),
+      serverSecret = scopedConfig.getString("server-secret"),
       clientSessionCookieConfig = CookieConfig(
-        name = clientSessionConfig.getStringOption("cookie.name").getOrElse("_sessiondata"),
-        domain = clientSessionConfig.getStringOption("cookie.domain"),
-        path = clientSessionConfig.getStringOption("cookie.path").orElse(Some("/")),
-        maxAge = clientSessionConfig.getDurationSecondsOption("cookie.maxAge"),
-        secure = clientSessionConfig.getBooleanOption("cookie.secure").getOrElse(false),
-        httpOnly = clientSessionConfig.getBooleanOption("cookie.httpOnly").getOrElse(true)
+        name = clientSessionConfig.getString("cookie.name"),
+        domain = clientSessionConfig.getOptionalString("cookie.domain"),
+        path = clientSessionConfig.getOptionalString("cookie.path"),
+        maxAge = clientSessionConfig.getOptionalDurationSeconds("cookie.max-age"),
+        secure = clientSessionConfig.getBoolean("cookie.secure"),
+        httpOnly = clientSessionConfig.getBoolean("cookie.http-only")
       ),
-      clientSessionMaxAgeSeconds = clientSessionConfig.getLongOption("maxAgeSeconds"),
-      clientSessionEncryptData = clientSessionConfig.getBooleanOption("encryptData").getOrElse(false),
+      clientSessionMaxAgeSeconds = clientSessionConfig.getOptionalLong("max-age-seconds"),
+      clientSessionEncryptData = clientSessionConfig.getBoolean("encrypt-data"),
       csrfCookieConfig = CookieConfig(
-        name = csrfConfig.getStringOption("cookie.name").getOrElse("XSRF-TOKEN"),
-        domain = csrfConfig.getStringOption("cookie.domain"),
-        path = csrfConfig.getStringOption("cookie.path").orElse(Some("/")),
-        maxAge = csrfConfig.getDurationSecondsOption("cookie.maxAge"),
-        secure = csrfConfig.getBooleanOption("cookie.secure").getOrElse(false),
-        httpOnly = csrfConfig.getBooleanOption("cookie.httpOnly").getOrElse(false)
+        name = csrfConfig.getString("cookie.name"),
+        domain = csrfConfig.getOptionalString("cookie.domain"),
+        path = csrfConfig.getOptionalString("cookie.path"),
+        maxAge = csrfConfig.getOptionalDurationSeconds("cookie.max-age"),
+        secure = csrfConfig.getBoolean("cookie.secure"),
+        httpOnly = csrfConfig.getBoolean("cookie.http-only")
       ),
-      csrfSubmittedName = csrfConfig.getStringOption("submittedName").getOrElse("X-XSRF-TOKEN"),
+      csrfSubmittedName = csrfConfig.getString("submitted-name"),
       refreshTokenCookieConfig = CookieConfig(
-        name = refreshTokenConfig.getStringOption("cookie.name").getOrElse("_refreshtoken"),
-        domain = refreshTokenConfig.getStringOption("cookie.domain"),
-        path = refreshTokenConfig.getStringOption("cookie.path").orElse(Some("/")),
-        maxAge = refreshTokenConfig.getDurationSecondsOption("cookie.maxAge").orElse(Some(60L * 60L * 24L * 30L)),
-        secure = refreshTokenConfig.getBooleanOption("cookie.secure").getOrElse(false),
-        httpOnly = refreshTokenConfig.getBooleanOption("cookie.httpOnly").getOrElse(true)
+        name = refreshTokenConfig.getString("cookie.name"),
+        domain = refreshTokenConfig.getOptionalString("cookie.domain"),
+        path = refreshTokenConfig.getOptionalString("cookie.path"),
+        maxAge = refreshTokenConfig.getOptionalDurationSeconds("cookie.max-age"),
+        secure = refreshTokenConfig.getBoolean("cookie.secure"),
+        httpOnly = refreshTokenConfig.getBoolean("cookie.http-only")
       ),
-      removeUsedRefreshTokenAfter = refreshTokenConfig.getDurationSecondsOption("removeUsedTokenAfter").getOrElse(5L)
+      removeUsedRefreshTokenAfter = refreshTokenConfig.getDuration("remove-used-token-after", TimeUnit.SECONDS)
     )
   }
 
   /**
-   * Creates a default configuration using the given secret. Default values:
-   *
-   * <pre>
-   * clientSession {
-   *   cookie {
-   *     name = "_sessiondata"
-   *     path = /
-   *     secure = false
-   *     httpOnly = true
-   *   }
-   *   encryptData = false
-   * }
-   *
-   * csrf {
-   *   cookie {
-   *     name = "XSRF-TOKEN"
-   *     path = /
-   *     secure = false
-   *     httpOnly = false
-   *   }
-   *   submittedName = "X-XSRF-TOKEN"
-   * }
-   *
-   * refreshToken {
-   *   cookie {
-   *     name = "_refreshtoken"
-   *     path = /
-   *     maxAge = 30 days
-   *     secure = false
-   *     httpOnly = true
-   *   }
-   *   removeUsedTokenAfter = 5 seconds
-   * }
-   * </pre>
-   *
-   * Other attributes are `None`.
+   * Creates a default configuration using the given secret.
    */
-  def default(serverSecret: String) = fromConfig(ConfigFactory.empty()
-    .withValue("akka.http.session.serverSecret", ConfigValueFactory.fromAnyRef(serverSecret)))
+  def default(serverSecret: String) = fromConfig(ConfigFactory.load()
+    .withValue("akka.http.session.server-secret", ConfigValueFactory.fromAnyRef(serverSecret)))
 }
