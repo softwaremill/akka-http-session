@@ -6,9 +6,9 @@ import akka.http.scaladsl.server.AuthorizationFailedRejection
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import org.scalatest.{ShouldMatchers, FlatSpec}
 import akka.http.scaladsl.server.Directives._
-import com.softwaremill.session.ClientSessionDirectives._
+import com.softwaremill.session.SessionDirectives._
 
-class ClientSessionDirectivesTest extends FlatSpec with ScalatestRouteTest with ShouldMatchers {
+class OneOffSessionDirectivesTest extends FlatSpec with ScalatestRouteTest with ShouldMatchers {
 
   import TestData._
   val cookieName = sessionConfig.clientSessionCookieConfig.name

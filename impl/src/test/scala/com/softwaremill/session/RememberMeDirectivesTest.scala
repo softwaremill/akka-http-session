@@ -5,7 +5,7 @@ import akka.http.scaladsl.model.headers.{Cookie, `Set-Cookie`}
 import akka.http.scaladsl.server.AuthorizationFailedRejection
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import com.softwaremill.session.ClientSessionDirectives._
+import com.softwaremill.session.SessionDirectives._
 import org.scalatest.{ShouldMatchers, FlatSpec}
 
 class RememberMeDirectivesTest extends FlatSpec with ScalatestRouteTest with ShouldMatchers {
