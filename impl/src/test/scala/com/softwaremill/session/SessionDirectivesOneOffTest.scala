@@ -8,7 +8,7 @@ import org.scalatest.{ShouldMatchers, FlatSpec}
 import akka.http.scaladsl.server.Directives._
 import com.softwaremill.session.SessionDirectives._
 
-class OneOffSessionDirectivesTest extends FlatSpec with ScalatestRouteTest with ShouldMatchers {
+class SessionDirectivesOneOffTest extends FlatSpec with ScalatestRouteTest with ShouldMatchers {
 
   import TestData._
   val cookieName = sessionConfig.sessionCookieConfig.name
