@@ -20,27 +20,27 @@ class SessionDirectivesRefreshableTest extends FlatSpec with ScalatestRouteTest 
 
   def routes(implicit manager: SessionManager[Map[String, String]]) = get {
     path("set") {
-      setSession(refreshable, Map("k1" -> "v1")) {
+      setSession(refreshable, usingCookies, Map("k1" -> "v1")) {
         complete { "ok" }
       }
     } ~
       path("getOpt") {
-        optionalSession(refreshable) { session =>
+        optionalSession(refreshable, usingCookies) { session =>
           complete { session.toString }
         }
       } ~
       path("getReq") {
-        requiredSession(refreshable) { session =>
+        requiredSession(refreshable, usingCookies) { session =>
           complete { session.toString }
         }
       } ~
       path("touchReq") {
-        touchRequiredSession(refreshable) { session =>
+        touchRequiredSession(refreshable, usingCookies) { session =>
           complete { session.toString }
         }
       } ~
       path("invalidate") {
-        invalidateSession(refreshable) {
+        invalidateSession(refreshable, usingCookies) {
           complete { "ok" }
         }
       }

@@ -23,6 +23,10 @@ object Example extends App with StrictLogging {
     def log(msg: String) = logger.info(msg)
   }
 
+  def mySetSession(v: ExampleSession) = setSession(refreshable, usingCookies, v)
+  val myRequiredSession = requiredSession(refreshable, usingCookies)
+  val myInvalidateSession = invalidateSession(refreshable, usingCookies)
+
   val routes =
     path("") {
       redirect("/site/index.html", Found)
@@ -34,7 +38,7 @@ object Example extends App with StrictLogging {
               entity(as[String]) { body =>
                 logger.info(s"Logging in $body")
 
-                setSession(refreshable, ExampleSession(body)) {
+                mySetSession(ExampleSession(body)) {
                   setNewCsrfToken() { ctx => ctx.complete("ok") }
                 }
               }
@@ -43,8 +47,8 @@ object Example extends App with StrictLogging {
             // This should be protected and accessible only when logged in
             path("do_logout") {
               post {
-                requiredSession(refreshable) { session =>
-                  invalidateSession(refreshable) { ctx =>
+                myRequiredSession { session =>
+                  myInvalidateSession { ctx =>
                     logger.info(s"Logging out $session")
                     ctx.complete("ok")
                   }
@@ -54,7 +58,7 @@ object Example extends App with StrictLogging {
             // This should be protected and accessible only when logged in
             path("current_login") {
               get {
-                requiredSession(refreshable) { session => ctx =>
+                myRequiredSession { session => ctx =>
                   logger.info("Current session: " + session)
                   ctx.complete(session.username)
                 }

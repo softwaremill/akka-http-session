@@ -15,27 +15,27 @@ class SessionDirectivesOneOffTest extends FlatSpec with ScalatestRouteTest with 
 
   def routes(implicit manager: SessionManager[Map[String, String]]) = get {
     path("set") {
-      setSession(oneOff, Map("k1" -> "v1")) {
+      setSession(oneOff, usingCookies, Map("k1" -> "v1")) {
         complete { "ok" }
       }
     } ~
       path("getOpt") {
-        optionalSession(oneOff) { session =>
+        optionalSession(oneOff, usingCookies) { session =>
           complete { session.toString }
         }
       } ~
       path("getReq") {
-        requiredSession(oneOff) { session =>
+        requiredSession(oneOff, usingCookies) { session =>
           complete { session.toString }
         }
       } ~
       path("touchReq") {
-        touchRequiredSession(oneOff) { session =>
+        touchRequiredSession(oneOff, usingCookies) { session =>
           complete { session.toString }
         }
       } ~
       path("invalidate") {
-        invalidateSession(oneOff) {
+        invalidateSession(oneOff, usingCookies) {
           complete { "ok" }
         }
       }

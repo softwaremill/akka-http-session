@@ -1,0 +1,7 @@
+package com.softwaremill.session
+
+sealed trait GetSessionTransport
+sealed trait SetSessionTransport
+case object CookieSessionTransport extends GetSessionTransport with SetSessionTransport
+case object HeaderSessionTransport extends GetSessionTransport with SetSessionTransport
+case object CookieOrHeaderSessionTransport extends GetSessionTransport
