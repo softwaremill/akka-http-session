@@ -1,136 +1,157 @@
 package com.softwaremill.session
 
-import akka.http.scaladsl.model.DateTime
-import akka.http.scaladsl.model.headers.{Cookie, `Set-Cookie`}
+import akka.http.scaladsl.model.headers.`Set-Cookie`
 import akka.http.scaladsl.server.AuthorizationFailedRejection
-import akka.http.scaladsl.testkit.ScalatestRouteTest
-import org.scalatest.{ShouldMatchers, FlatSpec}
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.softwaremill.session.SessionDirectives._
+import org.scalatest.{FlatSpec, ShouldMatchers}
 
-class SessionDirectivesOneOffTest extends FlatSpec with ScalatestRouteTest with ShouldMatchers {
+class SessionDirectivesOneOffTest extends FlatSpec with ScalatestRouteTest with ShouldMatchers with MultipleTransportTest {
 
   import TestData._
-  val cookieName = sessionConfig.sessionCookieConfig.name
 
-  def routes(implicit manager: SessionManager[Map[String, String]]) = get {
+  def createRoutes(using: TestUsingTransport)(implicit manager: SMan) = get {
     path("set") {
-      setSession(oneOff, usingCookies, Map("k1" -> "v1")) {
-        complete { "ok" }
+      setSession(oneOff, using.setSessionTransport, Map("k1" -> "v1")) {
+        complete {
+          "ok"
+        }
       }
     } ~
       path("getOpt") {
-        optionalSession(oneOff, usingCookies) { session =>
-          complete { session.toString }
+        optionalSession(oneOff, using.getSessionTransport) { session =>
+          complete {
+            session.toString
+          }
         }
       } ~
       path("getReq") {
-        requiredSession(oneOff, usingCookies) { session =>
-          complete { session.toString }
+        requiredSession(oneOff, using.getSessionTransport) { session =>
+          complete {
+            session.toString
+          }
         }
       } ~
       path("touchReq") {
-        touchRequiredSession(oneOff, usingCookies) { session =>
-          complete { session.toString }
+        touchRequiredSession(oneOff, using.getSessionTransport) { session =>
+          complete {
+            session.toString
+          }
         }
       } ~
       path("invalidate") {
-        invalidateSession(oneOff, usingCookies) {
-          complete { "ok" }
+        invalidateSession(oneOff, using.getSessionTransport) {
+          complete {
+            "ok"
+          }
         }
       }
   }
 
-  it should "set the session cookie" in {
-    Get("/set") ~> routes ~> check {
-      responseAs[String] should be ("ok")
-
+  it should s"Using cookies: set the correct session cookie name" in {
+    Get("/set") ~> createRoutes(TestUsingCookies) ~> check {
       val sessionCookieOption = header[`Set-Cookie`]
-      sessionCookieOption should be ('defined)
+      sessionCookieOption should be('defined)
       val Some(sessionCookie) = sessionCookieOption
 
-      sessionCookie.cookie.name should be (cookieName)
+      sessionCookie.cookie.name should be(TestUsingCookies.cookieName)
     }
   }
 
-  it should "read an optional session when the session cookie is set" in {
-    Get("/set") ~> routes ~> check {
-      val Some(sessionCookie) = header[`Set-Cookie`]
+  List(TestUsingCookies).foreach { using =>
+    val p = s"Using ${using.transportName}: "
+    def routes(implicit manager: SMan) = createRoutes(using)(manager)
 
-      Get("/getOpt") ~> addHeader(Cookie(cookieName, sessionCookie.cookie.value)) ~> routes ~> check {
-        responseAs[String] should be ("Some(Map(k1 -> v1))")
+    it should s"$p set the session" in {
+      Get("/set") ~> routes ~> check {
+        responseAs[String] should be("ok")
+
+        val sessionOption = using.getSession
+        sessionOption should be('defined)
+
+        using.isSessionExpired should be (false)
       }
     }
-  }
 
-  it should "read an optional session when the session cookie is not set" in {
-    Get("/getOpt") ~> routes ~> check {
-      responseAs[String] should be ("None")
-    }
-  }
+    it should s"$p read an optional session when the session is set" in {
+      Get("/set") ~> routes ~> check {
+        val Some(s) = using.getSession
 
-  it should "read a required session when the session cookie is set" in {
-    Get("/set") ~> routes ~> check {
-      val Some(sessionCookie) = header[`Set-Cookie`]
-
-      Get("/getReq") ~> addHeader(Cookie(cookieName, sessionCookie.cookie.value)) ~> routes ~> check {
-        responseAs[String] should be ("Map(k1 -> v1)")
-      }
-    }
-  }
-
-  it should "invalidate a session" in {
-    Get("/set") ~> routes ~> check {
-      val Some(sessionCookie1) = header[`Set-Cookie`]
-
-      Get("/invalidate") ~> addHeader(Cookie(cookieName, sessionCookie1.cookie.value)) ~> routes ~> check {
-        responseAs[String] should be ("ok")
-
-        val Some(sessionCookie2) = header[`Set-Cookie`]
-        sessionCookie2.cookie.expires should be (Some(DateTime.MinValue))
-      }
-    }
-  }
-
-  it should "reject the request if the session cookie is not set" in {
-    Get("/getReq") ~> routes ~> check {
-      rejection should be (AuthorizationFailedRejection)
-    }
-  }
-
-  it should "reject the request if the session cookie is invalid" in {
-    Get("/getReq") ~> addHeader(Cookie(cookieName, "invalid")) ~> routes ~> check {
-      rejection should be (AuthorizationFailedRejection)
-    }
-  }
-
-  it should "touch the session" in {
-    Get("/set") ~> routes(manager_expires60_fixedTime) ~> check {
-      val Some(sessionCookie1) = header[`Set-Cookie`]
-
-      Get("/touchReq") ~>
-        addHeader(Cookie(cookieName, sessionCookie1.cookie.value)) ~>
-        routes(manager_expires60_fixedTime_plus30s) ~>
-        check {
-          responseAs[String] should be ("Map(k1 -> v1)")
-
-          val Some(sessionCookie2) = header[`Set-Cookie`]
-
-          // The session cookie should be modified with a new expiry date
-          sessionCookie1.cookie.value should not be (sessionCookie2.cookie.value)
-
-          // 70 seconds from the initial cookie, only the touched one should work
-          Get("/touchReq") ~> addHeader(Cookie(cookieName, sessionCookie1.cookie.value)) ~>
-            routes(manager_expires60_fixedTime_plus70s) ~>
-            check {
-              rejection should be (AuthorizationFailedRejection)
-            }
-          Get("/touchReq") ~> addHeader(Cookie(cookieName, sessionCookie2.cookie.value)) ~>
-            routes(manager_expires60_fixedTime_plus70s) ~>
-            check {
-              responseAs[String] should be ("Map(k1 -> v1)")
-            }
+        Get("/getOpt") ~> addHeader(using.setSessionHeader(s)) ~> routes ~> check {
+          responseAs[String] should be("Some(Map(k1 -> v1))")
         }
+      }
+    }
+
+    it should s"$p read an optional session when the session is not set" in {
+      Get("/getOpt") ~> routes ~> check {
+        responseAs[String] should be("None")
+      }
+    }
+
+    it should s"$p read a required session when the session is set" in {
+      Get("/set") ~> routes ~> check {
+        val Some(s) = using.getSession
+
+        Get("/getReq") ~> addHeader(using.setSessionHeader(s)) ~> routes ~> check {
+          responseAs[String] should be("Map(k1 -> v1)")
+        }
+      }
+    }
+
+    it should s"$p invalidate a session" in {
+      Get("/set") ~> routes ~> check {
+        val Some(s1) = using.getSession
+
+        Get("/invalidate") ~> addHeader(using.setSessionHeader(s1)) ~> routes ~> check {
+          responseAs[String] should be("ok")
+
+          using.isSessionExpired should be (true)
+        }
+      }
+    }
+
+    it should s"$p reject the request if the session is not set" in {
+      Get("/getReq") ~> routes ~> check {
+        rejection should be(AuthorizationFailedRejection)
+      }
+    }
+
+    it should s"$p reject the request if the session is invalid" in {
+      Get("/getReq") ~> addHeader(using.setSessionHeader("invalid")) ~> routes ~> check {
+        rejection should be(AuthorizationFailedRejection)
+      }
+    }
+
+    it should s"$p touch the session" in {
+      Get("/set") ~> routes(manager_expires60_fixedTime) ~> check {
+        val Some(s1) = using.getSession
+
+        Get("/touchReq") ~>
+          addHeader(using.setSessionHeader(s1)) ~>
+          routes(manager_expires60_fixedTime_plus30s) ~>
+          check {
+            responseAs[String] should be("Map(k1 -> v1)")
+
+            val Some(s2) = using.getSession
+
+            // The session should be modified with a new expiry date
+            s1 should not be (s2)
+
+            // 70 seconds from the initial request, only the touched one should work
+            Get("/touchReq") ~> addHeader(using.setSessionHeader(s1)) ~>
+              routes(manager_expires60_fixedTime_plus70s) ~>
+              check {
+                rejection should be(AuthorizationFailedRejection)
+              }
+            Get("/touchReq") ~> addHeader(using.setSessionHeader(s2)) ~>
+              routes(manager_expires60_fixedTime_plus70s) ~>
+              check {
+                responseAs[String] should be("Map(k1 -> v1)")
+              }
+          }
+      }
     }
   }
 }
