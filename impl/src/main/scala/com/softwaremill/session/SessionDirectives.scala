@@ -39,9 +39,9 @@ trait SessionDirectives extends OneOffSessionDirectives with RefreshableSessionD
    * Invalidate the session cookie.
    *
    * If refreshable, also removes the refresh token cookie and the refresh token token (from the client and token
-    * store), if present.
-    *
-    * Note that you should use `refreshable` if you use refreshable systems even only for some users.
+   * store), if present.
+   *
+   * Note that you should use `refreshable` if you use refreshable systems even only for some users.
    */
   def invalidateSession[T](sc: SessionContinuity[T], st: GetSessionTransport): Directive0 = {
     sc match {

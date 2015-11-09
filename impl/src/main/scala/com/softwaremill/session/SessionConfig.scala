@@ -13,20 +13,27 @@ case class CookieConfig(
   httpOnly: Boolean
 )
 
+case class HeaderConfig(
+  sendToClientHeaderName: String,
+  getFromClientHeaderName: String
+)
+
 case class SessionConfig(
   /**
    * Should be different on each environment and **kept secret!**. It's used to sign and encrypt cookie data.
    * This should be a long random string.
    */
   serverSecret: String,
+  /**
+   * For session cookies, **do not** set the [[CookieConfig.maxAge]], as this will turn it into a persistent cookie
+   * (on the client).
+   */
   sessionCookieConfig: CookieConfig,
+  sessionHeaderConfig: HeaderConfig,
   /**
    * If you'd like session cookies to expire as well after a period of inactivity, you can optionally include an
    * expiration date in the cookie data (expiration will be validated on the server). The expiration date will be
    * calculated by adding the given number of seconds to the time at which the session is last updated.
-   *
-   * For session cookies, **do not** set the [[CookieConfig.maxAge]], as this will turn it into a persistent cookie
-   * (on the client).
    */
   sessionMaxAgeSeconds: Option[Long],
   /**
@@ -40,6 +47,7 @@ case class SessionConfig(
    */
   csrfSubmittedName: String,
   refreshTokenCookieConfig: CookieConfig,
+  refreshTokenHeaderConfig: HeaderConfig,
   /**
    * When a refresh token is used to log in, a new one is generated. The old one should be deleted with a delay,
    * to properly serve concurrent requests using the old token.
@@ -74,6 +82,10 @@ object SessionConfig {
         secure = scopedConfig.getBoolean("cookie.secure"),
         httpOnly = scopedConfig.getBoolean("cookie.http-only")
       ),
+      sessionHeaderConfig = HeaderConfig(
+        sendToClientHeaderName = scopedConfig.getString("header.send-to-client-name"),
+        getFromClientHeaderName = scopedConfig.getString("header.get-from-client-name")
+      ),
       sessionMaxAgeSeconds = scopedConfig.getOptionalLong("max-age-seconds"),
       sessionEncryptData = scopedConfig.getBoolean("encrypt-data"),
       csrfCookieConfig = CookieConfig(
@@ -92,6 +104,10 @@ object SessionConfig {
         maxAge = refreshTokenConfig.getOptionalDurationSeconds("cookie.max-age"),
         secure = refreshTokenConfig.getBoolean("cookie.secure"),
         httpOnly = refreshTokenConfig.getBoolean("cookie.http-only")
+      ),
+      refreshTokenHeaderConfig = HeaderConfig(
+        sendToClientHeaderName = refreshTokenConfig.getString("header.send-to-client-name"),
+        getFromClientHeaderName = refreshTokenConfig.getString("header.get-from-client-name")
       ),
       removeUsedRefreshTokenAfter = refreshTokenConfig.getDuration("remove-used-token-after", TimeUnit.SECONDS)
     )
