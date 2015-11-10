@@ -119,7 +119,7 @@ trait RefreshableSessionDirectives { this: OneOffSessionDirectives =>
   private[session] def refreshableSession[T](sc: Refreshable[T]): Directive1[SessionResult[T]] = {
     import sc.ec
     oneOffSession(sc).flatMap {
-      case SessionResult.NoSession =>
+      case SessionResult.NoSession | SessionResult.Expired =>
         optionalCookie(sc.refreshTokenManager.config.refreshTokenCookieConfig.name).flatMap {
           case None => provide(SessionResult.NoSession)
           case Some(cookie) =>

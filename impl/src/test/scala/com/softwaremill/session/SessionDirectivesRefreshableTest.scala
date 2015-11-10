@@ -1,238 +1,244 @@
 package com.softwaremill.session
 
-import akka.http.scaladsl.model.DateTime
-import akka.http.scaladsl.model.headers.{Cookie, `Set-Cookie`}
 import akka.http.scaladsl.server.AuthorizationFailedRejection
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.softwaremill.session.SessionDirectives._
-import org.scalatest.{ShouldMatchers, FlatSpec}
+import org.scalatest.{FlatSpec, ShouldMatchers}
 
-class SessionDirectivesRefreshableTest extends FlatSpec with ScalatestRouteTest with ShouldMatchers {
+class SessionDirectivesRefreshableTest extends FlatSpec with ScalatestRouteTest with ShouldMatchers with MultipleTransportTest {
 
   import TestData._
-  val sessionCookieName = sessionConfig.sessionCookieConfig.name
-  val cookieName = sessionConfig.refreshTokenCookieConfig.name
 
   implicit val storage = new InMemoryRefreshTokenStorage[Map[String, String]] {
     override def log(msg: String) = println(msg)
   }
 
-  def routes(implicit manager: SessionManager[Map[String, String]]) = get {
+  def createRoutes(using: TestUsingTransport)(implicit manager: SessionManager[Map[String, String]]) = get {
     path("set") {
-      setSession(refreshable, usingCookies, Map("k1" -> "v1")) {
+      setSession(refreshable, using.setSessionTransport, Map("k1" -> "v1")) {
         complete { "ok" }
       }
     } ~
       path("getOpt") {
-        optionalSession(refreshable, usingCookies) { session =>
+        optionalSession(refreshable, using.getSessionTransport) { session =>
           complete { session.toString }
         }
       } ~
       path("getReq") {
-        requiredSession(refreshable, usingCookies) { session =>
+        requiredSession(refreshable, using.getSessionTransport) { session =>
           complete { session.toString }
         }
       } ~
       path("touchReq") {
-        touchRequiredSession(refreshable, usingCookies) { session =>
+        touchRequiredSession(refreshable, using.getSessionTransport) { session =>
           complete { session.toString }
         }
       } ~
       path("invalidate") {
-        invalidateSession(refreshable, usingCookies) {
+        invalidateSession(refreshable, using.getSessionTransport) {
           complete { "ok" }
         }
       }
   }
 
-  def cookiesMap = headers.collect { case `Set-Cookie`(cookie) => cookie.name -> cookie.value }.toMap
+  it should s"Using cookies: set the refresh token cookie to expire" in {
+    Get("/set") ~> createRoutes(TestUsingCookies) ~> check {
+      responseAs[String] should be("ok")
 
-  it should "set both the session and refresh token cookies" in {
-    Get("/set") ~> routes ~> check {
-      responseAs[String] should be ("ok")
-
-      cookiesMap.get(sessionCookieName) should be ('defined)
-      cookiesMap.get(cookieName) should be ('defined)
-    }
-  }
-
-  it should "set the refresh token cookie to expire" in {
-    Get("/set") ~> routes ~> check {
-      responseAs[String] should be ("ok")
-
-      headers.collect { case `Set-Cookie`(cookie) if cookie.name == cookieName => cookie.maxAge }.headOption.flatten
+      TestUsingCookies.cookiesMap.get(TestUsingCookies.refreshTokenCookieName).flatMap(_.maxAge)
         .getOrElse(0L) should be > (60L * 60L * 24L * 29)
     }
   }
 
-  it should "set a new refresh token cookie when the session is set again" in {
-    Get("/set") ~> routes ~> check {
-      val cookies1 = cookiesMap
+  List(TestUsingCookies).foreach { using =>
+    val p = s"Using ${using.transportName}: "
+    def routes(implicit manager: SMan) = createRoutes(using)(manager)
 
-      Get("/set") ~>
-        routes ~>
-        check {
-          val cookies2 = cookiesMap
-          cookies1(cookieName) should not be (cookies2(cookieName))
-        }
+    it should s"$p set both the session and refresh token" in {
+      Get("/set") ~> routes ~> check {
+        responseAs[String] should be("ok")
+
+        using.getSession should be('defined)
+        using.getRefreshToken should be('defined)
+      }
     }
-  }
 
-  it should "read an optional session when both the session and refresh token cookies are set" in {
-    Get("/set") ~> routes ~> check {
-      val cookies = cookiesMap
+    it should s"$p set a new refresh token when the session is set again" in {
+      Get("/set") ~> routes ~> check {
+        val Some(token1) = using.getRefreshToken
 
-      Get("/getOpt") ~>
-        addHeader(Cookie(sessionCookieName, cookies(sessionCookieName))) ~>
-        addHeader(Cookie(cookieName, cookies(cookieName))) ~>
-        routes ~>
-        check {
-          responseAs[String] should be ("Some(Map(k1 -> v1))")
-        }
+        Get("/set") ~>
+          routes ~>
+          check {
+            val Some(token2) = using.getRefreshToken
+            token1 should not be (token2)
+          }
+      }
     }
-  }
 
-  it should "read an optional session when only the session cookies is set" in {
-    Get("/set") ~> routes ~> check {
-      val cookies = cookiesMap
+    it should s"$p read an optional session when both the session and refresh token are set" in {
+      Get("/set") ~> routes ~> check {
+        val Some(session) = using.getSession
+        val Some(token) = using.getRefreshToken
 
-      Get("/getOpt") ~>
-        addHeader(Cookie(sessionCookieName, cookies(sessionCookieName))) ~>
-        routes ~>
-        check {
-          responseAs[String] should be ("Some(Map(k1 -> v1))")
-        }
+        Get("/getOpt") ~>
+          addHeader(using.setSessionHeader(session)) ~>
+          addHeader(using.setRefreshTokenHeader(token)) ~>
+          routes ~>
+          check {
+            responseAs[String] should be("Some(Map(k1 -> v1))")
+          }
+      }
     }
-  }
 
-  it should "read an optional session when no cookie is set" in {
-    Get("/getOpt") ~> routes ~> check {
-      responseAs[String] should be ("None")
+    it should s"$p read an optional session when only the session is set" in {
+      Get("/set") ~> routes ~> check {
+        val Some(session) = using.getSession
+
+        Get("/getOpt") ~>
+          addHeader(using.setSessionHeader(session)) ~>
+          routes ~>
+          check {
+            responseAs[String] should be("Some(Map(k1 -> v1))")
+          }
+      }
     }
-  }
 
-  it should "read an optional session when only the refresh token cookie is set (re-create the session)" in {
-    Get("/set") ~> routes ~> check {
-      val cookies = cookiesMap
-
-      Get("/getOpt") ~>
-        addHeader(Cookie(cookieName, cookies(cookieName))) ~>
-        routes ~>
-        check {
-          responseAs[String] should be ("Some(Map(k1 -> v1))")
-        }
+    it should s"$p read an optional session when none is set" in {
+      Get("/getOpt") ~> routes ~> check {
+        responseAs[String] should be("None")
+      }
     }
-  }
 
-  it should "set a new refresh token cookie after the session is re-created" in {
-    Get("/set") ~> routes ~> check {
-      val cookies1 = cookiesMap
+    it should s"$p read an optional session when only the refresh token is set (re-create the session)" in {
+      Get("/set") ~> routes ~> check {
+        val Some(token) = using.getRefreshToken
 
-      Get("/getOpt") ~>
-        addHeader(Cookie(cookieName, cookies1(cookieName))) ~>
-        routes ~>
-        check {
-          val cookies2 = cookiesMap
-          cookies1(cookieName) should not be (cookies2)
-        }
+        Get("/getOpt") ~>
+          addHeader(using.setRefreshTokenHeader(token)) ~>
+          routes ~>
+          check {
+            responseAs[String] should be("Some(Map(k1 -> v1))")
+          }
+      }
     }
-  }
 
-  it should "read a required session when both the session and refresh token cookies are set" in {
-    Get("/set") ~> routes ~> check {
-      val cookies = cookiesMap
+    it should s"$p set a new refresh token after the session is re-created" in {
+      Get("/set") ~> routes ~> check {
+        val Some(token1) = using.getRefreshToken
 
-      Get("/getReq") ~>
-        addHeader(Cookie(sessionCookieName, cookies(sessionCookieName))) ~>
-        addHeader(Cookie(cookieName, cookies(cookieName))) ~>
-        routes ~>
-        check {
-          responseAs[String] should be ("Map(k1 -> v1)")
-        }
+        Get("/getOpt") ~>
+          addHeader(using.setRefreshTokenHeader(token1)) ~>
+          routes ~>
+          check {
+            val Some(token2) = using.getRefreshToken
+            token1 should not be (token2)
+          }
+      }
     }
-  }
 
-  it should "invalidate a session" in {
-    Get("/set") ~> routes ~> check {
-      val cookies1 = cookiesMap
+    it should s"$p read a required session when both the session and refresh token are set" in {
+      Get("/set") ~> routes ~> check {
+        val Some(session) = using.getSession
+        val Some(token) = using.getRefreshToken
 
-      Get("/invalidate") ~>
-        addHeader(Cookie(sessionCookieName, cookies1(sessionCookieName))) ~>
-        addHeader(Cookie(cookieName, cookies1(cookieName))) ~>
-        routes ~>
-        check {
-          val cookiesExpiry = headers.collect { case `Set-Cookie`(cookie) => cookie.name -> cookie.expires }.toMap
-          cookiesExpiry(cookieName) should be (Some(DateTime.MinValue))
-          cookiesExpiry(sessionCookieName) should be (Some(DateTime.MinValue))
-        }
+        Get("/getReq") ~>
+          addHeader(using.setSessionHeader(session)) ~>
+          addHeader(using.setRefreshTokenHeader(token)) ~>
+          routes ~>
+          check {
+            responseAs[String] should be("Map(k1 -> v1)")
+          }
+      }
     }
-  }
 
-  it should "reject the request if the session cookie is not set" in {
-    Get("/getReq") ~> routes ~> check {
-      rejection should be (AuthorizationFailedRejection)
+    it should s"$p invalidate a session" in {
+      Get("/set") ~> routes ~> check {
+        val Some(session) = using.getSession
+        val Some(token) = using.getRefreshToken
+
+        Get("/invalidate") ~>
+          addHeader(using.setSessionHeader(session)) ~>
+          addHeader(using.setRefreshTokenHeader(token)) ~>
+          routes ~>
+          check {
+            using.isSessionExpired should be (true)
+            using.isRefreshTokenExpired should be (true)
+          }
+      }
     }
-  }
 
-  it should "reject the request if the session cookie is invalid" in {
-    Get("/getReq") ~> addHeader(Cookie(sessionCookieName, "invalid")) ~> routes ~> check {
-      rejection should be (AuthorizationFailedRejection)
+    it should s"$p reject the request if the session is not set" in {
+      Get("/getReq") ~> routes ~> check {
+        rejection should be(AuthorizationFailedRejection)
+      }
     }
-  }
 
-  it should "reject the request if the refresh token cookie is invalid" in {
-    Get("/getReq") ~> addHeader(Cookie(cookieName, "invalid")) ~> routes ~> check {
-      rejection should be (AuthorizationFailedRejection)
+    it should s"$p reject the request if the session is invalid" in {
+      Get("/getReq") ~> addHeader(using.setSessionHeader("invalid")) ~> routes ~> check {
+        rejection should be(AuthorizationFailedRejection)
+      }
     }
-  }
 
-  it should "touch the session, keeping the refresh token token intact" in {
-    Get("/set") ~> routes(manager_expires60_fixedTime) ~> check {
-      val cookies1 = cookiesMap
+    it should s"$p reject the request if the refresh token is invalid" in {
+      Get("/getReq") ~> addHeader(using.setRefreshTokenHeader("invalid")) ~> routes ~> check {
+        rejection should be(AuthorizationFailedRejection)
+      }
+    }
 
-      Get("/touchReq") ~>
-        addHeader(Cookie(sessionCookieName, cookies1(sessionCookieName))) ~>
-        addHeader(Cookie(cookieName, cookies1(cookieName))) ~>
-        routes(manager_expires60_fixedTime_plus30s) ~>
-        check {
-          responseAs[String] should be ("Map(k1 -> v1)")
+    it should s"$p touch the session, keeping the refresh token token intact" in {
+      Get("/set") ~> routes(manager_expires60_fixedTime) ~> check {
+        val Some(session1) = using.getSession
+        val Some(token1) = using.getRefreshToken
 
-          val cookies2 = cookiesMap
+        Get("/touchReq") ~>
+          addHeader(using.setSessionHeader(session1)) ~>
+          addHeader(using.setRefreshTokenHeader(token1)) ~>
+          routes(manager_expires60_fixedTime_plus30s) ~>
+          check {
+            responseAs[String] should be("Map(k1 -> v1)")
 
-          // The session cookie should be modified with a new expiry date
-          cookies1(sessionCookieName) should not be (cookies2(sessionCookieName))
+            val Some(session2) = using.getSession
+            val token2Opt = using.getRefreshToken
 
-          // But the refresh token token should remain the same; no new cookie should be set
-          cookies2.get(cookieName) should be (None)
+            // The session should be modified with a new expiry date
+            session1 should not be (session2)
 
-          // 70 seconds from the initial cookie, only the touched one should work
-          Get("/touchReq") ~>
-            addHeader(Cookie(sessionCookieName, cookies2(sessionCookieName))) ~>
-            addHeader(Cookie(cookieName, cookies1(cookieName))) ~>
-            routes(manager_expires60_fixedTime_plus70s) ~>
-            check {
-              responseAs[String] should be ("Map(k1 -> v1)")
-            }
-          Get("/touchReq") ~>
-            addHeader(Cookie(sessionCookieName, cookies1(sessionCookieName))) ~>
-            routes(manager_expires60_fixedTime_plus70s) ~>
-            check {
-              rejection should be (AuthorizationFailedRejection)
-            }
-          // When sending the expired cookie and refresh token token, a new session should start
-          Get("/touchReq") ~>
-            addHeader(Cookie(sessionCookieName, cookies2(sessionCookieName))) ~>
-            addHeader(Cookie(cookieName, cookies1(cookieName))) ~>
-            routes(manager_expires60_fixedTime_plus70s) ~>
-            check {
-              responseAs[String] should be ("Map(k1 -> v1)")
+            // But the refresh token token should remain the same; no new token should be set
+            token2Opt should be(None)
 
-              val cookies3 = cookiesMap
-              // new token should be generated
-              cookies1(sessionCookieName) should not be (cookies3(sessionCookieName))
-            }
-        }
+            // 70 seconds from the initial session, only the touched one should work
+            Get("/touchReq") ~>
+              addHeader(using.setSessionHeader(session2)) ~>
+              addHeader(using.setRefreshTokenHeader(token1)) ~>
+              routes(manager_expires60_fixedTime_plus70s) ~>
+              check {
+                responseAs[String] should be("Map(k1 -> v1)")
+              }
+            Get("/touchReq") ~>
+              addHeader(using.setSessionHeader(session1)) ~>
+              routes(manager_expires60_fixedTime_plus70s) ~>
+              check {
+                rejection should be(AuthorizationFailedRejection)
+              }
+            // When sending the expired session and refresh token token, a new session should start
+            Get("/touchReq") ~>
+              addHeader(using.setSessionHeader(session1)) ~>
+              addHeader(using.setRefreshTokenHeader(token1)) ~>
+              routes(manager_expires60_fixedTime_plus70s) ~>
+              check {
+                responseAs[String] should be("Map(k1 -> v1)")
+
+                val Some(session3) = using.getSession
+                val token3Opt = using.getRefreshToken
+
+                // new token should be generated
+                session1 should not be (session3)
+                token3Opt should be ('defined)
+              }
+          }
+      }
     }
   }
 }

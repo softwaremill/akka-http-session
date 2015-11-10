@@ -55,7 +55,7 @@ class SessionDirectivesOneOffTest extends FlatSpec with ScalatestRouteTest with 
       sessionCookieOption should be('defined)
       val Some(sessionCookie) = sessionCookieOption
 
-      sessionCookie.cookie.name should be(TestUsingCookies.cookieName)
+      sessionCookie.cookie.name should be(TestUsingCookies.sessionCookieName)
     }
   }
 
