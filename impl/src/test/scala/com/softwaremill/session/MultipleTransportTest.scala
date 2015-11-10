@@ -1,7 +1,7 @@
 package com.softwaremill.session
 
 import akka.http.scaladsl.model.{DateTime, HttpHeader}
-import akka.http.scaladsl.model.headers.{HttpCookie, Cookie, `Set-Cookie`}
+import akka.http.scaladsl.model.headers.{RawHeader, HttpCookie, Cookie, `Set-Cookie`}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.softwaremill.session.SessionDirectives._
 import com.softwaremill.session.TestData._
@@ -10,9 +10,14 @@ trait MultipleTransportTest { this: ScalatestRouteTest =>
 
   trait TestUsingTransport {
     def transportName: String
+
     def getSession: Option[String]
     def setSessionHeader(s: String): HttpHeader
     def isSessionExpired: Boolean
+
+    def getRefreshToken: Option[String]
+    def setRefreshTokenHeader(s: String): HttpHeader
+    def isRefreshTokenExpired: Boolean
 
     def getSessionTransport: GetSessionTransport
     def setSessionTransport: SetSessionTransport
@@ -37,5 +42,20 @@ trait MultipleTransportTest { this: ScalatestRouteTest =>
 
     def getSessionTransport = usingCookies
     def setSessionTransport = usingCookies
+  }
+
+  object TestUsingHeaders extends TestUsingTransport {
+    val transportName = "headers"
+
+    def getSession = header(sessionConfig.sessionHeaderConfig.getFromClientHeaderName).map(_.value)
+    def setSessionHeader(s: String) = RawHeader(sessionConfig.sessionHeaderConfig.sendToClientHeaderName, s)
+    def isSessionExpired = getSession.contains("")
+
+    def getRefreshToken = header(sessionConfig.refreshTokenHeaderConfig.getFromClientHeaderName).map(_.value)
+    def setRefreshTokenHeader(s: String) = RawHeader(sessionConfig.refreshTokenHeaderConfig.sendToClientHeaderName, s)
+    def isRefreshTokenExpired = getRefreshToken.contains("")
+
+    def getSessionTransport = usingHeaders
+    def setSessionTransport = usingHeaders
   }
 }

@@ -42,7 +42,7 @@ class SessionDirectivesRefreshableTest extends FlatSpec with ScalatestRouteTest 
       }
   }
 
-  it should s"Using cookies: set the refresh token cookie to expire" in {
+  "Using cookies" should "set the refresh token cookie to expire" in {
     Get("/set") ~> createRoutes(TestUsingCookies) ~> check {
       responseAs[String] should be("ok")
 
@@ -51,11 +51,11 @@ class SessionDirectivesRefreshableTest extends FlatSpec with ScalatestRouteTest 
     }
   }
 
-  List(TestUsingCookies).foreach { using =>
-    val p = s"Using ${using.transportName}: "
+  List(TestUsingCookies, TestUsingHeaders).foreach { using =>
+    val p = s"Using ${using.transportName}"
     def routes(implicit manager: SMan) = createRoutes(using)(manager)
 
-    it should s"$p set both the session and refresh token" in {
+    p should "set both the session and refresh token" in {
       Get("/set") ~> routes ~> check {
         responseAs[String] should be("ok")
 
@@ -64,7 +64,7 @@ class SessionDirectivesRefreshableTest extends FlatSpec with ScalatestRouteTest 
       }
     }
 
-    it should s"$p set a new refresh token when the session is set again" in {
+    p should "set a new refresh token when the session is set again" in {
       Get("/set") ~> routes ~> check {
         val Some(token1) = using.getRefreshToken
 
@@ -77,7 +77,7 @@ class SessionDirectivesRefreshableTest extends FlatSpec with ScalatestRouteTest 
       }
     }
 
-    it should s"$p read an optional session when both the session and refresh token are set" in {
+    p should "read an optional session when both the session and refresh token are set" in {
       Get("/set") ~> routes ~> check {
         val Some(session) = using.getSession
         val Some(token) = using.getRefreshToken
@@ -92,7 +92,7 @@ class SessionDirectivesRefreshableTest extends FlatSpec with ScalatestRouteTest 
       }
     }
 
-    it should s"$p read an optional session when only the session is set" in {
+    p should "read an optional session when only the session is set" in {
       Get("/set") ~> routes ~> check {
         val Some(session) = using.getSession
 
@@ -105,13 +105,13 @@ class SessionDirectivesRefreshableTest extends FlatSpec with ScalatestRouteTest 
       }
     }
 
-    it should s"$p read an optional session when none is set" in {
+    p should "read an optional session when none is set" in {
       Get("/getOpt") ~> routes ~> check {
         responseAs[String] should be("None")
       }
     }
 
-    it should s"$p read an optional session when only the refresh token is set (re-create the session)" in {
+    p should "read an optional session when only the refresh token is set (re-create the session)" in {
       Get("/set") ~> routes ~> check {
         val Some(token) = using.getRefreshToken
 
@@ -124,7 +124,7 @@ class SessionDirectivesRefreshableTest extends FlatSpec with ScalatestRouteTest 
       }
     }
 
-    it should s"$p set a new refresh token after the session is re-created" in {
+    p should "set a new refresh token after the session is re-created" in {
       Get("/set") ~> routes ~> check {
         val Some(token1) = using.getRefreshToken
 
@@ -138,7 +138,7 @@ class SessionDirectivesRefreshableTest extends FlatSpec with ScalatestRouteTest 
       }
     }
 
-    it should s"$p read a required session when both the session and refresh token are set" in {
+    p should "read a required session when both the session and refresh token are set" in {
       Get("/set") ~> routes ~> check {
         val Some(session) = using.getSession
         val Some(token) = using.getRefreshToken
@@ -153,7 +153,7 @@ class SessionDirectivesRefreshableTest extends FlatSpec with ScalatestRouteTest 
       }
     }
 
-    it should s"$p invalidate a session" in {
+    p should "invalidate a session" in {
       Get("/set") ~> routes ~> check {
         val Some(session) = using.getSession
         val Some(token) = using.getRefreshToken
@@ -169,25 +169,25 @@ class SessionDirectivesRefreshableTest extends FlatSpec with ScalatestRouteTest 
       }
     }
 
-    it should s"$p reject the request if the session is not set" in {
+    p should "reject the request if the session is not set" in {
       Get("/getReq") ~> routes ~> check {
         rejection should be(AuthorizationFailedRejection)
       }
     }
 
-    it should s"$p reject the request if the session is invalid" in {
+    p should "reject the request if the session is invalid" in {
       Get("/getReq") ~> addHeader(using.setSessionHeader("invalid")) ~> routes ~> check {
         rejection should be(AuthorizationFailedRejection)
       }
     }
 
-    it should s"$p reject the request if the refresh token is invalid" in {
+    p should "reject the request if the refresh token is invalid" in {
       Get("/getReq") ~> addHeader(using.setRefreshTokenHeader("invalid")) ~> routes ~> check {
         rejection should be(AuthorizationFailedRejection)
       }
     }
 
-    it should s"$p touch the session, keeping the refresh token token intact" in {
+    p should "touch the session, keeping the refresh token token intact" in {
       Get("/set") ~> routes(manager_expires60_fixedTime) ~> check {
         val Some(session1) = using.getSession
         val Some(token1) = using.getRefreshToken

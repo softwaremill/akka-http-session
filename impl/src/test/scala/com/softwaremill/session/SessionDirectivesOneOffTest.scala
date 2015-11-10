@@ -49,7 +49,7 @@ class SessionDirectivesOneOffTest extends FlatSpec with ScalatestRouteTest with 
       }
   }
 
-  it should s"Using cookies: set the correct session cookie name" in {
+  "Using cookies" should "set the correct session cookie name" in {
     Get("/set") ~> createRoutes(TestUsingCookies) ~> check {
       val sessionCookieOption = header[`Set-Cookie`]
       sessionCookieOption should be('defined)
@@ -59,11 +59,11 @@ class SessionDirectivesOneOffTest extends FlatSpec with ScalatestRouteTest with 
     }
   }
 
-  List(TestUsingCookies).foreach { using =>
-    val p = s"Using ${using.transportName}: "
+  List(TestUsingCookies, TestUsingHeaders).foreach { using =>
+    val p = s"Using ${using.transportName}"
     def routes(implicit manager: SMan) = createRoutes(using)(manager)
 
-    it should s"$p set the session" in {
+    p should "set the session" in {
       Get("/set") ~> routes ~> check {
         responseAs[String] should be("ok")
 
@@ -74,7 +74,7 @@ class SessionDirectivesOneOffTest extends FlatSpec with ScalatestRouteTest with 
       }
     }
 
-    it should s"$p read an optional session when the session is set" in {
+    p should "read an optional session when the session is set" in {
       Get("/set") ~> routes ~> check {
         val Some(s) = using.getSession
 
@@ -84,13 +84,13 @@ class SessionDirectivesOneOffTest extends FlatSpec with ScalatestRouteTest with 
       }
     }
 
-    it should s"$p read an optional session when the session is not set" in {
+    p should "read an optional session when the session is not set" in {
       Get("/getOpt") ~> routes ~> check {
         responseAs[String] should be("None")
       }
     }
 
-    it should s"$p read a required session when the session is set" in {
+    p should "read a required session when the session is set" in {
       Get("/set") ~> routes ~> check {
         val Some(s) = using.getSession
 
@@ -100,7 +100,7 @@ class SessionDirectivesOneOffTest extends FlatSpec with ScalatestRouteTest with 
       }
     }
 
-    it should s"$p invalidate a session" in {
+    p should "invalidate a session" in {
       Get("/set") ~> routes ~> check {
         val Some(s1) = using.getSession
 
@@ -112,19 +112,19 @@ class SessionDirectivesOneOffTest extends FlatSpec with ScalatestRouteTest with 
       }
     }
 
-    it should s"$p reject the request if the session is not set" in {
+    p should "reject the request if the session is not set" in {
       Get("/getReq") ~> routes ~> check {
         rejection should be(AuthorizationFailedRejection)
       }
     }
 
-    it should s"$p reject the request if the session is invalid" in {
+    p should "reject the request if the session is invalid" in {
       Get("/getReq") ~> addHeader(using.setSessionHeader("invalid")) ~> routes ~> check {
         rejection should be(AuthorizationFailedRejection)
       }
     }
 
-    it should s"$p touch the session" in {
+    p should "touch the session" in {
       Get("/set") ~> routes(manager_expires60_fixedTime) ~> check {
         val Some(s1) = using.getSession
 
