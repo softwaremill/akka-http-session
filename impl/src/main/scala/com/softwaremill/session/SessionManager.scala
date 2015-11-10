@@ -47,7 +47,7 @@ trait ClientSessionManager[T] {
     name = config.sessionCookieConfig.name,
     value = value,
     expires = None,
-    maxAge = config.sessionCookieConfig.maxAge,
+    maxAge = None,
     domain = config.sessionCookieConfig.domain,
     path = config.sessionCookieConfig.path,
     secure = config.sessionCookieConfig.secure,
@@ -111,7 +111,6 @@ trait CsrfManager[T] {
     name = config.csrfCookieConfig.name,
     value = createToken(),
     expires = None,
-    maxAge = config.csrfCookieConfig.maxAge,
     domain = config.csrfCookieConfig.domain,
     path = config.csrfCookieConfig.path,
     secure = config.csrfCookieConfig.secure,
@@ -147,7 +146,7 @@ trait RefreshTokenManager[T] {
       forSession = session,
       selector = selector,
       tokenHash = crypto.hash(token),
-      expires = nowMillis + config.refreshTokenCookieConfig.maxAge.getOrElse(0L) * 1000L
+      expires = nowMillis + config.refreshTokenMaxAgeSeconds * 1000L
     )).map(_ => encodeSelectorAndToken(selector, token))
 
     existing.flatMap(decodeSelectorAndToken).foreach {
@@ -164,7 +163,7 @@ trait RefreshTokenManager[T] {
     name = config.refreshTokenCookieConfig.name,
     value = value,
     expires = None,
-    maxAge = config.refreshTokenCookieConfig.maxAge,
+    maxAge = Some(config.refreshTokenMaxAgeSeconds),
     domain = config.refreshTokenCookieConfig.domain,
     path = config.refreshTokenCookieConfig.path,
     secure = config.refreshTokenCookieConfig.secure,

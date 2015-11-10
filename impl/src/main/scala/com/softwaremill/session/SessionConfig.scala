@@ -8,7 +8,6 @@ case class CookieConfig(
   name: String,
   domain: Option[String],
   path: Option[String],
-  maxAge: Option[Long],
   secure: Boolean,
   httpOnly: Boolean
 )
@@ -24,10 +23,6 @@ case class SessionConfig(
    * This should be a long random string.
    */
   serverSecret: String,
-  /**
-   * For session cookies, **do not** set the [[CookieConfig.maxAge]], as this will turn it into a persistent cookie
-   * (on the client).
-   */
   sessionCookieConfig: CookieConfig,
   sessionHeaderConfig: HeaderConfig,
   /**
@@ -48,6 +43,7 @@ case class SessionConfig(
   csrfSubmittedName: String,
   refreshTokenCookieConfig: CookieConfig,
   refreshTokenHeaderConfig: HeaderConfig,
+  refreshTokenMaxAgeSeconds: Long,
   /**
    * When a refresh token is used to log in, a new one is generated. The old one should be deleted with a delay,
    * to properly serve concurrent requests using the old token.
@@ -78,7 +74,6 @@ object SessionConfig {
         name = scopedConfig.getString("cookie.name"),
         domain = scopedConfig.getOptionalString("cookie.domain"),
         path = scopedConfig.getOptionalString("cookie.path"),
-        maxAge = scopedConfig.getOptionalDurationSeconds("cookie.max-age"),
         secure = scopedConfig.getBoolean("cookie.secure"),
         httpOnly = scopedConfig.getBoolean("cookie.http-only")
       ),
@@ -86,13 +81,12 @@ object SessionConfig {
         sendToClientHeaderName = scopedConfig.getString("header.send-to-client-name"),
         getFromClientHeaderName = scopedConfig.getString("header.get-from-client-name")
       ),
-      sessionMaxAgeSeconds = scopedConfig.getOptionalLong("max-age-seconds"),
+      sessionMaxAgeSeconds = scopedConfig.getOptionalDurationSeconds("max-age"),
       sessionEncryptData = scopedConfig.getBoolean("encrypt-data"),
       csrfCookieConfig = CookieConfig(
         name = csrfConfig.getString("cookie.name"),
         domain = csrfConfig.getOptionalString("cookie.domain"),
         path = csrfConfig.getOptionalString("cookie.path"),
-        maxAge = csrfConfig.getOptionalDurationSeconds("cookie.max-age"),
         secure = csrfConfig.getBoolean("cookie.secure"),
         httpOnly = csrfConfig.getBoolean("cookie.http-only")
       ),
@@ -101,7 +95,6 @@ object SessionConfig {
         name = refreshTokenConfig.getString("cookie.name"),
         domain = refreshTokenConfig.getOptionalString("cookie.domain"),
         path = refreshTokenConfig.getOptionalString("cookie.path"),
-        maxAge = refreshTokenConfig.getOptionalDurationSeconds("cookie.max-age"),
         secure = refreshTokenConfig.getBoolean("cookie.secure"),
         httpOnly = refreshTokenConfig.getBoolean("cookie.http-only")
       ),
@@ -109,6 +102,7 @@ object SessionConfig {
         sendToClientHeaderName = refreshTokenConfig.getString("header.send-to-client-name"),
         getFromClientHeaderName = refreshTokenConfig.getString("header.get-from-client-name")
       ),
+      refreshTokenMaxAgeSeconds = refreshTokenConfig.getDuration("max-age", TimeUnit.SECONDS),
       removeUsedRefreshTokenAfter = refreshTokenConfig.getDuration("remove-used-token-after", TimeUnit.SECONDS)
     )
   }
