@@ -8,7 +8,7 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
-import akka.http.scaladsl.model.headers.HttpCookie
+import akka.http.scaladsl.model.headers.{RawHeader, HttpCookie}
 
 class SessionManager[T](val config: SessionConfig, crypto: Crypto = DefaultCrypto)(implicit sessionSerializer: SessionSerializer[T]) { manager =>
 
@@ -54,6 +54,13 @@ trait ClientSessionManager[T] {
     httpOnly = config.sessionCookieConfig.httpOnly
   )
 
+  def createHeader(data: T) = createHeaderWithValue(encode(data))
+
+  def createHeaderWithValue(value: String) = RawHeader(
+    name = config.sessionHeaderConfig.sendToClientHeaderName,
+    value = value
+  )
+
   def encode(data: T): String = {
     // adding an "x" so that the string is never empty, even if there's no data
     val serialized = "x" + sessionSerializer.serialize(data)
@@ -89,7 +96,7 @@ trait ClientSessionManager[T] {
         SessionResult.Corrupt
       }
       else {
-        SessionResult.DecodedFromCookie(sessionSerializer.deserialize(serialized.substring(1))) // removing the x
+        SessionResult.Decoded(sessionSerializer.deserialize(serialized.substring(1))) // removing the x
       }
     }
     catch {
@@ -98,7 +105,7 @@ trait ClientSessionManager[T] {
     }
   }
 
-  def cookieMissingRejection = AuthorizationFailedRejection
+  def sessionMissingRejection = AuthorizationFailedRejection
 }
 
 trait CsrfManager[T] {
@@ -127,8 +134,8 @@ trait RefreshTokenManager[T] {
   def createSelector(): String = SessionUtil.randomString(16)
   def createToken(): String = SessionUtil.randomString(64)
 
-  def decodeSelectorAndToken(cookieValue: String): Option[(String, String)] = {
-    val s = cookieValue.split(":", 2)
+  def decodeSelectorAndToken(value: String): Option[(String, String)] = {
+    val s = value.split(":", 2)
     if (s.length == 2) Some((s(0), s(1))) else None
   }
 
@@ -170,8 +177,13 @@ trait RefreshTokenManager[T] {
     httpOnly = config.refreshTokenCookieConfig.httpOnly
   )
 
-  def sessionFromCookie(cookieValue: String)(implicit ec: ExecutionContext): Future[SessionResult[T]] = {
-    decodeSelectorAndToken(cookieValue) match {
+  def createHeader(value: String) = RawHeader(
+    name = config.refreshTokenHeaderConfig.sendToClientHeaderName,
+    value = value
+  )
+
+  def sessionFromValue(value: String)(implicit ec: ExecutionContext): Future[SessionResult[T]] = {
+    decodeSelectorAndToken(value) match {
       case Some((selector, token)) =>
         storage.lookup(selector).flatMap {
           case Some(lookupResult) =>
@@ -192,8 +204,8 @@ trait RefreshTokenManager[T] {
     }
   }
 
-  def removeToken(cookieValue: String)(implicit ec: ExecutionContext): Future[Unit] = {
-    decodeSelectorAndToken(cookieValue) match {
+  def removeToken(value: String)(implicit ec: ExecutionContext): Future[Unit] = {
+    decodeSelectorAndToken(value) match {
       case Some((s, _)) => storage.remove(s)
       case None => Future.successful(())
     }
@@ -213,7 +225,7 @@ object SessionResult {
     def toOption: Option[T] = None
   }
 
-  case class DecodedFromCookie[T](session: T) extends SessionResult[T] with SessionValue[T]
+  case class Decoded[T](session: T) extends SessionResult[T] with SessionValue[T]
   case class CreatedFromToken[T](session: T) extends SessionResult[T] with SessionValue[T]
 
   case object NoSession extends SessionResult[Nothing] with NoSessionValue[Nothing]

@@ -15,7 +15,7 @@ object SessionManagerTest extends Properties("SessionManager") {
         .copy(sessionMaxAgeSeconds = if (useMaxAgeSeconds) Some(3600L) else None)
       val manager = new SessionManager[Map[String, String]](config).clientSession
 
-      manager.decode(manager.encode(data)) == SessionResult.DecodedFromCookie(data)
+      manager.decode(manager.encode(data)) == SessionResult.Decoded(data)
     }
   }
 

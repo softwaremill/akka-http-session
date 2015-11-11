@@ -47,12 +47,12 @@ trait MultipleTransportTest { this: ScalatestRouteTest =>
   object TestUsingHeaders extends TestUsingTransport {
     val transportName = "headers"
 
-    def getSession = header(sessionConfig.sessionHeaderConfig.getFromClientHeaderName).map(_.value)
-    def setSessionHeader(s: String) = RawHeader(sessionConfig.sessionHeaderConfig.sendToClientHeaderName, s)
+    def getSession = header(sessionConfig.sessionHeaderConfig.sendToClientHeaderName).map(_.value)
+    def setSessionHeader(s: String) = RawHeader(sessionConfig.sessionHeaderConfig.getFromClientHeaderName, s)
     def isSessionExpired = getSession.contains("")
 
-    def getRefreshToken = header(sessionConfig.refreshTokenHeaderConfig.getFromClientHeaderName).map(_.value)
-    def setRefreshTokenHeader(s: String) = RawHeader(sessionConfig.refreshTokenHeaderConfig.sendToClientHeaderName, s)
+    def getRefreshToken = header(sessionConfig.refreshTokenHeaderConfig.sendToClientHeaderName).map(_.value)
+    def setRefreshTokenHeader(s: String) = RawHeader(sessionConfig.refreshTokenHeaderConfig.getFromClientHeaderName, s)
     def isRefreshTokenExpired = getRefreshToken.contains("")
 
     def getSessionTransport = usingHeaders
