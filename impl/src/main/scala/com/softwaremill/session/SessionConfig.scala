@@ -18,38 +18,40 @@ case class HeaderConfig(
 )
 
 case class SessionConfig(
-  /**
-   * Should be different on each environment and **kept secret!**. It's used to sign and encrypt cookie data.
-   * This should be a long random string.
-   */
-  serverSecret: String,
-  sessionCookieConfig: CookieConfig,
-  sessionHeaderConfig: HeaderConfig,
-  /**
-   * If you'd like session cookies to expire as well after a period of inactivity, you can optionally include an
-   * expiration date in the cookie data (expiration will be validated on the server). The expiration date will be
-   * calculated by adding the given number of seconds to the time at which the session is last updated.
-   */
-  sessionMaxAgeSeconds: Option[Long],
-  /**
-   * By default the session data won't be encrypted, only signed with a hash. Set this to true if you'd like the data
-   * to be encrypted using a symmetrical key.
-   */
-  sessionEncryptData: Boolean,
-  csrfCookieConfig: CookieConfig,
-  /**
-   * Name of the header or form field in which the CSRF token will be submitted.
-   */
-  csrfSubmittedName: String,
-  refreshTokenCookieConfig: CookieConfig,
-  refreshTokenHeaderConfig: HeaderConfig,
-  refreshTokenMaxAgeSeconds: Long,
-  /**
-   * When a refresh token is used to log in, a new one is generated. The old one should be deleted with a delay,
-   * to properly serve concurrent requests using the old token.
-   */
-  removeUsedRefreshTokenAfter: Long
-)
+    /**
+     * Should be different on each environment and **kept secret!**. It's used to sign and encrypt cookie data.
+     * This should be a long random string.
+     */
+    serverSecret: String,
+    sessionCookieConfig: CookieConfig,
+    sessionHeaderConfig: HeaderConfig,
+    /**
+     * If you'd like session cookies to expire as well after a period of inactivity, you can optionally include an
+     * expiration date in the cookie data (expiration will be validated on the server). The expiration date will be
+     * calculated by adding the given number of seconds to the time at which the session is last updated.
+     */
+    sessionMaxAgeSeconds: Option[Long],
+    /**
+     * By default the session data won't be encrypted, only signed with a hash. Set this to true if you'd like the data
+     * to be encrypted using a symmetrical key.
+     */
+    sessionEncryptData: Boolean,
+    csrfCookieConfig: CookieConfig,
+    /**
+     * Name of the header or form field in which the CSRF token will be submitted.
+     */
+    csrfSubmittedName: String,
+    refreshTokenCookieConfig: CookieConfig,
+    refreshTokenHeaderConfig: HeaderConfig,
+    refreshTokenMaxAgeSeconds: Long,
+    /**
+     * When a refresh token is used to log in, a new one is generated. The old one should be deleted with a delay,
+     * to properly serve concurrent requests using the old token.
+     */
+    removeUsedRefreshTokenAfter: Long
+) {
+  require(serverSecret.length >= 64, "Server secret must be at least 64 characters long!")
+}
 
 object SessionConfig {
   private implicit class PimpedConfig(config: Config) {
