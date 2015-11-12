@@ -61,7 +61,7 @@ trait SessionDirectives extends OneOffSessionDirectives with RefreshableSessionD
    */
   def requiredSession[T](sc: SessionContinuity[T], st: GetSessionTransport): Directive1[T] =
     optionalSession(sc, st).flatMap {
-      case None => reject(sc.manager.clientSession.sessionMissingRejection)
+      case None => reject(sc.clientSessionManager.sessionMissingRejection)
       case Some(data) => provide(data)
     }
 
@@ -99,8 +99,8 @@ object SessionDirectives extends SessionDirectives
 trait OneOffSessionDirectives {
   private[session] def setOneOffSession[T](sc: SessionContinuity[T], st: SetSessionTransport, v: T): Directive0 =
     st match {
-      case CookieST => setCookie(sc.manager.clientSession.createCookie(v))
-      case HeaderST => respondWithHeader(sc.manager.clientSession.createHeader(v))
+      case CookieST => setCookie(sc.clientSessionManager.createCookie(v))
+      case HeaderST => respondWithHeader(sc.clientSessionManager.createHeader(v))
     }
 
   private[session] def setOneOffSessionSameTransport[T](sc: SessionContinuity[T], st: GetSessionTransport, v: T): Directive0 =
@@ -124,7 +124,7 @@ trait OneOffSessionDirectives {
 
   private[session] def oneOffSession[T](sc: SessionContinuity[T], st: GetSessionTransport): Directive1[SessionResult[T]] = {
     read(sc, st).map {
-      case Some((v, _)) => sc.manager.clientSession.decode(v)
+      case Some((v, _)) => sc.clientSessionManager.decode(v)
       case None => SessionResult.NoSession
     }
   }
@@ -134,10 +134,10 @@ trait OneOffSessionDirectives {
       case None =>
         readHeader(sc).flatMap {
           case None => pass
-          case Some(_) => respondWithHeader(sc.manager.clientSession.createHeaderWithValue(""))
+          case Some(_) => respondWithHeader(sc.clientSessionManager.createHeaderWithValue(""))
         }
 
-      case Some(_) => deleteCookie(sc.manager.clientSession.createCookieWithValue("").copy(maxAge = None))
+      case Some(_) => deleteCookie(sc.clientSessionManager.createCookieWithValue("").copy(maxAge = None))
     }
   }
 }

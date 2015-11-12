@@ -13,7 +13,7 @@ object SessionManagerTest extends Properties("SessionManager") {
       val config = SessionConfig.default(secret)
         .copy(sessionEncryptData = encrypt)
         .copy(sessionMaxAgeSeconds = if (useMaxAgeSeconds) Some(3600L) else None)
-      val manager = new SessionManager[Map[String, String]](config).clientSession
+      val manager = new SessionManager[Map[String, String]](config).clientSessionManager
 
       manager.decode(manager.encode(data)) == SessionResult.Decoded(data)
     }
@@ -26,10 +26,10 @@ object SessionManagerTest extends Properties("SessionManager") {
         .copy(sessionMaxAgeSeconds = Some(20L)) // expires after 20s
       val managerPast = new SessionManager[Map[String, String]](config) {
         override def nowMillis = 8172L * 1000L
-      }.clientSession
+      }.clientSessionManager
       val managerFuture = new SessionManager[Map[String, String]](config) {
         override def nowMillis = (8172L + 600L) * 1000L // 600s later
-      }.clientSession
+      }.clientSessionManager
 
       managerFuture.decode(managerPast.encode(data)) == SessionResult.Expired
     }

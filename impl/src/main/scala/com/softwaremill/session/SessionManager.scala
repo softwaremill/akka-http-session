@@ -12,18 +12,18 @@ import akka.http.scaladsl.model.headers.{RawHeader, HttpCookie}
 
 class SessionManager[T](val config: SessionConfig, crypto: Crypto = DefaultCrypto)(implicit sessionSerializer: SessionSerializer[T]) { manager =>
 
-  val clientSession: ClientSessionManager[T] = new ClientSessionManager[T] {
+  val clientSessionManager: ClientSessionManager[T] = new ClientSessionManager[T] {
     override def config = manager.config
     override def sessionSerializer = manager.sessionSerializer
     override def nowMillis = manager.nowMillis
     override def crypto = manager.crypto
   }
 
-  val csrf: CsrfManager[T] = new CsrfManager[T] {
+  val csrfManager: CsrfManager[T] = new CsrfManager[T] {
     override def config = manager.config
   }
 
-  def refreshToken(_storage: RefreshTokenStorage[T]): RefreshTokenManager[T] = new RefreshTokenManager[T] {
+  def createRefreshTokenManager(_storage: RefreshTokenStorage[T]): RefreshTokenManager[T] = new RefreshTokenManager[T] {
     override def config = manager.config
     override def nowMillis = manager.nowMillis
     override def crypto = manager.crypto

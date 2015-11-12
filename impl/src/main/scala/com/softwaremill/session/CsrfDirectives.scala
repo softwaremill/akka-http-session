@@ -16,7 +16,6 @@ trait CsrfDirectives {
    * See the documentation for more details.
    */
   def randomTokenCsrfProtection[T](checkMode: CsrfCheckMode[T]): Directive0 = {
-    import checkMode.manager
     csrfTokenFromCookie(checkMode).flatMap {
       case Some(cookie) =>
         // if a cookie is already set, we let through all get requests (without setting a new token), or validate
@@ -26,12 +25,12 @@ trait CsrfDirectives {
             pass
           }
           else {
-            reject(manager.csrf.tokenInvalidRejection).toDirective[Unit]
+            reject(checkMode.csrfManager.tokenInvalidRejection).toDirective[Unit]
           }
         }
       case None =>
         // if a cookie is not set, generating a new one for get requests, rejecting other
-        (get & setNewCsrfToken(checkMode)).recover(_ => reject(manager.csrf.tokenInvalidRejection))
+        (get & setNewCsrfToken(checkMode)).recover(_ => reject(checkMode.csrfManager.tokenInvalidRejection))
     }
   }
 
@@ -50,7 +49,7 @@ trait CsrfDirectives {
     optionalCookie(checkMode.manager.config.csrfCookieConfig.name).map(_.map(_.value))
 
   def setNewCsrfToken[T](checkMode: CsrfCheckMode[T]): Directive0 =
-    setCookie(checkMode.manager.csrf.createCookie())
+    setCookie(checkMode.csrfManager.createCookie())
 
   def checkHeader[T](implicit manager: SessionManager[T]): CheckHeader[T] = new CheckHeader[T]()
   def checkHeaderAndForm[T](implicit manager: SessionManager[T], materializer: Materializer): CheckHeaderAndForm[T] =
@@ -61,6 +60,7 @@ object CsrfDirectives extends CsrfDirectives
 
 sealed trait CsrfCheckMode[T] {
   def manager: SessionManager[T]
+  def csrfManager = manager.csrfManager
 }
 class CheckHeader[T] private[session] (implicit val manager: SessionManager[T]) extends CsrfCheckMode[T]
 class CheckHeaderAndForm[T] private[session] (implicit
