@@ -11,9 +11,9 @@ class CsrfDirectivesTest extends FlatSpec with ScalatestRouteTest with ShouldMat
 
   import TestData._
   val cookieName = sessionConfig.csrfCookieConfig.name
-  implicit val csrfCheckMode = CheckHeader
+  implicit val csrfCheckMode = checkHeader
 
-  def routes[T](implicit manager: SessionManager[T], checkMode: CsrfCheckMode) =
+  def routes[T](implicit manager: SessionManager[T], checkMode: CsrfCheckMode[T]) =
     randomTokenCsrfProtection(checkMode) {
       get {
         path("site") {
@@ -24,7 +24,7 @@ class CsrfDirectivesTest extends FlatSpec with ScalatestRouteTest with ShouldMat
       } ~
         post {
           path("login") {
-            setNewCsrfToken() {
+            setNewCsrfToken(checkMode) {
               complete { "ok" }
             }
           } ~
@@ -83,7 +83,7 @@ class CsrfDirectivesTest extends FlatSpec with ScalatestRouteTest with ShouldMat
   }
 
   it should "accept requests if the csrf cookie matches the form field value" in {
-    val testRoutes = routes(manager, CheckHeaderAndForm())
+    val testRoutes = routes(manager, checkHeaderAndForm)
     Get("/site") ~> testRoutes ~> check {
       responseAs[String] should be ("ok")
       val Some(csrfCookie) = header[`Set-Cookie`]

@@ -31,7 +31,7 @@ object Example extends App with StrictLogging {
     path("") {
       redirect("/site/index.html", Found)
     } ~
-      randomTokenCsrfProtection() {
+      randomTokenCsrfProtection(checkHeader) {
         pathPrefix("api") {
           path("do_login") {
             post {
@@ -39,7 +39,7 @@ object Example extends App with StrictLogging {
                 logger.info(s"Logging in $body")
 
                 mySetSession(ExampleSession(body)) {
-                  setNewCsrfToken() { ctx => ctx.complete("ok") }
+                  setNewCsrfToken(checkHeader) { ctx => ctx.complete("ok") }
                 }
               }
             }

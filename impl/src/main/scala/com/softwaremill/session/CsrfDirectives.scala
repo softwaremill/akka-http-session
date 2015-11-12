@@ -15,77 +15,54 @@ trait CsrfDirectives {
    *
    * See the documentation for more details.
    */
-  def randomTokenCsrfProtection[T](magnet: CsrfManagerMagnet[T, CsrfCheckMode]): Directive0 = {
-    import magnet.manager
-    csrfTokenFromCookie(magnet).flatMap {
+  def randomTokenCsrfProtection[T](checkMode: CsrfCheckMode[T]): Directive0 = {
+    import checkMode.manager
+    csrfTokenFromCookie(checkMode).flatMap {
       case Some(cookie) =>
         // if a cookie is already set, we let through all get requests (without setting a new token), or validate
         // that the token matches.
-        get | submittedCsrfToken(magnet).flatMap { submitted =>
+        get | submittedCsrfToken(checkMode).flatMap { submitted =>
           if (submitted == cookie) {
             pass
           }
           else {
-            reject(magnet.manager.tokenInvalidRejection).toDirective[Unit]
+            reject(manager.csrf.tokenInvalidRejection).toDirective[Unit]
           }
         }
       case None =>
         // if a cookie is not set, generating a new one for get requests, rejecting other
-        (get & setNewCsrfToken()).recover(_ => reject(magnet.manager.tokenInvalidRejection))
+        (get & setNewCsrfToken(checkMode)).recover(_ => reject(manager.csrf.tokenInvalidRejection))
     }
   }
 
-  def submittedCsrfToken[T](magnet: CsrfManagerMagnet[T, CsrfCheckMode]): Directive1[String] = {
-    headerValueByName(magnet.manager.config.csrfSubmittedName).recover { rejections =>
-      magnet.input match {
-        case c: CheckHeaderAndForm =>
+  def submittedCsrfToken[T](checkMode: CsrfCheckMode[T]): Directive1[String] = {
+    headerValueByName(checkMode.manager.config.csrfSubmittedName).recover { rejections =>
+      checkMode match {
+        case c: CheckHeaderAndForm[T] =>
           import c.materializer
-          formField(magnet.manager.config.csrfSubmittedName)
+          formField(checkMode.manager.config.csrfSubmittedName)
         case _ => reject(rejections: _*)
       }
     }
   }
 
-  def csrfTokenFromCookie[T](magnet: CsrfManagerMagnet[T, CsrfCheckMode]): Directive1[Option[String]] =
-    optionalCookie(magnet.manager.config.csrfCookieConfig.name).map(_.map(_.value))
+  def csrfTokenFromCookie[T](checkMode: CsrfCheckMode[T]): Directive1[Option[String]] =
+    optionalCookie(checkMode.manager.config.csrfCookieConfig.name).map(_.map(_.value))
 
-  def setNewCsrfToken[T](magnet: CsrfManagerMagnet[T, Unit]): Directive0 =
-    setCookie(magnet.manager.createCookie())
+  def setNewCsrfToken[T](checkMode: CsrfCheckMode[T]): Directive0 =
+    setCookie(checkMode.manager.csrf.createCookie())
+
+  def checkHeader[T](implicit manager: SessionManager[T]): CheckHeader[T] = new CheckHeader[T]()
+  def checkHeaderAndForm[T](implicit manager: SessionManager[T], materializer: Materializer): CheckHeaderAndForm[T] =
+    new CheckHeaderAndForm[T]()
 }
 
 object CsrfDirectives extends CsrfDirectives
 
-sealed trait CsrfCheckMode
-case object CheckHeader extends CsrfCheckMode
-case class CheckHeaderAndForm(implicit val materializer: Materializer) extends CsrfCheckMode
-
-trait CsrfManagerMagnet[T, In] {
-  implicit def manager: CsrfManager[T]
-  def input: In
+sealed trait CsrfCheckMode[T] {
+  def manager: SessionManager[T]
 }
-
-object CsrfManagerMagnet {
-  implicit def forCsrfManager[T, In](_input: In)(implicit _manager: CsrfManager[T]): CsrfManagerMagnet[T, In] =
-    new CsrfManagerMagnet[T, In] {
-      override val manager = _manager
-      override val input = _input
-    }
-
-  implicit def forCsrfManager[T](_input: Unit)(implicit _manager: CsrfManager[T]): CsrfManagerMagnet[T, CsrfCheckMode] =
-    new CsrfManagerMagnet[T, CsrfCheckMode] {
-      override val manager = _manager
-      override val input = CheckHeader
-    }
-
-  implicit def forSessionManager[T, In](_input: In)(implicit _manager: SessionManager[T]): CsrfManagerMagnet[T, In] =
-    new CsrfManagerMagnet[T, In] {
-      override val manager = _manager.csrf
-      override val input = _input
-    }
-
-  implicit def forSessionManager[T](_input: Unit)(implicit _manager: SessionManager[T]): CsrfManagerMagnet[T, CsrfCheckMode] =
-    new CsrfManagerMagnet[T, CsrfCheckMode] {
-      override val manager = _manager.csrf
-      override val input = CheckHeader
-    }
-}
+class CheckHeader[T] private[session] (implicit val manager: SessionManager[T]) extends CsrfCheckMode[T]
+class CheckHeaderAndForm[T] private[session] (implicit
+  val manager: SessionManager[T],
+  val materializer: Materializer) extends CsrfCheckMode[T]
