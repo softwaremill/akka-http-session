@@ -1,7 +1,7 @@
 import scalariform.formatter.preferences._
 
 lazy val commonSettings = scalariformSettings ++ Seq(
-  organization := "com.softwaremill",
+  organization := "com.softwaremill.akka-http-session",
   version := "0.1.4-2.0-M1",
   scalaVersion := "2.11.7",
   scalacOptions ++= Seq("-unchecked", "-deprecation"),
@@ -38,24 +38,36 @@ lazy val commonSettings = scalariformSettings ++ Seq(
 
 val akkaHttpVersion = "2.0-M1"
 
+val scalaTest = "org.scalatest" %% "scalatest" % "2.2.4" % "test"
+
 lazy val rootProject = (project in file("."))
   .settings(commonSettings: _*)
   .settings(
     publishArtifact := false,
-    name := "akka-http-session-root")
-  .aggregate(impl, example)
+    name := "root")
+  .aggregate(core, jwt, example)
 
-lazy val impl: Project = (project in file("impl"))
+lazy val core: Project = (project in file("core"))
   .settings(commonSettings: _*)
   .settings(
-    name := "akka-http-session",
+    name := "core",
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-http-experimental" % akkaHttpVersion,
       "com.typesafe.akka" %% "akka-http-testkit-experimental" % akkaHttpVersion % "test",
       "org.scalacheck" %% "scalacheck" % "1.12.4" % "test",
-      "org.scalatest" %% "scalatest" % "2.2.4" % "test"
+      scalaTest
     )
   )
+
+lazy val jwt: Project = (project in file("jwt"))
+  .settings(commonSettings: _*)
+  .settings(
+    name := "jwt",
+    libraryDependencies ++= Seq(
+      "org.json4s" %% "json4s-native" % "3.3.0",
+      scalaTest
+    )
+  ) dependsOn(core)
 
 lazy val example: Project = (project in file("example"))
   .settings(commonSettings: _*)
@@ -65,4 +77,4 @@ lazy val example: Project = (project in file("example"))
       "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2",
       "ch.qos.logback" % "logback-classic" % "1.1.3"
     ))
-  .dependsOn(impl)
+  .dependsOn(core)
