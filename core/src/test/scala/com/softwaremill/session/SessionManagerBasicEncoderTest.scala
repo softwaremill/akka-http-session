@@ -2,7 +2,7 @@ package com.softwaremill.session
 
 import org.scalacheck.{Gen, Prop, Properties}
 
-object SessionManagerTest extends Properties("SessionManager") {
+object SessionManagerBasicEncoderTest extends Properties("SessionManagerBasicEncoder") {
 
   import Prop._
 

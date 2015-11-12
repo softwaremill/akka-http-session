@@ -6,17 +6,15 @@ import akka.http.scaladsl.server.AuthorizationFailedRejection
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.control.NonFatal
 
 import akka.http.scaladsl.model.headers.{RawHeader, HttpCookie}
 
-class SessionManager[T](val config: SessionConfig, crypto: Crypto = DefaultCrypto)(implicit sessionSerializer: SessionSerializer[T]) { manager =>
+class SessionManager[T](val config: SessionConfig)(implicit sessionEncoder: SessionEncoder[T]) { manager =>
 
   val clientSessionManager: ClientSessionManager[T] = new ClientSessionManager[T] {
     override def config = manager.config
-    override def sessionSerializer = manager.sessionSerializer
+    override def sessionEncoder = manager.sessionEncoder
     override def nowMillis = manager.nowMillis
-    override def crypto = manager.crypto
   }
 
   val csrfManager: CsrfManager[T] = new CsrfManager[T] {
@@ -26,7 +24,6 @@ class SessionManager[T](val config: SessionConfig, crypto: Crypto = DefaultCrypt
   def createRefreshTokenManager(_storage: RefreshTokenStorage[T]): RefreshTokenManager[T] = new RefreshTokenManager[T] {
     override def config = manager.config
     override def nowMillis = manager.nowMillis
-    override def crypto = manager.crypto
     override def storage = _storage
   }
 
@@ -37,8 +34,7 @@ class SessionManager[T](val config: SessionConfig, crypto: Crypto = DefaultCrypt
 // see https://github.com/playframework/playframework/blob/master/framework/src/play/src/main/scala/play/api/mvc/Http.scala
 trait ClientSessionManager[T] {
   def config: SessionConfig
-  def sessionSerializer: SessionSerializer[T]
-  def crypto: Crypto
+  def sessionEncoder: SessionEncoder[T]
   def nowMillis: Long
 
   def createCookie(data: T) = createCookieWithValue(encode(data))
@@ -61,48 +57,21 @@ trait ClientSessionManager[T] {
     value = value
   )
 
-  def encode(data: T): String = {
-    // adding an "x" so that the string is never empty, even if there's no data
-    val serialized = "x" + sessionSerializer.serialize(data)
-
-    val withExpiry = config.sessionMaxAgeSeconds.fold(serialized) { maxAge =>
-      val expiry = nowMillis + maxAge * 1000L
-      s"$expiry-$serialized"
-    }
-
-    val encrypted = if (config.sessionEncryptData) crypto.encrypt(withExpiry, config.serverSecret) else withExpiry
-
-    s"${crypto.sign(serialized, config.serverSecret)}-$encrypted"
-  }
+  def encode(data: T): String = sessionEncoder.encode(data, nowMillis, config)
 
   def decode(data: String): SessionResult[T] = {
-    def extractExpiry(data: String): (Long, String) = {
-      config.sessionMaxAgeSeconds.fold((Long.MaxValue, data)) { maxAge =>
-        val splitted = data.split("-", 2)
-        (splitted(0).toLong, splitted(1))
-      }
-    }
-
-    try {
-      val splitted = data.split("-", 2)
-      val decrypted = if (config.sessionEncryptData) crypto.decrypt(splitted(1), config.serverSecret) else splitted(1)
-
-      val (expiry, serialized) = extractExpiry(decrypted)
-
-      if (nowMillis > expiry) {
+    sessionEncoder.decode(data, config).map { dr =>
+      val expired = config.sessionMaxAgeSeconds.fold(false)(_ => nowMillis > dr.expires.getOrElse(Long.MaxValue))
+      if (expired) {
         SessionResult.Expired
       }
-      else if (!SessionUtil.constantTimeEquals(splitted(0), crypto.sign(serialized, config.serverSecret))) {
-        SessionResult.Corrupt
+      else if (!dr.signatureMatches) {
+        SessionResult.Corrupt(new RuntimeException("Corrupt signature"))
       }
       else {
-        SessionResult.Decoded(sessionSerializer.deserialize(serialized.substring(1))) // removing the x
+        SessionResult.Decoded(dr.t)
       }
-    }
-    catch {
-      // fail gracefully is the session cookie is corrupted
-      case NonFatal(_) => SessionResult.Corrupt
-    }
+    }.recover { case t: Exception => SessionResult.Corrupt(t) }.get
   }
 
   def sessionMissingRejection = AuthorizationFailedRejection
@@ -127,7 +96,6 @@ trait CsrfManager[T] {
 
 trait RefreshTokenManager[T] {
   def config: SessionConfig
-  def crypto: Crypto
   def nowMillis: Long
   def storage: RefreshTokenStorage[T]
 
@@ -152,7 +120,7 @@ trait RefreshTokenManager[T] {
     val storeFuture = storage.store(new RefreshTokenData[T](
       forSession = session,
       selector = selector,
-      tokenHash = crypto.hash(token),
+      tokenHash = Crypto.hashSHA256(token),
       expires = nowMillis + config.refreshTokenMaxAgeSeconds * 1000L
     )).map(_ => encodeSelectorAndToken(selector, token))
 
@@ -190,8 +158,8 @@ trait RefreshTokenManager[T] {
             if (lookupResult.expires < nowMillis) {
               storage.remove(selector).map(_ => SessionResult.Expired)
             }
-            else if (!SessionUtil.constantTimeEquals(crypto.hash(token), lookupResult.tokenHash)) {
-              storage.remove(selector).map(_ => SessionResult.Corrupt)
+            else if (!SessionUtil.constantTimeEquals(Crypto.hashSHA256(token), lookupResult.tokenHash)) {
+              storage.remove(selector).map(_ => SessionResult.Corrupt(new RuntimeException("Corrupt token hash")))
             }
             else {
               Future.successful(SessionResult.CreatedFromToken(lookupResult.createSession()))
@@ -200,7 +168,7 @@ trait RefreshTokenManager[T] {
           case None =>
             Future.successful(SessionResult.TokenNotFound)
         }
-      case None => Future.successful(SessionResult.Corrupt)
+      case None => Future.successful(SessionResult.Corrupt(new RuntimeException("Cannot decode selector/token")))
     }
   }
 
@@ -231,5 +199,5 @@ object SessionResult {
   case object NoSession extends SessionResult[Nothing] with NoSessionValue[Nothing]
   case object TokenNotFound extends SessionResult[Nothing] with NoSessionValue[Nothing]
   case object Expired extends SessionResult[Nothing] with NoSessionValue[Nothing]
-  case object Corrupt extends SessionResult[Nothing] with NoSessionValue[Nothing]
+  case class Corrupt(e: Exception) extends SessionResult[Nothing] with NoSessionValue[Nothing]
 }

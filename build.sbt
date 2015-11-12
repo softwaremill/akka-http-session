@@ -77,4 +77,4 @@ lazy val example: Project = (project in file("example"))
       "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2",
       "ch.qos.logback" % "logback-classic" % "1.1.3"
     ))
-  .dependsOn(core)
+  .dependsOn(core, jwt)

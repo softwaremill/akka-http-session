@@ -11,6 +11,7 @@ import com.softwaremill.session.SessionDirectives._
 import com.typesafe.scalalogging.slf4j.StrictLogging
 
 import scala.io.StdIn
+import scala.util.Try
 
 object Example extends App with StrictLogging {
   implicit val system = ActorSystem("example")
@@ -87,9 +88,8 @@ object Example extends App with StrictLogging {
 case class ExampleSession(username: String)
 
 object ExampleSession {
-  implicit def serializer: SessionSerializer[ExampleSession] = new ToMapSessionSerializer[ExampleSession] {
-    private val Key = "u"
-    override def serializeToMap(t: ExampleSession) = Map(Key -> t.username)
-    override def deserializeFromMap(m: Map[String, String]) = ExampleSession(m(Key))
-  }
+  implicit def serializer: SessionSerializer[ExampleSession, String] = new ViaMapSessionSerializer(
+    es => Map("u" -> es.username),
+    m => Try { ExampleSession(m("u")) }
+  )
 }
