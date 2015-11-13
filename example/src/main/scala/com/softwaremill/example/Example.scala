@@ -88,8 +88,8 @@ object Example extends App with StrictLogging {
 case class ExampleSession(username: String)
 
 object ExampleSession {
-  implicit def serializer: SessionSerializer[ExampleSession, String] = new ViaMapSessionSerializer(
-    es => Map("u" -> es.username),
-    m => Try { ExampleSession(m("u")) }
+  implicit def serializer: SessionSerializer[ExampleSession, String] = new SingleValueSessionSerializer(
+    _.username,
+    (un: String) => Try { ExampleSession(un) }
   )
 }

@@ -9,63 +9,15 @@ trait SessionSerializer[T, R] {
   def deserialize(r: R): Try[T]
 }
 
-trait SessionEncoder[T] {
-  def encode(t: T, nowMillis: Long, config: SessionConfig): String
-  def decode(s: String, config: SessionConfig): Try[DecodeResult[T]]
+class SingleValueSessionSerializer[T, V](toValue: T => V, fromValue: V => Try[T])(
+  implicit valueSerializer: SessionSerializer[V, String]) extends SessionSerializer[T, String] {
+
+  override def serialize(t: T) = valueSerializer.serialize(toValue(t))
+
+  override def deserialize(r: String) = valueSerializer.deserialize(r).flatMap(fromValue)
 }
 
-object SessionEncoder {
-  implicit def basic[T](implicit serializer: SessionSerializer[T, String]) = new BasicSessionEncoder[T]()
-}
-
-case class DecodeResult[T](t: T, expires: Option[Long], signatureMatches: Boolean)
-
-/**
-  * @param serializer Must create cookie-safe strings (only with allowed characters).
-  */
-class BasicSessionEncoder[T](implicit serializer: SessionSerializer[T, String]) extends SessionEncoder[T] {
-
-  override def encode(t: T, nowMillis: Long, config: SessionConfig) = {
-    // adding an "x" so that the string is never empty, even if there's no data
-    val serialized = "x" + serializer.serialize(t)
-
-    val withExpiry = config.sessionMaxAgeSeconds.fold(serialized) { maxAge =>
-      val expiry = nowMillis + maxAge * 1000L
-      s"$expiry-$serialized"
-    }
-
-    val encrypted = if (config.sessionEncryptData) Crypto.encryptAES(withExpiry, config.serverSecret) else withExpiry
-
-    s"${Crypto.signHmacSHA1(serialized, config.serverSecret)}-$encrypted"
-  }
-
-  override def decode(s: String, config: SessionConfig) = {
-    def extractExpiry(data: String): (Option[Long], String) = {
-      config.sessionMaxAgeSeconds.fold((Option.empty[Long], data)) { maxAge =>
-        val splitted = data.split("-", 2)
-        (Some(splitted(0).toLong), splitted(1))
-      }
-    }
-
-    Try {
-      val splitted = s.split("-", 2)
-      val decrypted = if (config.sessionEncryptData) Crypto.decryptAES(splitted(1), config.serverSecret) else splitted(1)
-
-      val (expiry, serialized) = extractExpiry(decrypted)
-
-      val signatureMatches = SessionUtil.constantTimeEquals(
-        splitted(0),
-        Crypto.signHmacSHA1(serialized, config.serverSecret)
-      )
-
-      serializer.deserialize(serialized.substring(1)).map {
-        DecodeResult(_, expiry, signatureMatches)
-      }
-    }.flatten
-  }
-}
-
-class ViaMapSessionSerializer[T](toMap: T => Map[String, String], fromMap: Map[String, String] => Try[T])
+class MultiValueSessionSerializer[T](toMap: T => Map[String, String], fromMap: Map[String, String] => Try[T])
     extends SessionSerializer[T, String] {
 
   import SessionSerializer._
@@ -114,7 +66,7 @@ object SessionSerializer {
     override def deserialize(s: String) = Try(urlDecode(s).toDouble)
   }
 
-  implicit def mapToStringSessionSerializer = new ViaMapSessionSerializer[Map[String, String]](identity, Try(_))
+  implicit def mapToStringSessionSerializer = new MultiValueSessionSerializer[Map[String, String]](identity, Try(_))
 
   private[session] def urlEncode(s: String): String = URLEncoder.encode(s, "UTF-8")
   private[session] def urlDecode(s: String): String = URLDecoder.decode(s, "UTF-8")
