@@ -10,7 +10,9 @@ trait SessionSerializer[T, R] {
 }
 
 class SingleValueSessionSerializer[T, V](toValue: T => V, fromValue: V => Try[T])(
-  implicit valueSerializer: SessionSerializer[V, String]) extends SessionSerializer[T, String] {
+    implicit
+    valueSerializer: SessionSerializer[V, String]
+) extends SessionSerializer[T, String] {
 
   override def serialize(t: T) = valueSerializer.serialize(toValue(t))
 
@@ -41,32 +43,33 @@ class MultiValueSessionSerializer[T](toMap: T => Map[String, String], fromMap: M
 }
 
 object SessionSerializer {
-  implicit def stringToStringSessionSerializer = new SessionSerializer[String, String] {
+  implicit def stringToStringSessionSerializer: SessionSerializer[String, String] = new SessionSerializer[String, String] {
     override def serialize(t: String) = urlEncode(t)
     override def deserialize(s: String) = Try(urlDecode(s))
   }
 
-  implicit def intToStringSessionSerializer = new SessionSerializer[Int, String] {
+  implicit def intToStringSessionSerializer: SessionSerializer[Int, String] = new SessionSerializer[Int, String] {
     override def serialize(t: Int) = urlEncode(t.toString)
     override def deserialize(s: String) = Try(urlDecode(s).toInt)
   }
 
-  implicit def longToStringSessionSerializer = new SessionSerializer[Long, String] {
+  implicit def longToStringSessionSerializer: SessionSerializer[Long, String] = new SessionSerializer[Long, String] {
     override def serialize(t: Long) = urlEncode(t.toString)
     override def deserialize(s: String) = Try(urlDecode(s).toLong)
   }
 
-  implicit def floatToStringSessionSerializer = new SessionSerializer[Float, String] {
+  implicit def floatToStringSessionSerializer: SessionSerializer[Float, String] = new SessionSerializer[Float, String] {
     override def serialize(t: Float) = urlEncode(t.toString)
     override def deserialize(s: String) = Try(urlDecode(s).toFloat)
   }
 
-  implicit def doubleToStringSessionSerializer = new SessionSerializer[Double, String] {
+  implicit def doubleToStringSessionSerializer: SessionSerializer[Double, String] = new SessionSerializer[Double, String] {
     override def serialize(t: Double) = urlEncode(t.toString)
     override def deserialize(s: String) = Try(urlDecode(s).toDouble)
   }
 
-  implicit def mapToStringSessionSerializer = new MultiValueSessionSerializer[Map[String, String]](identity, Try(_))
+  implicit def mapToStringSessionSerializer: SessionSerializer[Map[String, String], String] =
+    new MultiValueSessionSerializer[Map[String, String]](identity, Try(_))
 
   private[session] def urlEncode(s: String): String = URLEncoder.encode(s, "UTF-8")
   private[session] def urlDecode(s: String): String = URLDecoder.decode(s, "UTF-8")

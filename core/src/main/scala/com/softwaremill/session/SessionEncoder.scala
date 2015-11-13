@@ -9,17 +9,17 @@ trait SessionEncoder[T] {
 
 object SessionEncoder {
   /**
-    * Default low-priority implicit encoder. If you wish to use another one, provide an implicit encoder in a
-    * higher-priority implicit scope, e.g. as an implicit value declared next to `SessionManager`.
-    */
+   * Default low-priority implicit encoder. If you wish to use another one, provide an implicit encoder in a
+   * higher-priority implicit scope, e.g. as an implicit value declared next to `SessionManager`.
+   */
   implicit def basic[T](implicit serializer: SessionSerializer[T, String]) = new BasicSessionEncoder[T]()
 }
 
 case class DecodeResult[T](t: T, expires: Option[Long], signatureMatches: Boolean)
 
 /**
-  * @param serializer Must create cookie-safe strings (only with allowed characters).
-  */
+ * @param serializer Must create cookie-safe strings (only with allowed characters).
+ */
 class BasicSessionEncoder[T](implicit serializer: SessionSerializer[T, String]) extends SessionEncoder[T] {
 
   override def encode(t: T, nowMillis: Long, config: SessionConfig) = {
@@ -31,9 +31,9 @@ class BasicSessionEncoder[T](implicit serializer: SessionSerializer[T, String]) 
       s"$expiry-$serialized"
     }
 
-    val encrypted = if (config.sessionEncryptData) Crypto.encryptAES(withExpiry, config.serverSecret) else withExpiry
+    val encrypted = if (config.sessionEncryptData) Crypto.encrypt_AES(withExpiry, config.serverSecret) else withExpiry
 
-    s"${Crypto.signHmacSHA1(serialized, config.serverSecret)}-$encrypted"
+    s"${Crypto.sign_HmacSHA1_hex(serialized, config.serverSecret)}-$encrypted"
   }
 
   override def decode(s: String, config: SessionConfig) = {
@@ -46,13 +46,13 @@ class BasicSessionEncoder[T](implicit serializer: SessionSerializer[T, String]) 
 
     Try {
       val splitted = s.split("-", 2)
-      val decrypted = if (config.sessionEncryptData) Crypto.decryptAES(splitted(1), config.serverSecret) else splitted(1)
+      val decrypted = if (config.sessionEncryptData) Crypto.decrypt_AES(splitted(1), config.serverSecret) else splitted(1)
 
       val (expiry, serialized) = extractExpiry(decrypted)
 
       val signatureMatches = SessionUtil.constantTimeEquals(
         splitted(0),
-        Crypto.signHmacSHA1(serialized, config.serverSecret)
+        Crypto.sign_HmacSHA1_hex(serialized, config.serverSecret)
       )
 
       serializer.deserialize(serialized.substring(1)).map {

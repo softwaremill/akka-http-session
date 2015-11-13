@@ -120,7 +120,7 @@ trait RefreshTokenManager[T] {
     val storeFuture = storage.store(new RefreshTokenData[T](
       forSession = session,
       selector = selector,
-      tokenHash = Crypto.hashSHA256(token),
+      tokenHash = Crypto.hash_SHA256(token),
       expires = nowMillis + config.refreshTokenMaxAgeSeconds * 1000L
     )).map(_ => encodeSelectorAndToken(selector, token))
 
@@ -158,7 +158,7 @@ trait RefreshTokenManager[T] {
             if (lookupResult.expires < nowMillis) {
               storage.remove(selector).map(_ => SessionResult.Expired)
             }
-            else if (!SessionUtil.constantTimeEquals(Crypto.hashSHA256(token), lookupResult.tokenHash)) {
+            else if (!SessionUtil.constantTimeEquals(Crypto.hash_SHA256(token), lookupResult.tokenHash)) {
               storage.remove(selector).map(_ => SessionResult.Corrupt(new RuntimeException("Corrupt token hash")))
             }
             else {
