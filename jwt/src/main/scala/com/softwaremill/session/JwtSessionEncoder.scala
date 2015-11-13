@@ -20,7 +20,8 @@ class JwtSessionEncoder[T](implicit serializer: SessionSerializer[T, JValue], fo
   }
 
   override def decode(s: String, config: SessionConfig) = Try {
-    val List(h, p, signature) = s.split("\\.").toList
+    val sCleaned = if (s.startsWith("Bearer")) s.substring(7).trim else s
+    val List(h, p, signature) = sCleaned.split("\\.").toList
 
     val signatureMatches = SessionUtil.constantTimeEquals(
       signature,

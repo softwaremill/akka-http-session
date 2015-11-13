@@ -63,6 +63,16 @@ class SessionManagerJwtEncoderTest extends FlatSpec with Matchers {
 
     managerHour3.decode(managerHour1.encode(SessionData("john", 40))) should be (SessionResult.Expired)
   }
+
+  it should "decode a token with 'Bearer' prefix" in {
+    implicit val ss = JValueSessionSerializer.caseClass[SessionData]
+    implicit val encoder = new JwtSessionEncoder[SessionData]
+    val manager = new SessionManager(defaultConfig).clientSessionManager
+
+    val data = SessionData("john", 50)
+
+    manager.decode("Bearer " + manager.encode(data)) should be (SessionResult.Decoded(data))
+  }
 }
 
 case class SessionData(userName: String, userId: Int)
