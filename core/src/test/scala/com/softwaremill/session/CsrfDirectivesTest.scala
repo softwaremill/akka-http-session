@@ -2,6 +2,7 @@ package com.softwaremill.session
 
 import akka.http.scaladsl.model.FormData
 import akka.http.scaladsl.model.headers.{Cookie, `Set-Cookie`}
+import akka.http.scaladsl.server.AuthorizationFailedRejection
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.softwaremill.session.CsrfDirectives._
@@ -62,7 +63,7 @@ class CsrfDirectivesTest extends FlatSpec with ScalatestRouteTest with ShouldMat
         addHeader(sessionConfig.csrfSubmittedName, "something else") ~>
         routes ~>
         check {
-          rejections should not be ('empty)
+          rejections should be (List(AuthorizationFailedRejection))
         }
     }
   }
@@ -74,7 +75,7 @@ class CsrfDirectivesTest extends FlatSpec with ScalatestRouteTest with ShouldMat
       Post("/transfer_money") ~>
         routes ~>
         check {
-          rejections should not be ('empty)
+          rejections should be (List(AuthorizationFailedRejection))
         }
     }
   }
