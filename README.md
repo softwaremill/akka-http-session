@@ -1,4 +1,4 @@
-# Client-side HTTP sessions for akka-http
+# Web & mobile sessions for akka-http
 
 [![Build Status](https://travis-ci.org/softwaremill/akka-http-session.svg?branch=master)](https://travis-ci.org/softwaremill/akka-http-session)
 
@@ -6,34 +6,130 @@
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.softwaremill/akka-http-session_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.softwaremill/akka-http-session_2.11)
 
-[akka-http](http://doc.akka.io/docs/akka-stream-and-http-experimental/1.0-M4/scala/http/) is an experimental Akka 
+[akka-http](http://doc.akka.io/docs/akka-stream-and-http-experimental/2.0-M1/scala/http/) is an experimental Akka 
 module, originating from [spray.io](http://spray.io), for building *reactive* REST services with an elegant DSL.
 
-`akka-http` has almost all of the required functionalities to serve as a backend for e.g. a single-page-application, 
-with one exception: session handling. This project aims to fill that gap.
+`akka-http` is a great toolkit for building backends for single-page or mobile applications. In almost all apps there 
+is a need to maintain user sessions, make sure session data is secure and cannot be tampered with.
 
-## Client-side sessions
+`akka-http-session` provides directives for client-side session management in web and mobile applications, using cookies
+or custom headers + local storage, with optional [Json Web Tokens](http://jwt.io/) format support. 
 
-### Basic usage
+## What is a session?
 
-Session data is stored as a cookie on the client. The content of the cookie is signed using a server secret, so that
-it is not possible to alter the session data on the client side.
- 
+Session data typically contains at least the id or username of the logged in user. This id must be secured so that a 
+session cannot be "stolen" or forged easily.
+
+Sessions can be stored on the server, either in-memory or in a database, with the session id sent to the client,
+or entirely on the client in a serialized format. The former approach requires sticky sessions or additional shared
+storage, while using the latter (which is supported by this library) sessions can be easily deserialized on any server.
+  
+A session is a string token which is sent to the client and should be sent back to the server on every request.
+
+To prevent forging, serialized session data is **signed** using a server secret. The signature is appended to the
+session data that is sent to the client, and verified when the session token is received back.
+
+## `akka-http-session` features
+
+* type-safe client-side sessions
+* sessions can be encrypted
+* sessions contain an expiry date
+* cookie or custom header transport
+* support for [JWT](http://jwt.io/)
+* refresh token support (e.g. to implement "remember me")
+* CSRF tokens support
+
+## Example
+
+````scala
+val sessionConfig = SessionConfig.default("some_very_long_secret_and_random_string_some_very_long_secret_and_random_string")
+implicit val sessionManager = new SessionManager[Long](sessionConfig)
+
+path("login") {
+  post {
+    entity(as[String]) { body =>
+      setSession(oneOff, usingCookies, 812832L) { ctx =>
+        ctx.complete("ok")
+      }
+    }
+  }
+} ~
+path("secret") {
+  get {
+    requiredSession(oneOff, usingCookies) { session => // type: Long, or whatever the T parameter is
+      complete { "treasure" }
+    }
+  }
+} ~
+path("logout") {
+  get {
+    invalidateSession(oneOff, usingCookies) {
+      complete { "logged out" }
+    }
+  }
+}
+````
+
+You can try out a simple example by running `com.softwaremill.example.Example` in the `example` project and
+opening [http://localhost:8080](http://localhost:8080), or you can just take a look
+[at the source](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/Example.scala).
+
+## `SessionManager` & configuration
+
 All directives require an implicit instance of a `SessionManager[T]`, which can be created by providing a server 
 secret (via a `SessionConfig`). The secret should be a long, random string unique to each environment your app is
 running in. You can generate one with `SessionUtil.randomServerSecret()`. Note that when you change the secret, 
 all sessions will become invalid.
 
+A `SessionConfig` instance can be created using [Typesafe config](https://github.com/typesafehub/config),
+The only value that you need to provide is `akka.http.session.server-secret`,
+preferably via `application.conf` (then you can safely call `SessionConfig.fromConfig`) or by using 
+`SessionConfig.default()`.
+
+You can customize any of the [default config options](https://github.com/softwaremill/akka-http-session/blob/master/core/src/main/resources/reference.conf) 
+either by modifying them through `application.conf` or by modifying the `SessionConfig` case class. If a value has
+type `Option[]`, you can set it to `None` by using a `none` value in the config file.
+
+When using cookies, by default the `secure` attribute of cookies is not set (for development), however it is 
+recommended that all sites  use `https` and all cookies have this attribute set. 
+
+## Client-side sessions
+
+All session-related directives take at least two parameters:
+ 
+* session continuity: `oneOff` vs `refreshable`; specifies what should happen when the session expires. If `refreshable`
+and a refresh token is present, the session will be re-created. See below for details.
+* session transport: `usingCookies` vs `usingHeaders`
+
+Typically, you would create aliases for the session-related directives which use the right parameters basing on the
+current request and logic specific to your application.
+
+### Cookies vs header
+
+Session data can be sent to the client using cookies or custom headers. The first approach is the simplest to use,
+as cookies are automatically sent to the server on each request. 
+
+However, cookies have some security vulnerabilities, and are typically not used in mobile applications. For these
+scenarios, session data can be transported using custom headers (the names of the headers are configurable in 
+the config).
+
+When using headers, you need to store the session (and, if used, refresh-) tokens yourself. These tokens can be 
+stored in-memory, or persistently e.g. using the browser's local storage.
+
+You can dynamically decide which transport to use, basing e.g. on the user-agent or other request properties.
+
+### Basic usage
+
 Sessions are typed; the `T` type parameter in `SessionManager[T]` determines what data is stored in the session. 
 Basic types like `String`, `Int`, `Long`, `Float`, `Double` and `Map[String, String]` are supported out-of-the box. 
-Support for other types can be added by providing an implicit `SessionSerializer[T]`. For case classes, it's most 
-convenient to implement `ToMapSessionSerializer[T]` which should convert the instance into a `String` map (nested 
-types are not supported on purpose, as session data should be small & simple).
+Support for other types can be added by providing an implicit `SessionSerializer[T, String]`. For case classes, it's most 
+convenient to use a `MultiValueSessionSerializer[T]` which should convert the instance into a `String -> String` map 
+(nested types are not supported on purpose, as session data should be small & simple).
 
 Here we are creating a manager where the session content will be a single `Long` number:
 
 ````scala
-val sessionConfig = SessionConfig.default("some_very_long_secret_and_random_string")
+val sessionConfig = SessionConfig.default("some_very_long_secret_and_random_string_some_very_long_secret_and_random_string")
 implicit val sessionManager = new SessionManager[Long](sessionConfig)
 ````
 
@@ -44,7 +140,7 @@ and set a new session cookie), you need to use the `setSession` directive:
 path("login") {
   post {
     entity(as[String]) { body =>
-      setSession(812832L) { ctx =>
+      setSession(oneOff, usingCookies, 812832L) { ctx =>
         ctx.complete("ok")
       }
     }
@@ -52,9 +148,8 @@ path("login") {
 }
 ````
 
-Note that the size of the cookie is limited to 4KB, so you shouldn't put too much data in there (the signature takes
-about 50 characters). Typically the session contains a user id, username or a token, and the rest is read on the 
-server (from a database, memcache server etc.).
+Note that when using cookies, their size is limited to 4KB, so you shouldn't put too much data in there (the signature 
+takes about 50 characters). 
 
 You can require a session to be present, optionally require a session or get a full description of possible session 
 decode outcomes:
@@ -62,14 +157,14 @@ decode outcomes:
 ````scala
 path("secret") {
   get {
-    requiredSession() { session => // type: Long, or whatever the T parameter is
+    requiredSession(oneOff, usingCookies) { session => // type: Long, or whatever the T parameter is
       complete { "treasure" }
     }
   }
 } ~
 path("open") {
   get {
-    optionalSession() { session => // type: Option[Long] (Option[T])
+    optionalSession(oneOff, usingCookies) { session => // type: Option[Long] (Option[T])
       complete { "small treasure" }
     }
   }
@@ -77,8 +172,8 @@ path("open") {
 path("detail") {
   get {
     // type: SessionResult[Long] (SessionResult[T])
-    // which can be: DecodedFromCookie, Expired, Corrupt, NoSession
-    session() { session => 
+    // which can be: Decoded, CreatedFromToken, Expired, Corrupt, NoSession
+    session(oneOff, usingCookies) { session => 
       complete { "small treasure" }
     }
   }
@@ -99,43 +194,57 @@ path("logout") {
 }
 ````
 
-You can try out a running example by running `com.softwaremill.example.Example` in the `example` project, or
-[browse the source](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/Example.scala).
-
 ### Encrypting the session
 
-It is possible to encrypt the session data by modifying the config:
-
-````scala
-val sessionConfig = SessionConfig
-    .default("some_very_long_secret_and_random_string")
-    .withEncryptSessionData(true)
-````
+It is possible to encrypt the session data by modifying the `akka.http.session.encrypt-data` config option. When 
+sessions are encrypted, it's not possible to read their content on the client side.
 
 The key used for encrypting will be calculated basing on the server secret.
 
-### Session timeout
+### Session expiry/timeout
 
-By default the cookie sent to the user will be a session cookie, however it is possible that the client will have the
-browser open for a very long time, [uses Chrome or FF](http://stackoverflow.com/questions/10617954/chrome-doesnt-delete-session-cookies), 
-or if an attacker steals the cookie, it can be re-used. It is possible to include an expiry date checked on the 
-server-side by setting the session timeout:
+By default, sessions expire after a week. This can be disabled or changed with the `akka.http.session.max-age` config
+option.
+
+Note that when using cookies, even though the cookie sent will be a session cookie, it is possible that the client 
+will have the browser open for a very long time, [uses Chrome or FF](http://stackoverflow.com/questions/10617954/chrome-doesnt-delete-session-cookies), 
+or if an attacker steals the cookie, it can be re-used. Hence having an expiry date for sessions is highly recommended.
+
+## JWT: encoding sessions
+
+By default, sessions are encoded into a string using a custom format, where expiry/data/signature parts are separated
+using `-`, and data fields are separated using `=` and url-encoded.
+
+You can also encode sessions in the [Json Web Tokens](http://jwt.io) format, by adding the additional `jwt` dependency,
+which makes use of [`json4s`](http://json4s.org).
+
+To use JWT, you need to create an implicit session encoder before creating a session manager:
 
 ````scala
-val sessionConfig = SessionConfig
-    .default("some_very_long_secret_and_random_string")
-    .withSessionMaxAgeSeconds(Some(3600)) // 1 hour
+case class SessionData(...)
+
+implicit val serializer = JValueSessionSerializer.caseClass[SessionData]
+implicit val encoder = new JwtSessionEncoder[SessionData]
+implicit val manager = new SessionManager(SessionConfig.fromConfig())
 ````
 
-The expiry will be appended to the session data (and taken into account in the signature as well).
+When using JWT, you need to provide a serializer which serializes session data to a `JValue` instead of a `String`. 
+A number of implicit serializers for the basic types are present in `JValueSessionSerializer`, as well as a generic 
+serializer for case classes (used above).
 
-## CSRF protection
+There are many tools available to read JWT session data using various platforms, e.g. 
+[for Angular](https://github.com/auth0/angular-jwt).
+
+It is also possible to customize the session data content generated by overriding appropriate methods in 
+`JwtSessionEncoder` (e.g. provide additional claims in the payload).
+
+## CSRF protection (cookie transport only)
 
 CSRF is an attack where an attacker issues a `GET` or `POST` request on behalf of a user, if the user e.g.
 clicks on a specially constructed link. See the [OWASP page](https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet)
 or the [Play! docs](https://www.playframework.com/documentation/2.2.x/JavaCsrf) for a thorough introduction.
 
-All web apps should be protected against CSRF attacks. This implementation:
+Web apps which use cookies for session management should be protected against CSRF attacks. This implementation:
 
 * assumes that `GET` requests are non-mutating (have no side effects)
 * uses double-submit cookies to verify requests
@@ -144,18 +253,19 @@ All web apps should be protected against CSRF attacks. This implementation:
 
 Note that if the token is passed in a form field, the website isn't protected by HTTPS or you don't control all 
 subdomains, this scheme [can be broken](http://security.stackexchange.com/questions/59470/double-submit-cookies-vulnerabilities/61039#61039).
-Currently, setting a custom header seems to be a secure solution, and is what a number of projects do.
+Currently, setting a custom header seems to be a secure solution, and is what a number of projects do (that's why, when
+using custom headers to send session data, no additional protection is needed).
 
 It is recommended to generate a new CSRF token after logging in, see [this SO question](http://security.stackexchange.com/questions/22903/why-refresh-csrf-token-per-form-request).
 A new token can be generated using the `setNewCsrfToken` directive.
 
 By default the name of the CSRF cookie and the custom header matches what [AngularJS expects and sets](https://docs.angularjs.org/api/ng/service/$http).
-These can be customized in the config, see below.
+These can be customized in the config.
 
 Example usage:
 
 ````scala
-randomTokenCsrfProtection() {
+randomTokenCsrfProtection(checkHeader) {
   get("site") {
     // read from disk
   } ~
@@ -165,159 +275,45 @@ randomTokenCsrfProtection() {
 }
 ````        
      
-## Remember me cookies
+## Refresh tokens ("remember me")
 
-If you'd like to implement persistent, "remember-me" sessions, you should use the `RememberMeDirectives`, which
-offer persistent variants of the directives found in `ClientSessionDirectives`. When using the remember me directives,
-in addition to an implicit `SessionManager` instance, you need to provide an implementation of the `RememberMeStorage`
-trait. This trait has methods to lookup, store and delete remember me tokens. Typically it would use some persistent
-storage.
+If you'd like to implement persistent, "remember-me" sessions, you should use `refreshable` instead of `oneOff`
+sessions. This is especially useful in mobile applications, where you log in once, and the session is remembered for
+a long time. Make sure to adjust the `akka.http.session.refresh-token.max-age` config option appropriately 
+(defaults to 1 month)!
+
+You can dynamically decide, basing on the request properties (e.g. a query parameter), if a session should be
+refreshable or not. Just pass the right parameter to `setSession`.
+
+When using refreshable sessions, in addition to an implicit `SessionManager` instance, you need to provide an 
+implementation of the `RefreshTokenStorage` trait. This trait has methods to lookup, store and delete refresh tokens. 
+Typically it would use some persistent storage.
 
 The tokens are never stored directly, instead only token hashes are passed to the storage. That way even if the token
-database is leaked, it won't be possible to create sessions using the hashes. Moreover, in addition to the token hash,
+database is leaked, it won't be possible to forge sessions using the hashes. Moreover, in addition to the token hash,
 a selector value is stored. That value is used to lookup stored hashes; tokens are compared using using a special
 constant-time comparison method, to prevent timing attacks.
 
-Using persistent sessions is almost the same as client-sessions described above, only the directives have the
-additional `persistent` part in their names:
+When a session expires or is not present, but the refresh token is (sent from the client using either a cookie,
+or a custom header), a new session will be created (using the `RefreshTokenLookupResult.createSession` function), 
+and a new refresh token will be created.
 
-````scala
-path("login") {
-  post {
-    entity(as[String]) { body =>
-      setPersistentSession(812832L) { ctx =>
-        ctx.complete("ok")
-      }
-    }
-  }
-} ~
-path("logout") {
-  post {
-    requiredPersistentSession() {
-      invalidatePersistentSession() { ctx =>
-        ctx.complete("ok")
-      }
-    }
-  }
-} ~
-path("secret") {
-  get {
-    requiredPersistentSession() { session => // type: Long, or whatever the T parameter is
-      complete { "treasure" }
-    }
-  }
-} ~
-path("open") {
-  get {
-    optionalPersistentSession() { session => // type: Option[Long] (Option[T])
-      complete { "small treasure" }
-    }
-  }
-} ~
-path("detail") {
-  get {         
-    // type: SessionResult[Long] (SessionResult[T])
-    // which can be: DecodedFromCookie, CreatedFromToken, Expired, Corrupt, TokenNotFound, NoSession
-    persistentSession() { session => 
-      complete { "small treasure" }
-    }
-  }
-}
-````
-
-When a session expires or the session cookie is not present, but the remember me cookie is, a new session will be
-created (using the `RememberMeLookupResult.createSession` function), and a new remember me token will be created.
-
-Note that you can differentiate between sessions created from "remember me" cookies and from regular authentication
+Note that you can differentiate between sessions created from refresh tokens and from regular authentication
 by storing appropriate information in the session data. That way, you can force the user to re-authenticate 
-if the session was created by "remember me" before crucial operations.
+if the session was created by a refresh token before crucial operations.
 
-The semantics of `touch[Required|Optional]PersistentSession()` are a bit subtle. You can still use expiring client
-sessions when using "remember me". You will then have 2 stages of expiration: expiration of the client session
-(should be shorter), and expiry of the remember me cookie. That way you can have strongly-authenticated sessions
+It is of course possible to read `oneOff`-session using `requiredSession(refreshable, ...)`. If a session was created
+as `oneOff`, using `refreshable` has no additional effect.
+
+### Touching sessions
+
+The semantics of `touch[Required|Optional]Session()` are a bit subtle. You can still use expiring client
+sessions when using refresh tokens. You will then have 2 stages of expiration: expiration of the client session
+(should be shorter), and expiry of the refresh token. That way you can have strongly-authenticated sessions
 which expire fast, and weaker-authenticated re-creatable sessions (as described in the paragraph above).
 
-When touching an existing session, the remember me cookie will not be re-generated and extended, only the session
+When touching an existing session, the refresh token will not be re-generated and extended, only the session
 cookie.
-
-### Conditional persistent sessions
-
-Usually you want to use persistent session conditionally, depending on user choice, if e.g. a "remember me" checkbox
-is ticked. If that's the case, you should use the `persistent` directive variants for reading sessions (they work
-the same for persistent and normal sessions), taking care to use the correct variant when creating the sessions,
-so that the remember-me cookie is created conditionally (so using either `setSession` or `setPersistentSession`).
-
-As the way of specifying if a session should be persistent is app-specific, you should implement that directive
-yourself. If, for example, you are using a boolean query parameter, the directive may look like this:
-
-````scala
-def myAppSetSession(d: MySessionData) = parameter("remember_me".as[Boolean]).flatMap {
-  rm => if (rm) setPersistentSession(d) else setSession(d)
-}
-````
-
-## Customizing cookie parameters
-
-The default config has reasonable defaults concerning the cookie that is generated, you can however customize it by
-calling appropriate methods ont the `SessionConfig`.
-
-By default the `secure` attribute of cookies is not set (for development), however it is recommended that all sites 
-use `https` and all cookies have this attribute set. 
-
-## Creating a `SessionConfig` using Typesafe config
-
-It is possible to create a `SessionConfig` from a `Config` object (coming from 
-[Typesafe config](https://github.com/typesafehub/config)). Just use the `SessionConfig.fromConfig` method. The config
-keys are:
-
-````
-akka.http.session {
-  // The only required config key. 
-  // All other are optional, and the values below are defaults.
-  serverSecret = "some_very_long_secret_and_random_string" 
-  clientSession {
-    cookie {
-      name = "_sessiondata"
-      // domain = "..." 
-      path = "/" 
-      // maxAge = 0 
-      secure = false 
-      httpOnly = true 
-    }
-    maxAgeSeconds = 0 
-    encryptData = false
-  }
-  
-  csrf {
-    cookie {
-      name = "XSRF-TOKEN" 
-      // domain = "..." 
-      path = "/" 
-      // maxAge = 0 
-      secure = false 
-      httpOnly = false 
-    }
-    submittedName = "X-XSRF-TOKEN"
-  }
-  
-  rememberMe {
-    cookie {
-      name = "_rememberme" 
-      // domain = "..." 
-      path = "/" 
-      maxAge = 30 days 
-      secure = false 
-      httpOnly = true 
-    }
-    removeUsedTokenAfter = 5 seconds
-  }
-}
-````
-
-## Custom cryptography
-
-If you'd like to change the signing algorithm, or the session data encryption/decryption code, you can provide a custom
-`Crypto` implementation when creating a `SessionManager`.
 
 ## Links
 
@@ -330,19 +326,21 @@ code was taken
 stored in Rails
 * [Akka issue 16855](https://github.com/akka/akka/issues/16855) for implementing similar functionality straight in Akka
 * [Implementing remember me](https://paragonie.com/blog/2015/04/secure-authentication-php-with-long-term-persistence#title.2)
-* [The definitive guide to form-based website auhtorization](http://stackoverflow.com/questions/549/the-definitive-guide-to-form-based-website-authentication)
+* [The definitive guide to form-based website authorization](http://stackoverflow.com/questions/549/the-definitive-guide-to-form-based-website-authentication)
+* [The Anatomy of a JSON Web Token](https://scotch.io/tutorials/the-anatomy-of-a-json-web-token)
 * [Cookies vs tokens](https://auth0.com/blog/2014/01/07/angularjs-authentication-with-cookies-vs-token/)
 
 ## Using from SBT
 
-For `akka-http` version `1.0`:
-
-````scala
-libraryDependencies += "com.softwaremill" %% "akka-http-session" % "0.1.4"
-````
-
 For `akka-http` version `2.0-M1`:
 
 ````scala
-libraryDependencies += "com.softwaremill" %% "akka-http-session" % "0.1.4-2.0-M1"
+libraryDependencies += "com.softwaremill.akka-http-session" %% "core" % "0.2.0"
+libraryDependencies += "com.softwaremill.akka-http-session" %% "jwt"  % "0.2.0" // optional
+````
+
+For `akka-http` version `1.0` (old version, different API):
+
+````scala
+libraryDependencies += "com.softwaremill" %% "akka-http-session" % "0.1.4"
 ````
