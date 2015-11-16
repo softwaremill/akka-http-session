@@ -20,14 +20,16 @@ trait CsrfDirectives {
       case Some(cookie) =>
         // if a cookie is already set, we let through all get requests (without setting a new token), or validate
         // that the token matches.
-        get.recover { _ => submittedCsrfToken(checkMode).flatMap { submitted =>
-          if (submitted == cookie) {
-            pass
+        get.recover { _ =>
+          submittedCsrfToken(checkMode).flatMap { submitted =>
+            if (submitted == cookie) {
+              pass
+            }
+            else {
+              reject(checkMode.csrfManager.tokenInvalidRejection).toDirective[Unit]
+            }
           }
-          else {
-            reject(checkMode.csrfManager.tokenInvalidRejection).toDirective[Unit]
-          }
-        } }
+        }
       case None =>
         // if a cookie is not set, generating a new one for get requests, rejecting other
         (get & setNewCsrfToken(checkMode)).recover(_ => reject(checkMode.csrfManager.tokenInvalidRejection))
