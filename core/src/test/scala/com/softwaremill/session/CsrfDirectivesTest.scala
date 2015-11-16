@@ -67,6 +67,18 @@ class CsrfDirectivesTest extends FlatSpec with ScalatestRouteTest with ShouldMat
     }
   }
 
+  it should "reject requests if the csrf cookie isn't set" in {
+    Get("/site") ~> routes ~> check {
+      responseAs[String] should be ("ok")
+
+      Post("/transfer_money") ~>
+        routes ~>
+        check {
+          rejections should not be ('empty)
+        }
+    }
+  }
+
   it should "accept requests if the csrf cookie matches the header value" in {
     Get("/site") ~> routes ~> check {
       responseAs[String] should be ("ok")
