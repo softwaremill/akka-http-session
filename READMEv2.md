@@ -17,22 +17,21 @@ or custom headers + local storage, with optional [Json Web Tokens](http://jwt.io
 
 ## What is a session?
 
-Session data typically contains the id or username of the logged in user. This id must be secured so that a session
-cannot be "stolen" or forged easily.
+Session data typically contains at least the id or username of the logged in user. This id must be secured so that a 
+session cannot be "stolen" or forged easily.
 
 Sessions can be stored on the server, either in-memory or in a database, with the session id sent to the client,
 or entirely on the client in a serialized format. The former approach requires sticky sessions or additional shared
-storage, while using the latter (which is supported by this library) sessions can be easily deserialized on the server.
+storage, while using the latter (which is supported by this library) sessions can be easily deserialized on any server.
   
-A session is a string token which is sent to the client and should be sent back to the server on every request, to 
-verify that the user has the necessary permissions to execute a given action.
+A session is a string token which is sent to the client and should be sent back to the server on every request.
 
 To prevent forging, serialized session data is **signed** using a server secret. The signature is appended to the
 session data that is sent to the client, and verified when the session token is received back.
 
 ## `akka-http-session` features
 
-* client-side sessions
+* type-safe client-side sessions
 * sessions can be encrypted
 * sessions contain an expiry date
 * cookie or custom header transport
@@ -71,8 +70,9 @@ path("logout") {
 }
 ````
 
-You can try out a simple example by running `com.softwaremill.example.Example` in the `example` project, or
-[browse the source](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/Example.scala).
+You can try out a simple example by running `com.softwaremill.example.Example` in the `example` project and
+opening [http://localhost:8080](http://localhost:8080), or you can just take a look
+[at the source](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/Example.scala).
 
 ## `SessionManager` & configuration
 
@@ -83,7 +83,7 @@ all sessions will become invalid.
 
 A `SessionConfig` instance can be created using [Typesafe config](https://github.com/typesafehub/config),
 The only value that you need to provide is `akka.http.session.server-secret`,
-either via a `application.conf` file (then you can safely call `SessionConfig.fromConfig`) or by using 
+preferably via `application.conf` (then you can safely call `SessionConfig.fromConfig`) or by using 
 `SessionConfig.default()`.
 
 You can customize any of the [default config options](https://github.com/softwaremill/akka-http-session/blob/master/core/src/main/resources/reference.conf) 
@@ -113,7 +113,7 @@ However, cookies have some security vulnerabilities, and are typically not used 
 scenarios, session data can be transported using custom headers (the names of the headers are configurable in 
 the config).
 
-When using headers, you need to store the session (and, if used, refresh) tokens yourself. These tokens can be 
+When using headers, you need to store the session (and, if used, refresh-) tokens yourself. These tokens can be 
 stored in-memory, or persistently e.g. using the browser's local storage.
 
 You can dynamically decide which transport to use, basing e.g. on the user-agent or other request properties.
@@ -123,13 +123,13 @@ You can dynamically decide which transport to use, basing e.g. on the user-agent
 Sessions are typed; the `T` type parameter in `SessionManager[T]` determines what data is stored in the session. 
 Basic types like `String`, `Int`, `Long`, `Float`, `Double` and `Map[String, String]` are supported out-of-the box. 
 Support for other types can be added by providing an implicit `SessionSerializer[T, String]`. For case classes, it's most 
-convenient to use a `MultiValueSessionSerializer[T]` which should convert the instance into a `String` map (nested 
-types are not supported on purpose, as session data should be small & simple).
+convenient to use a `MultiValueSessionSerializer[T]` which should convert the instance into a `String -> String` map 
+(nested types are not supported on purpose, as session data should be small & simple).
 
 Here we are creating a manager where the session content will be a single `Long` number:
 
 ````scala
-val sessionConfig = SessionConfig.default("some_very_long_secret_and_random_string")
+val sessionConfig = SessionConfig.default("some_very_long_secret_and_random_string_some_very_long_secret_and_random_string")
 implicit val sessionManager = new SessionManager[Long](sessionConfig)
 ````
 
@@ -194,9 +194,6 @@ path("logout") {
 }
 ````
 
-You can try out a running example by running `com.softwaremill.example.Example` in the `example` project, or
-[browse the source](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/Example.scala).
-
 ### Encrypting the session
 
 It is possible to encrypt the session data by modifying the `akka.http.session.encrypt-data` config option. When 
@@ -213,7 +210,7 @@ Note that when using cookies, even though the cookie sent will be a session cook
 will have the browser open for a very long time, [uses Chrome or FF](http://stackoverflow.com/questions/10617954/chrome-doesnt-delete-session-cookies), 
 or if an attacker steals the cookie, it can be re-used. Hence having an expiry date for sessions is highly recommended.
 
-## Encoding sessions
+## JWT: encoding sessions
 
 By default, sessions are encoded into a string using a custom format, where expiry/data/signature parts are separated
 using `-`, and data fields are separated using `=` and url-encoded.
@@ -231,11 +228,12 @@ implicit val encoder = new JwtSessionEncoder[SessionData]
 implicit val manager = new SessionManager(SessionConfig.fromConfig())
 ````
 
-When using JWT, you need to provide a serializer which serializes to a `JValue` instead of a `String`. A number
-of implicit serializers for the basic types are present in `JValueSessionSerializer`, as well as a generic serializer
-for case classes (used above).
+When using JWT, you need to provide a serializer which serializes session data to a `JValue` instead of a `String`. 
+A number of implicit serializers for the basic types are present in `JValueSessionSerializer`, as well as a generic 
+serializer for case classes (used above).
 
-There are many tools to read JWT session data, e.g. [for Angular](https://github.com/auth0/angular-jwt).
+There are many tools available to read JWT session data using various platforms, e.g. 
+[for Angular](https://github.com/auth0/angular-jwt).
 
 It is also possible to customize the session data content generated by overriding appropriate methods in 
 `JwtSessionEncoder` (e.g. provide additional claims in the payload).
@@ -285,26 +283,26 @@ a long time. Make sure to adjust the `akka.http.session.refresh-token.max-age` c
 (defaults to 1 month)!
 
 You can dynamically decide, basing on the request properties (e.g. a query parameter), if a session should be
-refreshable or not. Just pass the right parameter to `setSession`!
+refreshable or not. Just pass the right parameter to `setSession`.
 
-When using the refreshable sessions, in addition to an implicit `SessionManager` instance, you need to provide an 
+When using refreshable sessions, in addition to an implicit `SessionManager` instance, you need to provide an 
 implementation of the `RefreshTokenStorage` trait. This trait has methods to lookup, store and delete refresh tokens. 
 Typically it would use some persistent storage.
 
 The tokens are never stored directly, instead only token hashes are passed to the storage. That way even if the token
-database is leaked, it won't be possible to create sessions using the hashes. Moreover, in addition to the token hash,
+database is leaked, it won't be possible to forge sessions using the hashes. Moreover, in addition to the token hash,
 a selector value is stored. That value is used to lookup stored hashes; tokens are compared using using a special
 constant-time comparison method, to prevent timing attacks.
 
 When a session expires or is not present, but the refresh token is (sent from the client using either a cookie,
-or a cusstom header) , a new session will be created (using the `RefreshTokenLookupResult.createSession` function), 
+or a custom header), a new session will be created (using the `RefreshTokenLookupResult.createSession` function), 
 and a new refresh token will be created.
 
 Note that you can differentiate between sessions created from refresh tokens and from regular authentication
 by storing appropriate information in the session data. That way, you can force the user to re-authenticate 
 if the session was created by a refresh token before crucial operations.
 
-It is of course possible to read `oneOff`-session using `requiredSession(refreshable, ...)`. If a session was create
+It is of course possible to read `oneOff`-session using `requiredSession(refreshable, ...)`. If a session was created
 as `oneOff`, using `refreshable` has no additional effect.
 
 ### Touching sessions
