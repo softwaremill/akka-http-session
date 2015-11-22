@@ -7,7 +7,7 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.softwaremill.session.SessionDirectives._
 import org.scalatest.{FlatSpec, ShouldMatchers}
 
-class SessionDirectivesOneOffTest extends FlatSpec with ScalatestRouteTest with ShouldMatchers with MultipleTransportTest {
+class OneOffTest extends FlatSpec with ScalatestRouteTest with ShouldMatchers with MultipleTransportTest {
 
   import TestData._
 

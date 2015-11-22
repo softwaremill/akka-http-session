@@ -46,7 +46,7 @@ trait SessionDirectives extends OneOffSessionDirectives with RefreshableSessionD
   def invalidateSession[T](sc: SessionContinuity[T], st: GetSessionTransport): Directive0 = {
     sc match {
       case _: OneOff[T] => invalidateOneOffSession(sc, st)
-      case r: Refreshable[T] => invalidateRefreshableSession(r, st)
+      case r: Refreshable[T] => invalidateOneOffSession(sc, st) & invalidateRefreshableSession(r, st)
     }
   }
 
@@ -188,8 +188,7 @@ trait RefreshableSessionDirectives { this: OneOffSessionDirectives =>
           case HeaderST => respondWithHeader(sc.refreshTokenManager.createHeader(""))
         }
 
-        invalidateOneOffSession(sc, st) &
-          deleteTokenOnClient &
+        deleteTokenOnClient &
           onSuccess(sc.refreshTokenManager.removeToken(v))
     }
   }
