@@ -80,7 +80,11 @@ trait SessionDirectives extends OneOffSessionDirectives with RefreshableSessionD
   def touchRequiredSession[T](sc: SessionContinuity[T], st: GetSessionTransport): Directive1[T] = {
     requiredSession(sc, st).flatMap { d => setOneOffSessionSameTransport(sc, st, d) & provide(d) }
   }
+}
 
+object SessionDirectives extends SessionDirectives
+
+object SessionOptions {
   def oneOff[T](implicit manager: SessionManager[T]): OneOff[T] = new OneOff[T]()(manager)
 
   def refreshable[T](implicit
@@ -93,8 +97,6 @@ trait SessionDirectives extends OneOffSessionDirectives with RefreshableSessionD
   def usingHeaders = HeaderST
   def usingCookiesOrHeaders = CookieOrHeaderST
 }
-
-object SessionDirectives extends SessionDirectives
 
 trait OneOffSessionDirectives {
   private[session] def setOneOffSession[T](sc: SessionContinuity[T], st: SetSessionTransport, v: T): Directive0 =

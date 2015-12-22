@@ -7,7 +7,9 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.model.StatusCodes._
 import com.softwaremill.session._
 import com.softwaremill.session.CsrfDirectives._
+import com.softwaremill.session.CsrfOptions._
 import com.softwaremill.session.SessionDirectives._
+import com.softwaremill.session.SessionOptions._
 import com.typesafe.scalalogging.slf4j.StrictLogging
 
 import scala.io.StdIn

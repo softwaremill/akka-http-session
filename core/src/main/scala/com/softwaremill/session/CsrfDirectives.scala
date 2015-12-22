@@ -52,10 +52,6 @@ trait CsrfDirectives {
 
   def setNewCsrfToken[T](checkMode: CsrfCheckMode[T]): Directive0 =
     setCookie(checkMode.csrfManager.createCookie())
-
-  def checkHeader[T](implicit manager: SessionManager[T]): CheckHeader[T] = new CheckHeader[T]()
-  def checkHeaderAndForm[T](implicit manager: SessionManager[T], materializer: Materializer): CheckHeaderAndForm[T] =
-    new CheckHeaderAndForm[T]()
 }
 
 object CsrfDirectives extends CsrfDirectives
@@ -68,3 +64,9 @@ class CheckHeader[T] private[session] (implicit val manager: SessionManager[T]) 
 class CheckHeaderAndForm[T] private[session] (implicit
   val manager: SessionManager[T],
   val materializer: Materializer) extends CsrfCheckMode[T]
+
+object CsrfOptions {
+  def checkHeader[T](implicit manager: SessionManager[T]): CheckHeader[T] = new CheckHeader[T]()
+  def checkHeaderAndForm[T](implicit manager: SessionManager[T], materializer: Materializer): CheckHeaderAndForm[T] =
+    new CheckHeaderAndForm[T]()
+}

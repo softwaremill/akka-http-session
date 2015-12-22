@@ -3,7 +3,7 @@ package com.softwaremill.session
 import akka.http.scaladsl.model.{DateTime, HttpHeader}
 import akka.http.scaladsl.model.headers.{RawHeader, HttpCookie, Cookie, `Set-Cookie`}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import com.softwaremill.session.SessionDirectives._
+import com.softwaremill.session.SessionOptions._
 import com.softwaremill.session.TestData._
 
 trait MultipleTransportTest { this: ScalatestRouteTest =>
