@@ -42,6 +42,12 @@ session data that is sent to the client, and verified when the session token is 
 ## Example
 
 ````scala
+import akka.http.scaladsl.server.Directives._
+
+import com.softwaremill.session.{SessionConfig, SessionManager}
+import com.softwaremill.session.SessionDirectives._
+import com.softwaremill.session.SessionOptions._
+
 val sessionConfig = SessionConfig.default("some_very_long_secret_and_random_string_some_very_long_secret_and_random_string")
 implicit val sessionManager = new SessionManager[Long](sessionConfig)
 
@@ -129,6 +135,8 @@ convenient to use a `MultiValueSessionSerializer[T]` which should convert the in
 Here we are creating a manager where the session content will be a single `Long` number:
 
 ````scala
+import com.softwaremill.session.{SessionConfig, SessionManager}
+
 val sessionConfig = SessionConfig.default("some_very_long_secret_and_random_string_some_very_long_secret_and_random_string")
 implicit val sessionManager = new SessionManager[Long](sessionConfig)
 ````
@@ -137,6 +145,11 @@ The basic directives enable you to set, read and invalidate the session. To crea
 and set a new session cookie), you need to use the `setSession` directive:
 
 ````scala
+import akka.http.scaladsl.server.Directives._
+
+import com.softwaremill.session.SessionDirectives._
+import com.softwaremill.session.SessionOptions._
+
 path("login") {
   post {
     entity(as[String]) { body =>
@@ -265,6 +278,11 @@ These can be customized in the config.
 Example usage:
 
 ````scala
+import akka.http.scaladsl.server.Directives._
+
+import com.softwaremill.session.CsrfDirectives._
+import com.softwaremill.session.CsrfOptions._
+
 randomTokenCsrfProtection(checkHeader) {
   get("site") {
     // read from disk
