@@ -1,10 +1,9 @@
 # Web & mobile sessions for akka-http
 
 [![Build Status](https://travis-ci.org/softwaremill/akka-http-session.svg?branch=master)](https://travis-ci.org/softwaremill/akka-http-session)
-
 [![Join the chat at https://gitter.im/softwaremill/akka-http-session](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/softwaremill/akka-http-session?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.softwaremill.akka-http-session/core_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.softwaremill.akka-http-session/core_2.11)
+[![Dependencies](https://app.updateimpact.com/badge/634276070333485056/akka-http-session.svg?config=compile)](https://app.updateimpact.com/latest/634276070333485056/akka-http-session)
 
 [akka-http](http://doc.akka.io/docs/akka-stream-and-http-experimental/2.0-M1/scala/http/) is an experimental Akka 
 module, originating from [spray.io](http://spray.io), for building *reactive* REST services with an elegant DSL.

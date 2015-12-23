@@ -44,7 +44,7 @@ lazy val rootProject = (project in file("."))
   .settings(commonSettings: _*)
   .settings(
     publishArtifact := false,
-    name := "root")
+    name := "akka-http-session")
   .aggregate(core, jwt, example)
 
 lazy val core: Project = (project in file("core"))
