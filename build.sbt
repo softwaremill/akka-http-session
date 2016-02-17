@@ -2,7 +2,7 @@ import scalariform.formatter.preferences._
 
 lazy val commonSettings = scalariformSettings ++ Seq(
   organization := "com.softwaremill.akka-http-session",
-  version := "0.2.3",
+  version := "0.2.4-SNAPSHOT",
   scalaVersion := "2.11.7",
   scalacOptions ++= Seq("-unchecked", "-deprecation"),
   ScalariformKeys.preferences := ScalariformKeys.preferences.value
@@ -36,7 +36,7 @@ lazy val commonSettings = scalariformSettings ++ Seq(
   homepage := Some(new java.net.URL("http://softwaremill.com"))
 )
 
-val akkaHttpVersion = "2.0"
+val akkaVersion = "2.4.2"
 
 val scalaTest = "org.scalatest" %% "scalatest" % "2.2.5" % "test"
 
@@ -52,8 +52,9 @@ lazy val core: Project = (project in file("core"))
   .settings(
     name := "core",
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-http-experimental" % akkaHttpVersion,
-      "com.typesafe.akka" %% "akka-http-testkit-experimental" % akkaHttpVersion % "test",
+      "com.typesafe.akka" %% "akka-http-core" % akkaVersion,
+      "com.typesafe.akka" %% "akka-http-experimental" % akkaVersion,
+      "com.typesafe.akka" %% "akka-http-testkit" % akkaVersion % "test",
       "org.scalacheck" %% "scalacheck" % "1.12.5" % "test",
       scalaTest
     )
