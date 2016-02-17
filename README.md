@@ -5,7 +5,7 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.softwaremill.akka-http-session/core_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.softwaremill.akka-http-session/core_2.11)
 [![Dependencies](https://app.updateimpact.com/badge/634276070333485056/akka-http-session.svg?config=compile)](https://app.updateimpact.com/latest/634276070333485056/akka-http-session)
 
-[akka-http](http://doc.akka.io/docs/akka-stream-and-http-experimental/2.0-M1/scala/http/) is an experimental Akka 
+[akka-http](http://doc.akka.io/docs/akka/2.4.2/scala/http/index.html) is an Akka 
 module, originating from [spray.io](http://spray.io), for building *reactive* REST services with an elegant DSL.
 
 `akka-http` is a great toolkit for building backends for single-page or mobile applications. In almost all apps there 
@@ -349,7 +349,7 @@ stored in Rails
 
 ## Using from SBT
 
-For `akka-http` version `2.0`:
+For `akka` version `2.4.2`:
 
 ````scala
 libraryDependencies += "com.softwaremill.akka-http-session" %% "core" % "0.2.3"

@@ -82,7 +82,7 @@ object Example extends App with StrictLogging {
   bindingFuture
     .flatMap(_.unbind())
     .onComplete { _ =>
-      system.shutdown()
+      system.terminate()
       println("Server stopped")
     }
 }
