@@ -2,7 +2,7 @@ import scalariform.formatter.preferences._
 
 lazy val commonSettings = scalariformSettings ++ Seq(
   organization := "com.softwaremill.akka-http-session",
-  version := "0.2.4-SNAPSHOT",
+  version := "0.2.4",
   scalaVersion := "2.11.7",
   scalacOptions ++= Seq("-unchecked", "-deprecation"),
   ScalariformKeys.preferences := ScalariformKeys.preferences.value
@@ -38,7 +38,7 @@ lazy val commonSettings = scalariformSettings ++ Seq(
 
 val akkaVersion = "2.4.2"
 
-val scalaTest = "org.scalatest" %% "scalatest" % "2.2.5" % "test"
+val scalaTest = "org.scalatest" %% "scalatest" % "2.2.6" % "test"
 
 lazy val rootProject = (project in file("."))
   .settings(commonSettings: _*)
@@ -55,7 +55,7 @@ lazy val core: Project = (project in file("core"))
       "com.typesafe.akka" %% "akka-http-core" % akkaVersion,
       "com.typesafe.akka" %% "akka-http-experimental" % akkaVersion,
       "com.typesafe.akka" %% "akka-http-testkit" % akkaVersion % "test",
-      "org.scalacheck" %% "scalacheck" % "1.12.5" % "test",
+      "org.scalacheck" %% "scalacheck" % "1.13.0" % "test",
       scalaTest
     )
   )
@@ -76,6 +76,6 @@ lazy val example: Project = (project in file("example"))
     publishArtifact := false,
     libraryDependencies ++= Seq(
       "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2",
-      "ch.qos.logback" % "logback-classic" % "1.1.3"
+      "ch.qos.logback" % "logback-classic" % "1.1.5"
     ))
   .dependsOn(core, jwt)
