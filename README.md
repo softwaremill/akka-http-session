@@ -334,6 +334,7 @@ cookie.
 
 ## Links
 
+* [Bootzooka](https://github.com/softwaremill/bootzooka), a web application template project using `akka-http` and `akka-http-session`
 * [Spray session](https://github.com/gnieh/spray-session), similar project for spray.io
 * [Spray SPA](https://github.com/enetsee/Spray-SPA), a single-page-application demo built using spray.io, also
 containing an implementation of client-side sessions
