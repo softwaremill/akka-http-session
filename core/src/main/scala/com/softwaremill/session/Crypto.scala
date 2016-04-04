@@ -1,9 +1,11 @@
 package com.softwaremill.session
 
 import java.security.MessageDigest
+import java.util
 import javax.crypto.{Cipher, Mac}
 import javax.crypto.spec.SecretKeySpec
 import javax.xml.bind.DatatypeConverter
+
 import com.softwaremill.session.SessionUtil._
 
 object Crypto {
@@ -22,8 +24,7 @@ object Crypto {
   }
 
   def encrypt_AES(value: String, secret: String): String = {
-    val aesSecret = secret.substring(0, 16)
-    val raw = aesSecret.getBytes("utf-8")
+    val raw = util.Arrays.copyOf(secret.getBytes("utf-8"), 16)
     val skeySpec = new SecretKeySpec(raw, "AES")
     val cipher = Cipher.getInstance("AES")
     cipher.init(Cipher.ENCRYPT_MODE, skeySpec)
@@ -31,8 +32,7 @@ object Crypto {
   }
 
   def decrypt_AES(value: String, secret: String): String = {
-    val aesSecret = secret.substring(0, 16)
-    val raw = aesSecret.getBytes("utf-8")
+    val raw = util.Arrays.copyOf(secret.getBytes("utf-8"), 16)
     val skeySpec = new SecretKeySpec(raw, "AES")
     val cipher = Cipher.getInstance("AES")
     cipher.init(Cipher.DECRYPT_MODE, skeySpec)
