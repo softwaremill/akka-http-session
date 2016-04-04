@@ -3,7 +3,7 @@ import scalariform.formatter.preferences._
 lazy val commonSettings = scalariformSettings ++ Seq(
   organization := "com.softwaremill.akka-http-session",
   version := "0.2.5-SNAPSHOT",
-  scalaVersion := "2.11.7",
+  scalaVersion := "2.11.8",
   scalacOptions ++= Seq("-unchecked", "-deprecation"),
   ScalariformKeys.preferences := ScalariformKeys.preferences.value
     .setPreference(DoubleIndentClassDeclaration, true)
@@ -36,7 +36,7 @@ lazy val commonSettings = scalariformSettings ++ Seq(
   homepage := Some(new java.net.URL("http://softwaremill.com"))
 )
 
-val akkaVersion = "2.4.2"
+val akkaVersion = "2.4.3"
 
 val scalaTest = "org.scalatest" %% "scalatest" % "2.2.6" % "test"
 
@@ -76,6 +76,6 @@ lazy val example: Project = (project in file("example"))
     publishArtifact := false,
     libraryDependencies ++= Seq(
       "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2",
-      "ch.qos.logback" % "logback-classic" % "1.1.5"
+      "ch.qos.logback" % "logback-classic" % "1.1.7"
     ))
   .dependsOn(core, jwt)
