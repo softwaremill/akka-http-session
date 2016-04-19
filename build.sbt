@@ -21,7 +21,7 @@ lazy val commonSettings = scalariformSettings ++ Seq(
   credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),publishMavenStyle := true,
   pomIncludeRepository := { _ => false },pomExtra := (
     <scm>
-      <url>git@gihub.com/softwaremill/akka-http-session.git</url>
+      <url>git@github.com/softwaremill/akka-http-session.git</url>
       <connection>scm:git:git@github.com/softwaremill/akka-http-session.git</connection>
     </scm>
       <developers>
