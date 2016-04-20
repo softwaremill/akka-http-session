@@ -1,4 +1,4 @@
-addSbtPlugin("com.typesafe.sbt" % "sbt-pgp" % "0.8.3")
+addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.0.0")
 
 addSbtPlugin("org.scalariform" % "sbt-scalariform" % "1.4.0")
 
