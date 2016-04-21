@@ -55,7 +55,7 @@ lazy val core: Project = (project in file("core"))
       "com.typesafe.akka" %% "akka-http-core" % akkaVersion,
       "com.typesafe.akka" %% "akka-http-experimental" % akkaVersion,
       "com.typesafe.akka" %% "akka-http-testkit" % akkaVersion % "test",
-      "org.scalacheck" %% "scalacheck" % "1.13.0" % "test",
+      "org.scalacheck" %% "scalacheck" % "1.12.5" % "test",
       scalaTest
     )
   )
