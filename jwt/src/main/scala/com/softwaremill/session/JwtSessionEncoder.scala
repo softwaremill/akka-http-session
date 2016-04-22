@@ -3,8 +3,7 @@ package com.softwaremill.session
 import javax.xml.bind.DatatypeConverter
 
 import org.json4s._
-import org.json4s.native.JsonMethods._
-
+import org.json4s.jackson.JsonMethods._
 import scala.util.Try
 
 class JwtSessionEncoder[T](implicit serializer: SessionSerializer[T, JValue], formats: Formats = DefaultFormats)

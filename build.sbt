@@ -67,7 +67,7 @@ lazy val jwt: Project = (project in file("jwt"))
   .settings(
     name := "jwt",
     libraryDependencies ++= Seq(
-      "org.json4s" %% "json4s-native" % "3.3.0",
+      "org.json4s" %% "json4s-jackson" % "3.3.0",
       scalaTest
     )
   ) dependsOn(core)
