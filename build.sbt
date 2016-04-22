@@ -18,8 +18,10 @@ lazy val commonSettings = scalariformSettings ++ Seq(
     else
       Some("releases"  at nexus + "service/local/staging/deploy/maven2")
   },
-  credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),publishMavenStyle := true,
-  pomIncludeRepository := { _ => false },pomExtra := (
+  credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
+  publishMavenStyle := true,
+  pomIncludeRepository := { _ => false },
+  pomExtra := (
     <scm>
       <url>git@github.com/softwaremill/akka-http-session.git</url>
       <connection>scm:git:git@github.com/softwaremill/akka-http-session.git</connection>
