@@ -197,8 +197,8 @@ If a required session is not present, by default a 403 is returned. Finally, a s
 ````scala
 path("logout") {
   get {
-    requiredSession() { session => 
-      invalidateSession() {
+    requiredSession(oneOff, usingCookies) { session => 
+      invalidateSession(oneOff, usingCookies) {
         complete { "logged out" }
       }
     }
