@@ -38,7 +38,7 @@ lazy val commonSettings = scalariformSettings ++ Seq(
   homepage := Some(new java.net.URL("http://softwaremill.com"))
 )
 
-val akkaVersion = "2.4.4"
+val akkaVersion = "2.4.9"
 
 val scalaTest = "org.scalatest" %% "scalatest" % "2.2.6" % "test"
 
