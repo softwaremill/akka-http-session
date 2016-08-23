@@ -350,9 +350,9 @@ stored in Rails
 
 ## Using from SBT
 
-For `akka` version `2.4.4`:
+For `akka` version `2.4.9`:
 
 ````scala
-libraryDependencies += "com.softwaremill.akka-http-session" %% "core" % "0.2.5"
-libraryDependencies += "com.softwaremill.akka-http-session" %% "jwt"  % "0.2.5" // optional
+libraryDependencies += "com.softwaremill.akka-http-session" %% "core" % "0.2.7"
+libraryDependencies += "com.softwaremill.akka-http-session" %% "jwt"  % "0.2.7" // optional
 ````
