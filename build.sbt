@@ -38,7 +38,8 @@ lazy val commonSettings = scalariformSettings ++ Seq(
   homepage := Some(new java.net.URL("http://softwaremill.com"))
 )
 
-val akkaVersion = "2.4.9"
+val akkaHttpVersion = "3.0.0-RC1"
+val akkaVersion = "2.4.11"
 
 val scalaTest = "org.scalatest" %% "scalatest" % "2.2.6" % "test"
 
@@ -54,9 +55,9 @@ lazy val core: Project = (project in file("core"))
   .settings(
     name := "core",
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-http-core" % akkaVersion,
-      "com.typesafe.akka" %% "akka-http-experimental" % akkaVersion,
-      "com.typesafe.akka" %% "akka-http-testkit" % akkaVersion % "test",
+      "com.typesafe.akka" %% "akka-testkit" % akkaVersion,
+      "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
+      "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
       "org.scalacheck" %% "scalacheck" % "1.12.5" % "test",
       scalaTest
     )
