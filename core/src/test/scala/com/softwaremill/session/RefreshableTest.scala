@@ -5,9 +5,9 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.softwaremill.session.SessionDirectives._
 import com.softwaremill.session.SessionOptions._
-import org.scalatest.{FlatSpec, ShouldMatchers}
+import org.scalatest.{FlatSpec, Matchers}
 
-class RefreshableTest extends FlatSpec with ScalatestRouteTest with ShouldMatchers with MultipleTransportTest {
+class RefreshableTest extends FlatSpec with ScalatestRouteTest with Matchers with MultipleTransportTest {
 
   import TestData._
 

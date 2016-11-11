@@ -2,8 +2,9 @@ import scalariform.formatter.preferences._
 
 lazy val commonSettings = scalariformSettings ++ Seq(
   organization := "com.softwaremill.akka-http-session",
-  version := "0.2.7",
+  version := "0.3.0-SNAPSHOT",
   scalaVersion := "2.11.8",
+  crossScalaVersions := Seq(scalaVersion.value, "2.12.0"),
   scalacOptions ++= Seq("-unchecked", "-deprecation"),
   ScalariformKeys.preferences := ScalariformKeys.preferences.value
     .setPreference(DoubleIndentClassDeclaration, true)
@@ -38,10 +39,10 @@ lazy val commonSettings = scalariformSettings ++ Seq(
   homepage := Some(new java.net.URL("http://softwaremill.com"))
 )
 
-val akkaHttpVersion = "3.0.0-RC1"
-val akkaVersion = "2.4.11"
+val akkaHttpVersion = "10.0.0-RC2"
+val akkaVersion = "2.4.12"
 
-val scalaTest = "org.scalatest" %% "scalatest" % "2.2.6" % "test"
+val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 
 lazy val rootProject = (project in file("."))
   .settings(commonSettings: _*)
@@ -58,7 +59,7 @@ lazy val core: Project = (project in file("core"))
       "com.typesafe.akka" %% "akka-testkit" % akkaVersion,
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
       "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
-      "org.scalacheck" %% "scalacheck" % "1.12.5" % "test",
+      "org.scalacheck" %% "scalacheck" % "1.13.4" % "test",
       scalaTest
     )
   )
@@ -68,7 +69,7 @@ lazy val jwt: Project = (project in file("jwt"))
   .settings(
     name := "jwt",
     libraryDependencies ++= Seq(
-      "org.json4s" %% "json4s-jackson" % "3.3.0",
+      "org.json4s" %% "json4s-jackson" % "3.5.0",
       scalaTest
     )
   ) dependsOn(core)
@@ -78,7 +79,7 @@ lazy val example: Project = (project in file("example"))
   .settings(
     publishArtifact := false,
     libraryDependencies ++= Seq(
-      "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2",
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
       "ch.qos.logback" % "logback-classic" % "1.1.7"
     ))
   .dependsOn(core, jwt)
