@@ -40,7 +40,6 @@ lazy val commonSettings = scalariformSettings ++ Seq(
 )
 
 val akkaHttpVersion = "10.0.0-RC2"
-val akkaVersion = "2.4.12"
 
 val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 
@@ -56,7 +55,6 @@ lazy val core: Project = (project in file("core"))
   .settings(
     name := "core",
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-testkit" % akkaVersion,
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
       "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
       "org.scalacheck" %% "scalacheck" % "1.13.4" % "test",
