@@ -172,7 +172,7 @@ trait RefreshableSessionDirectives { this: OneOffSessionDirectives =>
             onSuccess(sc.refreshTokenManager.sessionFromValue(v))
               .flatMap {
                 case s @ SessionResult.CreatedFromToken(session) =>
-                  setRefreshableSession(sc, setSt, session) & provide(s: SessionResult[T])
+                  setRefreshToken(sc, setSt, session) & provide(s: SessionResult[T])
                 case s => provide(s)
               }
         }
