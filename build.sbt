@@ -54,10 +54,14 @@ lazy val core: Project = (project in file("core"))
   .settings(commonSettings: _*)
   .settings(
     name := "core",
+    testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a")),
+    crossPaths := false, // https://github.com/sbt/junit-interface/issues/35
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
       "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
       "org.scalacheck" %% "scalacheck" % "1.13.4" % "test",
+      "junit" % "junit" % "4.12" % "test",
+      "com.novocode" % "junit-interface" % "0.11" % "test",
       scalaTest
     )
   )
