@@ -106,6 +106,23 @@ class RefreshableTest extends FlatSpec with ScalatestRouteTest with Matchers wit
       }
     }
 
+    p should "set a new session after the session is re-created" in {
+      Get("/set") ~> routes ~> check {
+        val Some(token1) = using.getRefreshToken
+        val session1 = using.getSession
+        session1 should be('defined)
+
+        Get("/getOpt") ~>
+          addHeader(using.setRefreshTokenHeader(token1)) ~>
+          routes ~>
+          check {
+            val session2 = using.getSession
+            session2 should be('defined)
+            session2 should not be (session1)
+          }
+      }
+    }
+
     p should "read an optional session when none is set" in {
       Get("/getOpt") ~> routes ~> check {
         responseAs[String] should be("None")
