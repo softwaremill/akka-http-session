@@ -67,3 +67,9 @@ trait InMemoryRefreshTokenStorage[T] extends RefreshTokenStorage[T] {
 
   def log(msg: String): Unit
 }
+
+/**
+ * Can't use the trait above in Java code, hence this wrapper
+ * http://stackoverflow.com/questions/7637752/using-scala-traits-with-implemented-methods-in-java
+ */
+abstract class InMemoryRefreshTokenStorageWrapper[T]() extends InMemoryRefreshTokenStorage[T]
