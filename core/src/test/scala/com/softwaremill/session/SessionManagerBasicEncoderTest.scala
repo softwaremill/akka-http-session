@@ -10,7 +10,7 @@ object SessionManagerBasicEncoderTest extends Properties("SessionManagerBasicEnc
 
   property("encode+decode") = forAllNoShrink(secretGen) { (secret: String) =>
     forAll { (encrypt: Boolean, useMaxAgeSeconds: Boolean, data: Map[String, String]) =>
-      val config = SessionConfig.default(secret)
+      val config = SessionConfig.defaultConfig(secret)
         .copy(sessionEncryptData = encrypt)
         .copy(sessionMaxAgeSeconds = if (useMaxAgeSeconds) Some(3600L) else None)
       val manager = new SessionManager[Map[String, String]](config).clientSessionManager
@@ -21,7 +21,7 @@ object SessionManagerBasicEncoderTest extends Properties("SessionManagerBasicEnc
 
   property("doesn't decode expired session") = forAllNoShrink(secretGen) { (secret: String) =>
     forAll { (encrypt: Boolean, data: Map[String, String]) =>
-      val config = SessionConfig.default(secret)
+      val config = SessionConfig.defaultConfig(secret)
         .copy(sessionEncryptData = encrypt)
         .copy(sessionMaxAgeSeconds = Some(20L)) // expires after 20s
       val managerPast = new SessionManager[Map[String, String]](config) {

@@ -112,6 +112,6 @@ object SessionConfig {
   /**
    * Creates a default configuration using the given secret.
    */
-  def default(serverSecret: String) = fromConfig(ConfigFactory.load()
+  def defaultConfig(serverSecret: String) = fromConfig(ConfigFactory.load()
     .withValue("akka.http.session.server-secret", ConfigValueFactory.fromAnyRef(serverSecret)))
 }
