@@ -1,9 +1,5 @@
 package com.softwaremill.session
 
-import java.util.function.Supplier
-
-import akka.http.javadsl.server.Route
-import akka.http.javadsl.server.directives.RouteAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{Directive0, Directive1}
 
@@ -23,15 +19,6 @@ trait SessionDirectives extends OneOffSessionDirectives with RefreshableSessionD
     sc match {
       case _: OneOff[T] => setOneOffSession(sc, st, v)
       case r: Refreshable[T] => setRefreshableSession(r, st, v)
-    }
-  }
-
-  /**
-   * Java alternative
-   */
-  def setSession[T](sc: SessionContinuity[T], st: SetSessionTransport, v: T, inner: Supplier[Route]): Route = RouteAdapter {
-    setSession(sc, st, v) {
-      inner.get.asInstanceOf[RouteAdapter].delegate
     }
   }
 
@@ -64,28 +51,10 @@ trait SessionDirectives extends OneOffSessionDirectives with RefreshableSessionD
   }
 
   /**
-   * Java alternative
-   */
-  def invalidateSession[T](sc: SessionContinuity[T], st: GetSessionTransport, inner: Supplier[Route]): Route = RouteAdapter {
-    invalidateSession(sc, st) {
-      inner.get.asInstanceOf[RouteAdapter].delegate
-    }
-  }
-
-  /**
    * Read an optional session from the session cookie.
    */
   def optionalSession[T](sc: SessionContinuity[T], st: GetSessionTransport): Directive1[Option[T]] =
     session(sc, st).map(_.toOption)
-
-  /**
-   * Java alternative
-   */
-  def optionalSession[T](sc: SessionContinuity[T], st: GetSessionTransport, inner: java.util.function.Function[Option[T], Route]): Route = RouteAdapter {
-    optionalSession(sc, st) { session =>
-      inner.apply(session).asInstanceOf[RouteAdapter].delegate
-    }
-  }
 
   /**
    * Read a required session from the session cookie.
@@ -95,15 +64,6 @@ trait SessionDirectives extends OneOffSessionDirectives with RefreshableSessionD
       case None => reject(sc.clientSessionManager.sessionMissingRejection)
       case Some(data) => provide(data)
     }
-
-  /**
-   * Java alternative
-   */
-  def requiredSession[T](sc: SessionContinuity[T], st: GetSessionTransport, inner: java.util.function.Function[T, Route]): Route = RouteAdapter {
-    requiredSession(sc, st) { session =>
-      inner.apply(session).asInstanceOf[RouteAdapter].delegate
-    }
-  }
 
   /**
    * Sets the session cookie again with the same data. Useful when using the [[SessionConfig.sessionMaxAgeSeconds]]
@@ -119,15 +79,6 @@ trait SessionDirectives extends OneOffSessionDirectives with RefreshableSessionD
    */
   def touchRequiredSession[T](sc: SessionContinuity[T], st: GetSessionTransport): Directive1[T] = {
     requiredSession(sc, st).flatMap { d => setOneOffSessionSameTransport(sc, st, d) & provide(d) }
-  }
-
-  /**
-   * Java alternative
-   */
-  def touchRequiredSession[T](sc: SessionContinuity[T], st: GetSessionTransport, inner: java.util.function.Function[T, Route]): Route = RouteAdapter {
-    touchRequiredSession(sc, st) { session =>
-      inner.apply(session).asInstanceOf[RouteAdapter].delegate
-    }
   }
 
 }

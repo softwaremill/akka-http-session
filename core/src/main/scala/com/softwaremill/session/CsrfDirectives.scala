@@ -1,9 +1,5 @@
 package com.softwaremill.session
 
-import java.util.function.Supplier
-
-import akka.http.javadsl.server.Route
-import akka.http.javadsl.server.directives.RouteAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{Directive0, Directive1}
 import akka.stream.Materializer
@@ -40,15 +36,6 @@ trait CsrfDirectives {
     }
   }
 
-  /**
-   * Java alternative
-   */
-  def randomTokenCsrfProtection[T](checkMode: CsrfCheckMode[T], inner: Supplier[Route]): Route = RouteAdapter {
-    randomTokenCsrfProtection(checkMode) {
-      inner.get.asInstanceOf[RouteAdapter].delegate
-    }
-  }
-
   def submittedCsrfToken[T](checkMode: CsrfCheckMode[T]): Directive1[String] = {
     headerValueByName(checkMode.manager.config.csrfSubmittedName).recover { rejections =>
       checkMode match {
@@ -65,15 +52,6 @@ trait CsrfDirectives {
 
   def setNewCsrfToken[T](checkMode: CsrfCheckMode[T]): Directive0 =
     setCookie(checkMode.csrfManager.createCookie())
-
-  /**
-   * Java alternative
-   */
-  def setNewCsrfToken[T](checkMode: CsrfCheckMode[T], inner: Supplier[Route]): Route = RouteAdapter {
-    setNewCsrfToken(checkMode) {
-      inner.get.asInstanceOf[RouteAdapter].delegate
-    }
-  }
 }
 
 object CsrfDirectives extends CsrfDirectives
