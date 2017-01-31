@@ -4,7 +4,7 @@ import org.json4s.JValue
 import org.scalatest.{Matchers, FlatSpec}
 
 class SessionManagerJwtEncoderTest extends FlatSpec with Matchers {
-  val defaultConfig = SessionConfig.defaultConfig("1234567890123456789012345678901234567890123456789012345678901234567890")
+  val defaultConfig = SessionConfig.default("1234567890123456789012345678901234567890123456789012345678901234567890")
   val configMaxAge = defaultConfig.copy(sessionMaxAgeSeconds = Some(3600))
   val configEncrypted = defaultConfig.copy(sessionEncryptData = true)
   val configEncryptedMaxAge = configMaxAge.copy(sessionEncryptData = true)

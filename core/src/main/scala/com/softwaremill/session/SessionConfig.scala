@@ -112,6 +112,8 @@ object SessionConfig {
   /**
    * Creates a default configuration using the given secret.
    */
-  def defaultConfig(serverSecret: String) = fromConfig(ConfigFactory.load()
+  def default(serverSecret: String): SessionConfig = fromConfig(ConfigFactory.load()
     .withValue("akka.http.session.server-secret", ConfigValueFactory.fromAnyRef(serverSecret)))
+
+  def defaultConfig(serverSecret: String): SessionConfig = default(serverSecret) // required for javadsl directives, because default is a keyword
 }
