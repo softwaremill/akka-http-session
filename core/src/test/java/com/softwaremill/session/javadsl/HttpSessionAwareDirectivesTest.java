@@ -13,7 +13,6 @@ import com.softwaremill.session.BasicSessionEncoder;
 import com.softwaremill.session.CheckHeader;
 import com.softwaremill.session.CheckHeaderAndForm;
 import com.softwaremill.session.CsrfCheckMode;
-import com.softwaremill.session.InMemoryRefreshTokenStorageWrapper;
 import com.softwaremill.session.OneOff;
 import com.softwaremill.session.RefreshTokenStorage;
 import com.softwaremill.session.Refreshable;
@@ -54,7 +53,7 @@ public abstract class HttpSessionAwareDirectivesTest extends JUnitRouteTest {
         )
     );
     // in-memory refresh token storage
-    private static final RefreshTokenStorage<String> REFRESH_TOKEN_STORAGE = new InMemoryRefreshTokenStorageWrapper<String>() {
+    private static final RefreshTokenStorage<String> REFRESH_TOKEN_STORAGE = new InMemoryRefreshTokenStorage<String>() {
         private Logger logger = Logger.getLogger("TokenStorage");
 
         @Override

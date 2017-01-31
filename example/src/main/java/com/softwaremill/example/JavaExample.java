@@ -17,7 +17,7 @@ import akka.stream.javadsl.Flow;
 import com.softwaremill.session.BasicSessionEncoder;
 import com.softwaremill.session.CheckHeader;
 import com.softwaremill.session.CookieST$;
-import com.softwaremill.session.InMemoryRefreshTokenStorageWrapper;
+import com.softwaremill.session.javadsl.InMemoryRefreshTokenStorage;
 import com.softwaremill.session.RefreshTokenStorage;
 import com.softwaremill.session.Refreshable;
 import com.softwaremill.session.SessionConfig;
@@ -38,7 +38,7 @@ public class JavaExample extends HttpSessionAwareDirectives<MySession> {
     private static final SessionEncoder<MySession> BASIC_ENCODER = new BasicSessionEncoder<>(MySession.getSerializer());
 
     // in-memory refresh token storage
-    private static final RefreshTokenStorage<MySession> REFRESH_TOKEN_STORAGE = new InMemoryRefreshTokenStorageWrapper<MySession>() {
+    private static final RefreshTokenStorage<MySession> REFRESH_TOKEN_STORAGE = new InMemoryRefreshTokenStorage<MySession>() {
         @Override
         public void log(String msg) {
             logger.info(msg);

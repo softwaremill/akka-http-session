@@ -16,7 +16,7 @@ import akka.stream.ActorMaterializer;
 import akka.stream.javadsl.Flow;
 import com.softwaremill.session.CheckHeader;
 import com.softwaremill.session.CookieST$;
-import com.softwaremill.session.InMemoryRefreshTokenStorageWrapper;
+import com.softwaremill.session.javadsl.InMemoryRefreshTokenStorage;
 import com.softwaremill.session.JValueSessionSerializer$;
 import com.softwaremill.session.JwtSessionEncoder;
 import com.softwaremill.session.RefreshTokenStorage;
@@ -40,7 +40,7 @@ public class JavaJwtExample extends HttpSessionAwareDirectives<String> {
     private static final SessionEncoder<String> JWT_ENCODER = new JwtSessionEncoder<>(JValueSessionSerializer$.MODULE$.stringToJValueSessionSerializer(), DefaultFormats$.MODULE$);
 
     // in-memory refresh token storage
-    private static final RefreshTokenStorage<String> REFRESH_TOKEN_STORAGE = new InMemoryRefreshTokenStorageWrapper<String>() {
+    private static final RefreshTokenStorage<String> REFRESH_TOKEN_STORAGE = new InMemoryRefreshTokenStorage<String>() {
         @Override
         public void log(String msg) {
             logger.info(msg);
