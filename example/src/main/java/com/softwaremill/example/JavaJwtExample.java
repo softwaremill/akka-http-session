@@ -15,29 +15,30 @@ import akka.http.javadsl.unmarshalling.Unmarshaller;
 import akka.stream.ActorMaterializer;
 import akka.stream.javadsl.Flow;
 import com.softwaremill.session.CheckHeader;
-import com.softwaremill.session.CookieST$;
-import com.softwaremill.session.javadsl.InMemoryRefreshTokenStorage;
-import com.softwaremill.session.JValueSessionSerializer$;
 import com.softwaremill.session.JwtSessionEncoder;
 import com.softwaremill.session.RefreshTokenStorage;
 import com.softwaremill.session.Refreshable;
 import com.softwaremill.session.SessionConfig;
 import com.softwaremill.session.SessionEncoder;
 import com.softwaremill.session.SessionManager;
+import com.softwaremill.session.SetSessionTransport;
 import com.softwaremill.session.javadsl.HttpSessionAwareDirectives;
-import org.json4s.DefaultFormats$;
+import com.softwaremill.session.javadsl.InMemoryRefreshTokenStorage;
+import com.softwaremill.session.javadsl.JwtSessionSerializers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.concurrent.CompletionStage;
 
+import static com.softwaremill.session.javadsl.SessionTransports.CookieST;
+
 
 public class JavaJwtExample extends HttpSessionAwareDirectives<String> {
 
     private static final Logger logger = LoggerFactory.getLogger(JavaJwtExample.class);
     private static final String SECRET = "c05ll3lesrinf39t7mc5h6un6r0c69lgfno69dsak3vabeqamouq4328cuaekros401ajdpkh60rrtpd8ro24rbuqmgtnd1ebag6ljnb65i8a55d482ok7o0nch0bfbe";
-    private static final SessionEncoder<String> JWT_ENCODER = new JwtSessionEncoder<>(JValueSessionSerializer$.MODULE$.stringToJValueSessionSerializer(), DefaultFormats$.MODULE$);
+    private static final SessionEncoder<String> JWT_ENCODER = new JwtSessionEncoder<>(JwtSessionSerializers.StringToJValueSessionSerializer, JwtSessionSerializers.DefaultUtcDateFormat);
 
     // in-memory refresh token storage
     private static final RefreshTokenStorage<String> REFRESH_TOKEN_STORAGE = new InMemoryRefreshTokenStorage<String>() {
@@ -48,7 +49,7 @@ public class JavaJwtExample extends HttpSessionAwareDirectives<String> {
     };
 
     private Refreshable<String> refreshable;
-    private CookieST$ sessionTransport;
+    private SetSessionTransport sessionTransport;
 
     public JavaJwtExample(MessageDispatcher dispatcher) {
         super(new SessionManager<>(
@@ -62,7 +63,7 @@ public class JavaJwtExample extends HttpSessionAwareDirectives<String> {
         refreshable = new Refreshable<>(getSessionManager(), REFRESH_TOKEN_STORAGE, dispatcher);
 
         // set the session transport - based on Cookies (or Headers)
-        sessionTransport = CookieST$.MODULE$;
+        sessionTransport = CookieST;
     }
 
     public static void main(String[] args) throws IOException {
@@ -96,65 +97,64 @@ public class JavaJwtExample extends HttpSessionAwareDirectives<String> {
                     redirect(Uri.create("/site/index.html"), StatusCodes.FOUND)
                 ),
                 randomTokenCsrfProtection(checkHeader, () ->
-                    pathPrefix("api", () ->
-                        route(
-                            path("do_login", () ->
-                                post(() ->
-                                    entity(Unmarshaller.entityToString(), body -> {
-                                            logger.info("Logging in {}", body);
-                                            //return setSession(refreshable, sessionTransport, new MySession(body), () ->
-                                            return setSession(refreshable, sessionTransport, body, () ->
-                                                setNewCsrfToken(checkHeader, () ->
-                                                    extractRequestContext(ctx ->
-                                                        onSuccess(() -> ctx.completeWith(HttpResponse.create()), routeResult ->
-                                                            complete("ok")
+                    route(
+                        pathPrefix("api", () ->
+                            route(
+                                path("do_login", () ->
+                                    post(() ->
+                                        entity(Unmarshaller.entityToString(), body -> {
+                                                logger.info("Logging in {}", body);
+                                                return setSession(refreshable, sessionTransport, body, () ->
+                                                    setNewCsrfToken(checkHeader, () ->
+                                                        extractRequestContext(ctx ->
+                                                            onSuccess(() -> ctx.completeWith(HttpResponse.create()), routeResult ->
+                                                                complete("ok")
+                                                            )
                                                         )
                                                     )
-                                                )
-                                            );
-                                        }
+                                                );
+                                            }
+                                        )
                                     )
-                                )
-                            ),
+                                ),
 
-                            // This should be protected and accessible only when logged in
-                            path("do_logout", () ->
-                                post(() ->
-                                    requiredSession(refreshable, sessionTransport, session ->
-                                        invalidateSession(refreshable, sessionTransport, () ->
+                                // This should be protected and accessible only when logged in
+                                path("do_logout", () ->
+                                    post(() ->
+                                        requiredSession(refreshable, sessionTransport, session ->
+                                            invalidateSession(refreshable, sessionTransport, () ->
+                                                extractRequestContext(ctx -> {
+                                                        logger.info("Logging out {}", session);
+                                                        return onSuccess(() -> ctx.completeWith(HttpResponse.create()), routeResult ->
+                                                            complete("ok")
+                                                        );
+                                                    }
+                                                )
+                                            )
+                                        )
+                                    )
+                                ),
+
+                                // This should be protected and accessible only when logged in
+                                path("current_login", () ->
+                                    get(() ->
+                                        requiredSession(refreshable, sessionTransport, session ->
                                             extractRequestContext(ctx -> {
-                                                    //logger.info("Logging out {}", session.getUsername());
-                                                    logger.info("Logging out {}", session);
+                                                    logger.info("Current session: " + session);
                                                     return onSuccess(() -> ctx.completeWith(HttpResponse.create()), routeResult ->
-                                                        complete("ok")
+                                                        complete(session)
                                                     );
                                                 }
                                             )
                                         )
                                     )
                                 )
-                            ),
-
-                            // This should be protected and accessible only when logged in
-                            path("current_login", () ->
-                                get(() ->
-                                    requiredSession(refreshable, sessionTransport, session ->
-                                        extractRequestContext(ctx -> {
-                                                logger.info("Current session: " + session);
-                                                return onSuccess(() -> ctx.completeWith(HttpResponse.create()), routeResult ->
-                                                    //complete(session.getUsername())
-                                                    complete(session)
-                                                );
-                                            }
-                                        )
-                                    )
-                                )
                             )
-                        )
+                        ),
+                        pathPrefix("site", () ->
+                            getFromResourceDirectory(""))
                     )
-                ),
-                pathPrefix("site", () ->
-                    getFromResourceDirectory(""))
+                )
             );
     }
 }

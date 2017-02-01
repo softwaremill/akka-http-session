@@ -9,13 +9,14 @@ import akka.http.javadsl.model.headers.RawHeader;
 import akka.http.javadsl.server.Route;
 import akka.http.javadsl.testkit.TestRouteResult;
 import akka.http.scaladsl.model.HttpResponse;
-import com.softwaremill.session.CookieST$;
 import com.softwaremill.session.CsrfCheckMode;
-import com.softwaremill.session.HeaderST$;
 import com.softwaremill.session.SessionContinuity;
 import com.softwaremill.session.SetSessionTransport;
 import org.junit.Assert;
 import org.junit.Test;
+
+import static com.softwaremill.session.javadsl.SessionTransports.CookieST;
+import static com.softwaremill.session.javadsl.SessionTransports.HeaderST;
 
 public class OneOffTest extends HttpSessionAwareDirectivesTest {
 
@@ -44,7 +45,7 @@ public class OneOffTest extends HttpSessionAwareDirectivesTest {
     @Test
     public void shouldSetTheCorrectSessionCookieName_UsingCookies() {
         // given
-        final Route route = createRoute(CookieST$.MODULE$);
+        final Route route = createRoute(CookieST);
 
         // when
         TestRouteResult testRouteResult = testRoute(route)
@@ -65,7 +66,7 @@ public class OneOffTest extends HttpSessionAwareDirectivesTest {
     @Test
     public void shouldSetTheSession_UsingCookies() {
         // given
-        final Route route = createRoute(CookieST$.MODULE$);
+        final Route route = createRoute(CookieST);
 
         // when
         TestRouteResult testRouteResult = testRoute(route)
@@ -88,7 +89,7 @@ public class OneOffTest extends HttpSessionAwareDirectivesTest {
     @Test
     public void shouldSetTheSession_UsingHeaders() {
         // given
-        final Route route = createRoute(HeaderST$.MODULE$);
+        final Route route = createRoute(HeaderST);
 
         // when
         TestRouteResult testRouteResult = testRoute(route)
@@ -111,7 +112,7 @@ public class OneOffTest extends HttpSessionAwareDirectivesTest {
     @Test
     public void shouldReadAnOptionalSessionWhenTheSessionIsSet_UsingCookies() {
         // given
-        final Route route = createRoute(CookieST$.MODULE$);
+        final Route route = createRoute(CookieST);
 
         // when
         TestRouteResult setRouteResult = testRoute(route)
@@ -134,7 +135,7 @@ public class OneOffTest extends HttpSessionAwareDirectivesTest {
     @Test
     public void shouldReadAnOptionalSessionWhenTheSessionIsSet_UsingHeaders() {
         // given
-        final Route route = createRoute(HeaderST$.MODULE$);
+        final Route route = createRoute(HeaderST);
 
         // when
         TestRouteResult setRouteResult = testRoute(route)
@@ -156,7 +157,7 @@ public class OneOffTest extends HttpSessionAwareDirectivesTest {
     @Test
     public void shouldReadAnOptionalSessionWhenTheSessionIsNotSet_UsingCookies() {
         // given
-        final Route route = createRoute(CookieST$.MODULE$);
+        final Route route = createRoute(CookieST);
 
         // when
         TestRouteResult getOptRouteResult = testRoute(route)
@@ -171,7 +172,7 @@ public class OneOffTest extends HttpSessionAwareDirectivesTest {
     @Test
     public void shouldReadAnOptionalSessionWhenTheSessionIsNotSet_UsingHeaders() {
         // given
-        final Route route = createRoute(HeaderST$.MODULE$);
+        final Route route = createRoute(HeaderST);
 
         // when
         TestRouteResult getOptRouteResult = testRoute(route)
@@ -186,7 +187,7 @@ public class OneOffTest extends HttpSessionAwareDirectivesTest {
     @Test
     public void shouldReadARequiredSessionWhenTheSessionIsSet_UsingCookies() {
         // given
-        final Route route = createRoute(CookieST$.MODULE$);
+        final Route route = createRoute(CookieST);
 
         // when
         TestRouteResult setRouteResult = testRoute(route)
@@ -209,7 +210,7 @@ public class OneOffTest extends HttpSessionAwareDirectivesTest {
     @Test
     public void shouldReadARequiredSessionWhenTheSessionIsSet_UsingHeaders() {
         // given
-        final Route route = createRoute(HeaderST$.MODULE$);
+        final Route route = createRoute(HeaderST);
 
         // when
         TestRouteResult setRouteResult = testRoute(route)
@@ -232,7 +233,7 @@ public class OneOffTest extends HttpSessionAwareDirectivesTest {
     @Test
     public void shouldInvalidateASession_UsingCookies() {
         // given
-        final Route route = createRoute(CookieST$.MODULE$);
+        final Route route = createRoute(CookieST);
 
         // when
         TestRouteResult setRouteResult = testRoute(route)
@@ -258,7 +259,7 @@ public class OneOffTest extends HttpSessionAwareDirectivesTest {
     @Test
     public void shouldInvalidateASession_UsingHeaders() {
         // given
-        final Route route = createRoute(HeaderST$.MODULE$);
+        final Route route = createRoute(HeaderST);
 
         // when
         TestRouteResult setRouteResult = testRoute(route)
@@ -284,7 +285,7 @@ public class OneOffTest extends HttpSessionAwareDirectivesTest {
     @Test
     public void shouldRejectTheRequestIfTheSessionIsNotSet_UsingCookies() {
         // given
-        final Route route = createRoute(CookieST$.MODULE$);
+        final Route route = createRoute(CookieST);
 
         // when
         TestRouteResult getOptRouteResult = testRoute(route)
@@ -298,7 +299,7 @@ public class OneOffTest extends HttpSessionAwareDirectivesTest {
     @Test
     public void shouldRejectTheRequestIfTheSessionIsNotSet_UsingHeaders() {
         // given
-        final Route route = createRoute(HeaderST$.MODULE$);
+        final Route route = createRoute(HeaderST);
 
         // when
         TestRouteResult getReqRouteResult = testRoute(route)
@@ -313,7 +314,7 @@ public class OneOffTest extends HttpSessionAwareDirectivesTest {
     @Test
     public void shouldRejectTheRequestIfTheSessionIsInvalid_UsingCookies() {
         // given
-        final Route route = createRoute(CookieST$.MODULE$);
+        final Route route = createRoute(CookieST);
 
         // when
         TestRouteResult getOptRouteResult = testRoute(route)
@@ -329,7 +330,7 @@ public class OneOffTest extends HttpSessionAwareDirectivesTest {
     @Test
     public void shouldRejectTheRequestIfTheSessionIsInvalid_UsingHeaders() {
         // given
-        final Route route = createRoute(HeaderST$.MODULE$);
+        final Route route = createRoute(HeaderST);
 
         // when
         TestRouteResult getOptRouteResult = testRoute(route)
@@ -344,9 +345,9 @@ public class OneOffTest extends HttpSessionAwareDirectivesTest {
 
     @Test
     public void shouldTouchTheSession_UsingCookies() {
-        final Route route_fixed = createRoute(CookieST$.MODULE$, getExpiring60SessionManagerWithFixedTime());
-        final Route route_fixed_plus30s = createRoute(CookieST$.MODULE$, getExpiring60Plus30SessionManagerWithFixedTime());
-        final Route route_fixed_plus70s = createRoute(CookieST$.MODULE$, getExpiring60Plus70SessionManagerWithFixedTime());
+        final Route route_fixed = createRoute(CookieST, getExpiring60SessionManagerWithFixedTime());
+        final Route route_fixed_plus30s = createRoute(CookieST, getExpiring60Plus30SessionManagerWithFixedTime());
+        final Route route_fixed_plus70s = createRoute(CookieST, getExpiring60Plus70SessionManagerWithFixedTime());
 
         TestRouteResult setRouteResult = testRoute(route_fixed)
             .run(HttpRequest.GET("/set"));
@@ -385,9 +386,9 @@ public class OneOffTest extends HttpSessionAwareDirectivesTest {
 
     @Test
     public void shouldTouchTheSession_KeepingTheRefreshTokenIntact_UsingHeaders() {
-        final Route route_fixed = createRoute(HeaderST$.MODULE$, getExpiring60SessionManagerWithFixedTime());
-        final Route route_fixed_plus30s = createRoute(HeaderST$.MODULE$, getExpiring60Plus30SessionManagerWithFixedTime());
-        final Route route_fixed_plus70s = createRoute(HeaderST$.MODULE$, getExpiring60Plus70SessionManagerWithFixedTime());
+        final Route route_fixed = createRoute(HeaderST, getExpiring60SessionManagerWithFixedTime());
+        final Route route_fixed_plus30s = createRoute(HeaderST, getExpiring60Plus30SessionManagerWithFixedTime());
+        final Route route_fixed_plus70s = createRoute(HeaderST, getExpiring60Plus70SessionManagerWithFixedTime());
 
         TestRouteResult setRouteResult = testRoute(route_fixed)
             .run(HttpRequest.GET("/set"));

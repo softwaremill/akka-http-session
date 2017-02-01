@@ -1,8 +1,8 @@
 package com.softwaremill.example;
 
 import com.softwaremill.session.SessionSerializer;
-import com.softwaremill.session.SessionSerializer$;
 import com.softwaremill.session.SingleValueSessionSerializer;
+import com.softwaremill.session.javadsl.SessionSerializers;
 import scala.compat.java8.JFunction0;
 import scala.compat.java8.JFunction1;
 import scala.util.Try;
@@ -19,7 +19,7 @@ public class MySession {
         ,
         (JFunction1<String, Try<MySession>>) (login) -> Try.apply((JFunction0<MySession>) (() -> new MySession(login)))
         ,
-        SessionSerializer$.MODULE$.stringToStringSessionSerializer()
+        SessionSerializers.StringToStringSessionSerializer
     );
 
     private final String username;

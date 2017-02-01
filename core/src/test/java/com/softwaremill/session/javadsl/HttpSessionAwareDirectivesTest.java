@@ -20,7 +20,6 @@ import com.softwaremill.session.SessionConfig;
 import com.softwaremill.session.SessionContinuity;
 import com.softwaremill.session.SessionEncoder;
 import com.softwaremill.session.SessionManager;
-import com.softwaremill.session.SessionSerializer$;
 import com.softwaremill.session.SetSessionTransport;
 import com.softwaremill.session.SingleValueSessionSerializer;
 import com.typesafe.config.ConfigFactory;
@@ -49,7 +48,7 @@ public abstract class HttpSessionAwareDirectivesTest extends JUnitRouteTest {
         new SingleValueSessionSerializer<>(
             ((JFunction1<String, String>) session -> session),
             ((JFunction1<String, Try<String>>) session -> Try.apply((JFunction0<String>) (() -> session))),
-            SessionSerializer$.MODULE$.stringToStringSessionSerializer()
+            SessionSerializers.StringToStringSessionSerializer
         )
     );
     // in-memory refresh token storage

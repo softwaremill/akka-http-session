@@ -16,19 +16,21 @@ import akka.stream.ActorMaterializer;
 import akka.stream.javadsl.Flow;
 import com.softwaremill.session.BasicSessionEncoder;
 import com.softwaremill.session.CheckHeader;
-import com.softwaremill.session.CookieST$;
-import com.softwaremill.session.javadsl.InMemoryRefreshTokenStorage;
 import com.softwaremill.session.RefreshTokenStorage;
 import com.softwaremill.session.Refreshable;
 import com.softwaremill.session.SessionConfig;
 import com.softwaremill.session.SessionEncoder;
 import com.softwaremill.session.SessionManager;
+import com.softwaremill.session.SetSessionTransport;
 import com.softwaremill.session.javadsl.HttpSessionAwareDirectives;
+import com.softwaremill.session.javadsl.InMemoryRefreshTokenStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.concurrent.CompletionStage;
+
+import static com.softwaremill.session.javadsl.SessionTransports.CookieST;
 
 
 public class JavaExample extends HttpSessionAwareDirectives<MySession> {
@@ -46,7 +48,7 @@ public class JavaExample extends HttpSessionAwareDirectives<MySession> {
     };
 
     private Refreshable<MySession> refreshable;
-    private CookieST$ sessionTransport;
+    private SetSessionTransport sessionTransport;
 
     public JavaExample(MessageDispatcher dispatcher) {
         super(new SessionManager<>(
@@ -60,7 +62,7 @@ public class JavaExample extends HttpSessionAwareDirectives<MySession> {
         refreshable = new Refreshable<>(getSessionManager(), REFRESH_TOKEN_STORAGE, dispatcher);
 
         // set the session transport - based on Cookies (or Headers)
-        sessionTransport = CookieST$.MODULE$;
+        sessionTransport = CookieST;
     }
 
     public static void main(String[] args) throws IOException {
@@ -94,62 +96,64 @@ public class JavaExample extends HttpSessionAwareDirectives<MySession> {
                     redirect(Uri.create("/site/index.html"), StatusCodes.FOUND)
                 ),
                 randomTokenCsrfProtection(checkHeader, () ->
-                    pathPrefix("api", () ->
-                        route(
-                            path("do_login", () ->
-                                post(() ->
-                                    entity(Unmarshaller.entityToString(), body -> {
-                                            logger.info("Logging in {}", body);
-                                            return setSession(refreshable, sessionTransport, new MySession(body), () ->
-                                                setNewCsrfToken(checkHeader, () ->
-                                                    extractRequestContext(ctx ->
-                                                        onSuccess(() -> ctx.completeWith(HttpResponse.create()), routeResult ->
-                                                            complete("ok")
+                    route(
+                        pathPrefix("api", () ->
+                            route(
+                                path("do_login", () ->
+                                    post(() ->
+                                        entity(Unmarshaller.entityToString(), body -> {
+                                                logger.info("Logging in {}", body);
+                                                return setSession(refreshable, sessionTransport, new MySession(body), () ->
+                                                    setNewCsrfToken(checkHeader, () ->
+                                                        extractRequestContext(ctx ->
+                                                            onSuccess(() -> ctx.completeWith(HttpResponse.create()), routeResult ->
+                                                                complete("ok")
+                                                            )
                                                         )
                                                     )
-                                                )
-                                            );
-                                        }
+                                                );
+                                            }
+                                        )
                                     )
-                                )
-                            ),
+                                ),
 
-                            // This should be protected and accessible only when logged in
-                            path("do_logout", () ->
-                                post(() ->
-                                    requiredSession(refreshable, sessionTransport, session ->
-                                        invalidateSession(refreshable, sessionTransport, () ->
+                                // This should be protected and accessible only when logged in
+                                path("do_logout", () ->
+                                    post(() ->
+                                        requiredSession(refreshable, sessionTransport, session ->
+                                            invalidateSession(refreshable, sessionTransport, () ->
+                                                extractRequestContext(ctx -> {
+                                                        logger.info("Logging out {}", session.getUsername());
+                                                        return onSuccess(() -> ctx.completeWith(HttpResponse.create()), routeResult ->
+                                                            complete("ok")
+                                                        );
+                                                    }
+                                                )
+                                            )
+                                        )
+                                    )
+                                ),
+
+                                // This should be protected and accessible only when logged in
+                                path("current_login", () ->
+                                    get(() ->
+                                        requiredSession(refreshable, sessionTransport, session ->
                                             extractRequestContext(ctx -> {
-                                                    logger.info("Logging out {}", session.getUsername());
+                                                    logger.info("Current session: " + session);
                                                     return onSuccess(() -> ctx.completeWith(HttpResponse.create()), routeResult ->
-                                                        complete("ok")
+                                                        complete(session.getUsername())
                                                     );
                                                 }
                                             )
                                         )
                                     )
                                 )
-                            ),
-
-                            // This should be protected and accessible only when logged in
-                            path("current_login", () ->
-                                get(() ->
-                                    requiredSession(refreshable, sessionTransport, session ->
-                                        extractRequestContext(ctx -> {
-                                                logger.info("Current session: " + session);
-                                                return onSuccess(() -> ctx.completeWith(HttpResponse.create()), routeResult ->
-                                                    complete(session.getUsername())
-                                                );
-                                            }
-                                        )
-                                    )
-                                )
                             )
-                        )
+                        ),
+                        pathPrefix("site", () ->
+                            getFromResourceDirectory(""))
                     )
-                ),
-                pathPrefix("site", () ->
-                    getFromResourceDirectory(""))
+                )
             );
     }
 }
