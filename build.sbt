@@ -55,7 +55,6 @@ lazy val core: Project = (project in file("core"))
   .settings(
     name := "core",
     testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a")), // required for javadsl JUnit tests
-    crossPaths := false, // https://github.com/sbt/junit-interface/issues/35
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
       "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
