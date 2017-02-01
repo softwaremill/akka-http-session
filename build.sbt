@@ -48,19 +48,16 @@ lazy val rootProject = (project in file("."))
   .settings(
     publishArtifact := false,
     name := "akka-http-session")
-  .aggregate(core, jwt, example)
+  .aggregate(core, jwt, example, javaTests)
 
 lazy val core: Project = (project in file("core"))
   .settings(commonSettings: _*)
   .settings(
     name := "core",
-    testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a")), // required for javadsl JUnit tests
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
       "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
       "org.scalacheck" %% "scalacheck" % "1.13.4" % "test",
-      "junit" % "junit" % "4.12" % "test",
-      "com.novocode" % "junit-interface" % "0.11" % "test",
       scalaTest
     )
   )
@@ -84,3 +81,20 @@ lazy val example: Project = (project in file("example"))
       "ch.qos.logback" % "logback-classic" % "1.1.7"
     ))
   .dependsOn(core, jwt)
+
+lazy val javaTests: Project = (project in file("javaTests"))
+  .settings(commonSettings: _*)
+  .settings(
+    name := "javaTests",
+    testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a")), // required for javadsl JUnit tests
+    crossPaths := false, // https://github.com/sbt/junit-interface/issues/35
+    publishArtifact := false,
+    libraryDependencies ++= Seq(
+      "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
+      "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
+      "junit" % "junit" % "4.12" % "test",
+      "com.novocode" % "junit-interface" % "0.11" % "test",
+      scalaTest
+    ))
+  .dependsOn(core, jwt)
+
