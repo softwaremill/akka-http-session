@@ -2,9 +2,9 @@ import scalariform.formatter.preferences._
 
 lazy val commonSettings = scalariformSettings ++ Seq(
   organization := "com.softwaremill.akka-http-session",
-  version := "0.3.0",
+  version := "0.4.0",
   scalaVersion := "2.11.8",
-  crossScalaVersions := Seq(scalaVersion.value, "2.12.0"),
+  crossScalaVersions := Seq(scalaVersion.value, "2.12.1"),
   scalacOptions ++= Seq("-unchecked", "-deprecation"),
   ScalariformKeys.preferences := ScalariformKeys.preferences.value
     .setPreference(DoubleIndentClassDeclaration, true)
@@ -39,7 +39,7 @@ lazy val commonSettings = scalariformSettings ++ Seq(
   homepage := Some(new java.net.URL("http://softwaremill.com"))
 )
 
-val akkaHttpVersion = "10.0.0"
+val akkaHttpVersion = "10.0.3"
 
 val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 

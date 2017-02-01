@@ -37,6 +37,7 @@ session data that is sent to the client, and verified when the session token is 
 * support for [JWT](http://jwt.io/)
 * refresh token support (e.g. to implement "remember me")
 * CSRF tokens support
+* Java & Scala APIs
 
 ## Example
 
@@ -78,6 +79,8 @@ path("logout") {
 You can try out a simple example by running `com.softwaremill.example.Example` in the `example` project and
 opening [http://localhost:8080](http://localhost:8080), or you can just take a look
 [at the source](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/Example.scala).
+
+There's also a [Java version available](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/java/com/softwaremill/example/JavaExample.java).
 
 ## `SessionManager` & configuration
 
@@ -350,9 +353,9 @@ stored in Rails
 
 ## Using from SBT
 
-For `akka` version `2.4.11`, `akka-http` version `10.0.0`:
+For `akka-http` version `10.0.3`:
 
 ````scala
-libraryDependencies += "com.softwaremill.akka-http-session" %% "core" % "0.3.0"
-libraryDependencies += "com.softwaremill.akka-http-session" %% "jwt"  % "0.3.0" // optional
+libraryDependencies += "com.softwaremill.akka-http-session" %% "core" % "0.4.0"
+libraryDependencies += "com.softwaremill.akka-http-session" %% "jwt"  % "0.4.0" // optional
 ````
