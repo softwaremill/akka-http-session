@@ -1,7 +1,7 @@
 package com.softwaremill.session
 
-import akka.http.scaladsl.server.{Directive1, Directive0}
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.{Directive0, Directive1}
 
 import scala.concurrent.ExecutionContext
 
@@ -80,6 +80,7 @@ trait SessionDirectives extends OneOffSessionDirectives with RefreshableSessionD
   def touchRequiredSession[T](sc: SessionContinuity[T], st: GetSessionTransport): Directive1[T] = {
     requiredSession(sc, st).flatMap { d => setOneOffSessionSameTransport(sc, st, d) & provide(d) }
   }
+
 }
 
 object SessionDirectives extends SessionDirectives

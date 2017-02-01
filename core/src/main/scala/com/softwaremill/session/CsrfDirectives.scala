@@ -1,7 +1,7 @@
 package com.softwaremill.session
 
-import akka.http.scaladsl.server.{Directive1, Directive0}
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.{Directive0, Directive1}
 import akka.stream.Materializer
 
 trait CsrfDirectives {
