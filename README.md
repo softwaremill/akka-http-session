@@ -311,7 +311,7 @@ Typically it would use some persistent storage.
 
 The tokens are never stored directly, instead only token hashes are passed to the storage. That way even if the token
 database is leaked, it won't be possible to forge sessions using the hashes. Moreover, in addition to the token hash,
-a selector value is stored. That value is used to lookup stored hashes; tokens are compared using using a special
+a selector value is stored. That value is used to lookup stored hashes; tokens are compared using a special
 constant-time comparison method, to prevent timing attacks.
 
 When a session expires or is not present, but the refresh token is (sent from the client using either a cookie,
