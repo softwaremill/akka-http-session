@@ -247,6 +247,15 @@ When using JWT, you need to provide a serializer which serializes session data t
 A number of implicit serializers for the basic types are present in `JValueSessionSerializer`, as well as a generic 
 serializer for case classes (used above).
 
+You may also find it helpful to include the json4s-ext library which provides serializers for common Java types such as 
+`java.util.UUID`, `org.joda.time._` and Java enumerations.
+
+````scala
+import org.json4s.ext.JavaTypesSerializers
+
+implicit lazy val formats: Formats = Serialization.formats(NoTypeHints) ++ JavaTypesSerializers.all
+````
+
 There are many tools available to read JWT session data using various platforms, e.g. 
 [for Angular](https://github.com/auth0/angular-jwt).
 
