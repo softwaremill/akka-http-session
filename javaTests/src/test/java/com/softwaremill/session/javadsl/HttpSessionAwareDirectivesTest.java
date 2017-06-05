@@ -39,8 +39,8 @@ import static java.lang.String.format;
 public abstract class HttpSessionAwareDirectivesTest extends JUnitRouteTest {
 
     static final String SESSION = "my session object";
-    static final String EXPECTED_SESSION = format("Some(%s)", SESSION);
-    static final String NO_SESSION = "None";
+    static final String EXPECTED_SESSION = format("Optional[%s]", SESSION);
+    static final String NO_SESSION = "Optional.empty";
     static final String URL_ENCODED_SESSION = encode();
     private static final String SECRET = "c05ll3lesrinf39t7mc5h6un6r0c69lgfno69dsak3vabeqamouq4328cuaekros401ajdpkh60rrtpd8ro24rbuqmgtnd1ebag6ljnb65i8a55d482ok7o0nch0bfbe";
     private static final String MAX_SESSION_AGE = "60 seconds";

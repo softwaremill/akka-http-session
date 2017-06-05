@@ -6,8 +6,8 @@ import com.softwaremill.session.CsrfCheckMode;
 import com.softwaremill.session.SessionContinuity;
 import com.softwaremill.session.SessionManager;
 import com.softwaremill.session.SetSessionTransport;
-import scala.Option;
 
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -24,7 +24,7 @@ public class HttpSessionAwareDirectives<T> extends AllDirectives {
         return SessionDirectives$.MODULE$.setSession(sc, st, session, continuity);
     }
 
-    public Route optionalSession(SessionContinuity sc, SetSessionTransport st, Function<Option<T>, Route> continuity) {
+    public Route optionalSession(SessionContinuity sc, SetSessionTransport st, Function<Optional<T>, Route> continuity) {
         return SessionDirectives$.MODULE$.optionalSession(sc, st, continuity);
     }
 
