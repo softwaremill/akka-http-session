@@ -5,7 +5,7 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.softwaremill.akka-http-session/core_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.softwaremill.akka-http-session/core_2.11)
 [![Dependencies](https://app.updateimpact.com/badge/634276070333485056/akka-http-session.svg?config=compile)](https://app.updateimpact.com/latest/634276070333485056/akka-http-session)
 
-[akka-http](http://doc.akka.io/docs/akka/2.4.2/scala/http/index.html) is an Akka 
+[`akka-http`](http://doc.akka.io/docs/akka/2.4.2/scala/http/index.html) is an Akka 
 module, originating from [spray.io](http://spray.io), for building *reactive* REST services with an elegant DSL.
 
 `akka-http` is a great toolkit for building backends for single-page or mobile applications. In almost all apps there 
@@ -41,50 +41,13 @@ session data that is sent to the client, and verified when the session token is 
 
 ## Example
 
-````scala
-import akka.http.scaladsl.server.Directives._
+There are examples available in both [java](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/java/com/softwaremill/example/JavaExample.java) and [scala](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/ScalaExample.scala).
 
-import com.softwaremill.session.{SessionConfig, SessionManager}
-import com.softwaremill.session.SessionDirectives._
-import com.softwaremill.session.SessionOptions._
-
-val sessionConfig = SessionConfig.default("some_very_long_secret_and_random_string_some_very_long_secret_and_random_string")
-implicit val sessionManager = new SessionManager[Long](sessionConfig)
-
-path("login") {
-  post {
-    entity(as[String]) { body =>
-      setSession(oneOff, usingCookies, 812832L) { ctx =>
-        ctx.complete("ok")
-      }
-    }
-  }
-} ~
-path("secret") {
-  get {
-    requiredSession(oneOff, usingCookies) { session => // type: Long, or whatever the T parameter is
-      complete { "treasure" }
-    }
-  }
-} ~
-path("logout") {
-  get {
-    invalidateSession(oneOff, usingCookies) {
-      complete { "logged out" }
-    }
-  }
-}
-````
-
-You can try out a simple example by running `com.softwaremill.example.Example` in the `example` project and
-opening [http://localhost:8080](http://localhost:8080), or you can just take a look
-[at the source](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/Example.scala).
-
-There's also a [Java version available](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/java/com/softwaremill/example/JavaExample.java).
+You can try out a simple example by running `com.softwaremill.example.Example` in the [example](https://github.com/softwaremill/akka-http-session/blob/master/example/) project and opening [http://localhost:8080](http://localhost:8080).
 
 ## `SessionManager` & configuration
 
-All directives require an implicit instance of a `SessionManager[T]`, which can be created by providing a server 
+All directives require an implicit instance of a `SessionManager[T]` (or `SessionManager<T>`), which can be created by providing a server 
 secret (via a `SessionConfig`). The secret should be a long, random string unique to each environment your app is
 running in. You can generate one with `SessionUtil.randomServerSecret()`. Note that when you change the secret, 
 all sessions will become invalid.
@@ -96,7 +59,7 @@ preferably via `application.conf` (then you can safely call `SessionConfig.fromC
 
 You can customize any of the [default config options](https://github.com/softwaremill/akka-http-session/blob/master/core/src/main/resources/reference.conf) 
 either by modifying them through `application.conf` or by modifying the `SessionConfig` case class. If a value has
-type `Option[]`, you can set it to `None` by using a `none` value in the config file.
+type `Option[]`, you can set it to `None` by using a `none` value in the config file (for both java and scala).
 
 When using cookies, by default the `secure` attribute of cookies is not set (for development), however it is 
 recommended that all sites use `https` and all cookies have this attribute set. 

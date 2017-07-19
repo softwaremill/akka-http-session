@@ -33,21 +33,21 @@ import java.util.concurrent.CompletionStage;
 import static com.softwaremill.session.javadsl.SessionTransports.CookieST;
 
 
-public class JavaExample extends HttpSessionAwareDirectives<MySession> {
+public class JavaExample extends HttpSessionAwareDirectives<JavaSession> {
 
     private static final Logger logger = LoggerFactory.getLogger(JavaExample.class);
     private static final String SECRET = "c05ll3lesrinf39t7mc5h6un6r0c69lgfno69dsak3vabeqamouq4328cuaekros401ajdpkh60rrtpd8ro24rbuqmgtnd1ebag6ljnb65i8a55d482ok7o0nch0bfbe";
-    private static final SessionEncoder<MySession> BASIC_ENCODER = new BasicSessionEncoder<>(MySession.getSerializer());
+    private static final SessionEncoder<JavaSession> BASIC_ENCODER = new BasicSessionEncoder<>(JavaSession.getSerializer());
 
     // in-memory refresh token storage
-    private static final RefreshTokenStorage<MySession> REFRESH_TOKEN_STORAGE = new InMemoryRefreshTokenStorage<MySession>() {
+    private static final RefreshTokenStorage<JavaSession> REFRESH_TOKEN_STORAGE = new InMemoryRefreshTokenStorage<JavaSession>() {
         @Override
         public void log(String msg) {
             logger.info(msg);
         }
     };
 
-    private Refreshable<MySession> refreshable;
+    private Refreshable<JavaSession> refreshable;
     private SetSessionTransport sessionTransport;
 
     public JavaExample(MessageDispatcher dispatcher) {
@@ -89,7 +89,7 @@ public class JavaExample extends HttpSessionAwareDirectives<MySession> {
     }
 
     private Route createRoutes() {
-        CheckHeader<MySession> checkHeader = new CheckHeader<>(getSessionManager());
+        CheckHeader<JavaSession> checkHeader = new CheckHeader<>(getSessionManager());
         return
             route(
                 pathSingleSlash(() ->
@@ -103,7 +103,7 @@ public class JavaExample extends HttpSessionAwareDirectives<MySession> {
                                     post(() ->
                                         entity(Unmarshaller.entityToString(), body -> {
                                                 logger.info("Logging in {}", body);
-                                                return setSession(refreshable, sessionTransport, new MySession(body), () ->
+                                                return setSession(refreshable, sessionTransport, new JavaSession(body), () ->
                                                     setNewCsrfToken(checkHeader, () ->
                                                         extractRequestContext(ctx ->
                                                             onSuccess(() -> ctx.completeWith(HttpResponse.create()), routeResult ->
