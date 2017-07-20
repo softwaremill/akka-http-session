@@ -41,7 +41,7 @@ session data that is sent to the client, and verified when the session token is 
 
 ## Example
 
-There are examples available in both [java](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/java/com/softwaremill/example/JavaExample.java) and [scala](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/ScalaExample.scala).
+There are examples available in both [java](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/java/com/softwaremill/example/JavaExample.java) and [scala](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/scala/com/softwaremill/example/ScalaExample.scala).
 
 You can try out a simple example by running `com.softwaremill.example.Example` in the [example](https://github.com/softwaremill/akka-http-session/blob/master/example/) project and opening [http://localhost:8080](http://localhost:8080).
 
@@ -91,11 +91,12 @@ You can dynamically decide which transport to use, basing e.g. on the user-agent
 
 ### Basic usage
 
-Sessions are typed. The `T` type parameter in `SessionManager[T]` determines what data is stored in the session. 
-Basic types like `String`, `Int`, `Long`, `Float`, `Double` and `Map[String, String]` are supported out-of-the box. 
-Support for other types can be added by providing an implicit `SessionSerializer[T, String]`. For case classes, it's most 
-convenient to use a `MultiValueSessionSerializer[T]` which should convert the instance into a `String -> String` map 
-(nested types are not supported on purpose, as session data should be small & simple).
+Sessions are typed. The `T` type parameter in `SessionManager[T]` (or `SessionManager<T>`) determines what data is stored in the session. 
+Basic types like `String`, `Int`, `Long`, `Float`, `Double` and `Map[String, String]` (`Map<String, String>`) are supported out-of-the box. 
+Support for other types can be added by providing an implicit `SessionSerializer[T, String]` (`SessionSerializer<T, String>`). For case classes, it's most 
+convenient to use a `MultiValueSessionSerializer[T]` or (`MultiValueSessionSerializer<T>`) which should convert the instance into a `String -> String` map 
+(nested types are not supported on purpose, as session data should be small & simple). Examples of `SessionSerializer` and `MultiValueSessionSerializer` 
+usage can be found [here](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/scala/com/softwaremill/example/session) for scala [here](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/java/com/softwaremill/example/session) for java. 
 
 Here, a manager where the session content will be a single `Long` number is created:
 

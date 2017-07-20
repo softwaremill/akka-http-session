@@ -25,7 +25,7 @@ object Example extends App with StrictLogging {
   implicit val refreshTokenStorage = new InMemoryRefreshTokenStorage[ExampleSession] {
     def log(msg: String) = logger.info(msg)
   }
-
+  val lol = Map(1->2)
   def mySetSession(v: ExampleSession) = setSession(refreshable, usingCookies, v)
   val myRequiredSession = requiredSession(refreshable, usingCookies)
   val myInvalidateSession = invalidateSession(refreshable, usingCookies)
