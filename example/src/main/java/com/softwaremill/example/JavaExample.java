@@ -14,6 +14,7 @@ import akka.http.javadsl.server.Route;
 import akka.http.javadsl.unmarshalling.Unmarshaller;
 import akka.stream.ActorMaterializer;
 import akka.stream.javadsl.Flow;
+import com.softwaremill.example.session.MyJavaSession;
 import com.softwaremill.session.BasicSessionEncoder;
 import com.softwaremill.session.CheckHeader;
 import com.softwaremill.session.RefreshTokenStorage;
@@ -33,21 +34,21 @@ import java.util.concurrent.CompletionStage;
 import static com.softwaremill.session.javadsl.SessionTransports.CookieST;
 
 
-public class JavaExample extends HttpSessionAwareDirectives<JavaSession> {
+public class JavaExample extends HttpSessionAwareDirectives<MyJavaSession> {
 
     private static final Logger logger = LoggerFactory.getLogger(JavaExample.class);
     private static final String SECRET = "c05ll3lesrinf39t7mc5h6un6r0c69lgfno69dsak3vabeqamouq4328cuaekros401ajdpkh60rrtpd8ro24rbuqmgtnd1ebag6ljnb65i8a55d482ok7o0nch0bfbe";
-    private static final SessionEncoder<JavaSession> BASIC_ENCODER = new BasicSessionEncoder<>(JavaSession.getSerializer());
+    private static final SessionEncoder<MyJavaSession> BASIC_ENCODER = new BasicSessionEncoder<>(MyJavaSession.getSerializer());
 
     // in-memory refresh token storage
-    private static final RefreshTokenStorage<JavaSession> REFRESH_TOKEN_STORAGE = new InMemoryRefreshTokenStorage<JavaSession>() {
+    private static final RefreshTokenStorage<MyJavaSession> REFRESH_TOKEN_STORAGE = new InMemoryRefreshTokenStorage<MyJavaSession>() {
         @Override
         public void log(String msg) {
             logger.info(msg);
         }
     };
 
-    private Refreshable<JavaSession> refreshable;
+    private Refreshable<MyJavaSession> refreshable;
     private SetSessionTransport sessionTransport;
 
     public JavaExample(MessageDispatcher dispatcher) {
@@ -89,7 +90,7 @@ public class JavaExample extends HttpSessionAwareDirectives<JavaSession> {
     }
 
     private Route createRoutes() {
-        CheckHeader<JavaSession> checkHeader = new CheckHeader<>(getSessionManager());
+        CheckHeader<MyJavaSession> checkHeader = new CheckHeader<>(getSessionManager());
         return
             route(
                 pathSingleSlash(() ->
@@ -103,7 +104,7 @@ public class JavaExample extends HttpSessionAwareDirectives<JavaSession> {
                                     post(() ->
                                         entity(Unmarshaller.entityToString(), body -> {
                                                 logger.info("Logging in {}", body);
-                                                return setSession(refreshable, sessionTransport, new JavaSession(body), () ->
+                                                return setSession(refreshable, sessionTransport, new MyJavaSession(body), () ->
                                                     setNewCsrfToken(checkHeader, () ->
                                                         extractRequestContext(ctx ->
                                                             onSuccess(() -> ctx.completeWith(HttpResponse.create()), routeResult ->

@@ -11,5 +11,4 @@ public class SomeJavaComplexObject {
     public String getValue() {
         return value;
     }
-    
 }
