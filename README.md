@@ -98,14 +98,7 @@ convenient to use a `MultiValueSessionSerializer[T]` or (`MultiValueSessionSeria
 (nested types are not supported on purpose, as session data should be small & simple). Examples of `SessionSerializer` and `MultiValueSessionSerializer` 
 usage can be found [here](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/scala/com/softwaremill/example/session) for scala [here](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/java/com/softwaremill/example/session) for java. 
 
-Here, a manager where the session content will be a single `Long` number is created:
-
-````scala
-import com.softwaremill.session.{SessionConfig, SessionManager}
-
-val sessionConfig = SessionConfig.default("some_very_long_secret_and_random_string_some_very_long_secret_and_random_string")
-implicit val sessionManager = new SessionManager[Long](sessionConfig)
-````
+Sample code that illustrates how to create a session manager where the session content will be a single `Long` number can be found [here](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/scala/com/softwaremill/example/session/manager/MyScalaSessionManager.scala) for scala and [here](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/java/com/softwaremill/example/session/manager/MyJavaSessionManager.java) for java.
 
 The basic directives enable you to set, read and invalidate the session. To create a new client-side session (create
 and set a new session cookie), you need to use the `setSession` directive:
