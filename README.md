@@ -101,24 +101,7 @@ usage can be found [here](https://github.com/softwaremill/akka-http-session/blob
 Sample code that illustrates how to create a session manager where the session content will be a single `Long` number can be found [here](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/scala/com/softwaremill/example/session/manager/MyScalaSessionManager.scala) for scala and [here](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/java/com/softwaremill/example/session/manager/MyJavaSessionManager.java) for java.
 
 The basic directives enable you to set, read and invalidate the session. To create a new client-side session (create
-and set a new session cookie), you need to use the `setSession` directive:
-
-````scala
-import akka.http.scaladsl.server.Directives._
-
-import com.softwaremill.session.SessionDirectives._
-import com.softwaremill.session.SessionOptions._
-
-path("login") {
-  post {
-    entity(as[String]) { body =>
-      setSession(oneOff, usingCookies, 812832L) { ctx =>
-        ctx.complete("ok")
-      }
-    }
-  }
-}
-````
+and set a new session cookie), you need to use the `setSession` directive. See how it's done in [scala](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/scala/com/softwaremill/example/session/SetSessionScala.scala) and [java](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/java/com/softwaremill/example/session/SetSessionJava.java).
 
 Note that when using cookies, their size is limited to 4KB, so you shouldn't put too much data in there (the signature 
 takes about 50 characters). 
