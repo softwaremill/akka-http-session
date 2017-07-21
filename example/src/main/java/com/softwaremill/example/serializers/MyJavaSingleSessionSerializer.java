@@ -1,5 +1,6 @@
-package com.softwaremill.example.session;
+package com.softwaremill.example.serializers;
 
+import com.softwaremill.example.SomeJavaComplexObject;
 import com.softwaremill.session.SessionSerializer;
 import com.softwaremill.session.SingleValueSessionSerializer;
 import com.softwaremill.session.javadsl.SessionSerializers;

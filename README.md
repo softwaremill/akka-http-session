@@ -96,7 +96,7 @@ Basic types like `String`, `Int`, `Long`, `Float`, `Double` and `Map[String, Str
 Support for other types can be added by providing an implicit `SessionSerializer[T, String]` (`SessionSerializer<T, String>`). For case classes, it's most 
 convenient to use a `MultiValueSessionSerializer[T]` or (`MultiValueSessionSerializer<T>`) which should convert the instance into a `String -> String` map 
 (nested types are not supported on purpose, as session data should be small & simple). Examples of `SessionSerializer` and `MultiValueSessionSerializer` 
-usage can be found [here](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/scala/com/softwaremill/example/session) for scala [here](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/java/com/softwaremill/example/session) for java. 
+usage can be found [here](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/scala/com/softwaremill/example/serializers) for scala [here](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/java/com/softwaremill/example/serializers) for java. 
 
 Sample code that illustrates how to create a session manager where the session content will be a single `Long` number can be found [here](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/scala/com/softwaremill/example/session/manager/MyScalaSessionManager.scala) for scala and [here](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/java/com/softwaremill/example/session/manager/MyJavaSessionManager.java) for java.
 
@@ -135,17 +135,11 @@ You can also encode sessions in the [Json Web Tokens](http://jwt.io) format, by 
 [Java](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/java/com/softwaremill/example/session/manager/JWTSessionManagerJava.java) and [scala](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/scala/com/softwaremill/example/session/manager/JWTSessionManagerScala.scala) JWT session managers. 
 
 When using JWT, you need to provide a serializer which serializes session data to a `JValue` instead of a `String`. 
-A number of implicit serializers for the basic types are present in `JValueSessionSerializer`, as well as a generic 
-serializer for case classes (used above).
+A number of implicit serializers for the basic types are present in `JValueSessionSerializer`, as well as a generic serializer for case classes (used above).
 
-You may also find it helpful to include the json4s-ext library which provides serializers for common Java types such as 
-`java.util.UUID`, `org.joda.time._` and Java enumerations.
+You may also find it helpful to include the json4s-ext library which provides serializers for common Java types such as  `java.util.UUID`, `org.joda.time._` and Java enumerations.
 
-````scala
-import org.json4s.ext.JavaTypesSerializers
-
-implicit lazy val formats: Formats = Serialization.formats(NoTypeHints) ++ JavaTypesSerializers.all
-````
+Grab some [java](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/java/com/softwaremill/example/serializers/JWTSerializersJava.java) and [scala](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/scala/com/softwaremill/example/serializers/JWTSerializersScala.scala) examples.
 
 There are many tools available to read JWT session data using various platforms, e.g. 
 [for Angular](https://github.com/auth0/angular-jwt).

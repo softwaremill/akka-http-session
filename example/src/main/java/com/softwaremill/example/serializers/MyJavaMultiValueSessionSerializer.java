@@ -1,5 +1,6 @@
-package com.softwaremill.example.session;
+package com.softwaremill.example.serializers;
 
+import com.softwaremill.example.SomeJavaComplexObject;
 import com.softwaremill.session.MultiValueSessionSerializer;
 import com.softwaremill.session.converters.MapConverters;
 import scala.Function1;

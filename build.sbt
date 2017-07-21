@@ -17,7 +17,7 @@ lazy val commonSettings = scalariformSettings ++ Seq(
     if (v.trim.endsWith("SNAPSHOT"))
       Some("snapshots" at nexus + "content/repositories/snapshots")
     else
-      Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+      Some("releases" at nexus + "service/local/staging/deploy/maven2")
   },
   credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
   publishMavenStyle := true,
@@ -70,7 +70,7 @@ lazy val jwt: Project = (project in file("jwt"))
       "org.json4s" %% "json4s-jackson" % "3.5.0",
       scalaTest
     )
-  ) dependsOn(core)
+  ) dependsOn (core)
 
 lazy val example: Project = (project in file("example"))
   .settings(commonSettings: _*)
@@ -78,7 +78,8 @@ lazy val example: Project = (project in file("example"))
     publishArtifact := false,
     libraryDependencies ++= Seq(
       "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
-      "ch.qos.logback" % "logback-classic" % "1.1.7"
+      "ch.qos.logback" % "logback-classic" % "1.1.7",
+      "org.json4s" %% "json4s-ext" % "3.5.0"
     ))
   .dependsOn(core, jwt)
 

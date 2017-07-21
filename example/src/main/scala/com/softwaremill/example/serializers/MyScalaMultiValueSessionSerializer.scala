@@ -1,5 +1,6 @@
-package com.softwaremill.example.session
+package com.softwaremill.example.serializers
 
+import com.softwaremill.example.SomeScalaComplexObject
 import com.softwaremill.session.MultiValueSessionSerializer
 
 import scala.util.Try

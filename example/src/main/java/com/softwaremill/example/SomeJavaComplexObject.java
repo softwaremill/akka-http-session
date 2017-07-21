@@ -1,4 +1,4 @@
-package com.softwaremill.example.session;
+package com.softwaremill.example;
 
 public class SomeJavaComplexObject {
 
