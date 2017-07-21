@@ -128,21 +128,11 @@ or if an attacker steals the cookie, it can be re-used. Hence having an expiry d
 
 ## JWT: encoding sessions
 
-By default, sessions are encoded into a string using a custom format, where expiry/data/signature parts are separated
-using `-`, and data fields are separated using `=` and url-encoded.
+By default, sessions are encoded into a string using a custom format, where expiry/data/signature parts are separated using `-`, and data fields are separated using `=` and url-encoded.
 
-You can also encode sessions in the [Json Web Tokens](http://jwt.io) format, by adding the additional `jwt` dependency,
-which makes use of [`json4s`](http://json4s.org).
+You can also encode sessions in the [Json Web Tokens](http://jwt.io) format, by adding the additional `jwt` dependency, which makes use of [`json4s`](http://json4s.org).
 
-To use JWT, you need to create an implicit session encoder before creating a session manager:
-
-````scala
-case class SessionData(...)
-
-implicit val serializer = JValueSessionSerializer.caseClass[SessionData]
-implicit val encoder = new JwtSessionEncoder[SessionData]
-implicit val manager = new SessionManager(SessionConfig.fromConfig())
-````
+[Java](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/java/com/softwaremill/example/session/manager/JWTSessionManagerJava.java) and [scala](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/scala/com/softwaremill/example/session/manager/JWTSessionManagerScala.scala) JWT session managers. 
 
 When using JWT, you need to provide a serializer which serializes session data to a `JValue` instead of a `String`. 
 A number of implicit serializers for the basic types are present in `JValueSessionSerializer`, as well as a generic 

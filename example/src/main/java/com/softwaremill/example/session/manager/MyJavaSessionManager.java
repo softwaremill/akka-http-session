@@ -11,6 +11,6 @@ public class MyJavaSessionManager {
 
     static final SessionEncoder<Long> BASIC_ENCODER = new BasicSessionEncoder<>(LongToStringSessionSerializer);
     static final SessionConfig SESSION_CONFIG = SessionConfig.defaultConfig("some very long unusual string");
-    static final SessionManager<Long> SESSION_MANAGER = new SessionManager<Long>(SESSION_CONFIG, BASIC_ENCODER);
+    static final SessionManager<Long> SESSION_MANAGER = new SessionManager<>(SESSION_CONFIG, BASIC_ENCODER);
 
 }
