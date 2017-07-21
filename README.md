@@ -108,19 +108,7 @@ takes about 50 characters).
 
 You can require a session to be present, optionally require a session or get a full description of possible session decode outcomes. See examples for [java](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/java/com/softwaremill/example/session/VariousSessionsJava.java) and [scala](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/scala/com/softwaremill/example/session/VariousSessionsScala.scala).
 
-If a required session is not present, by default a `403` HTTP status code is returned. Finally, a session can be invalidated.
-
-````scala
-path("logout") {
-  get {
-    requiredSession(oneOff, usingCookies) { session => 
-      invalidateSession(oneOff, usingCookies) {
-        complete { "logged out" }
-      }
-    }
-  }
-}
-````
+If a required session is not present, by default a `403` HTTP status code is returned. Finally, a session can be invalidated. See how it's done in See examples for [java](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/java/com/softwaremill/example/session/SessionInvalidationJava.java) and [scala](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/scala/com/softwaremill/example/session/SessionInvalidationScala.scala).
 
 ### Encrypting the session
 
