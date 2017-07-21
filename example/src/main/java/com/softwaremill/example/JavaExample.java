@@ -14,6 +14,7 @@ import akka.http.javadsl.server.Route;
 import akka.http.javadsl.unmarshalling.Unmarshaller;
 import akka.stream.ActorMaterializer;
 import akka.stream.javadsl.Flow;
+import com.softwaremill.example.session.MyJavaSession;
 import com.softwaremill.session.BasicSessionEncoder;
 import com.softwaremill.session.CheckHeader;
 import com.softwaremill.session.RefreshTokenStorage;
@@ -33,21 +34,21 @@ import java.util.concurrent.CompletionStage;
 import static com.softwaremill.session.javadsl.SessionTransports.CookieST;
 
 
-public class JavaExample extends HttpSessionAwareDirectives<MySession> {
+public class JavaExample extends HttpSessionAwareDirectives<MyJavaSession> {
 
-    private static final Logger logger = LoggerFactory.getLogger(JavaExample.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JavaExample.class);
     private static final String SECRET = "c05ll3lesrinf39t7mc5h6un6r0c69lgfno69dsak3vabeqamouq4328cuaekros401ajdpkh60rrtpd8ro24rbuqmgtnd1ebag6ljnb65i8a55d482ok7o0nch0bfbe";
-    private static final SessionEncoder<MySession> BASIC_ENCODER = new BasicSessionEncoder<>(MySession.getSerializer());
+    private static final SessionEncoder<MyJavaSession> BASIC_ENCODER = new BasicSessionEncoder<>(MyJavaSession.getSerializer());
 
     // in-memory refresh token storage
-    private static final RefreshTokenStorage<MySession> REFRESH_TOKEN_STORAGE = new InMemoryRefreshTokenStorage<MySession>() {
+    private static final RefreshTokenStorage<MyJavaSession> REFRESH_TOKEN_STORAGE = new InMemoryRefreshTokenStorage<MyJavaSession>() {
         @Override
         public void log(String msg) {
-            logger.info(msg);
+            LOGGER.info(msg);
         }
     };
 
-    private Refreshable<MySession> refreshable;
+    private Refreshable<MyJavaSession> refreshable;
     private SetSessionTransport sessionTransport;
 
     public JavaExample(MessageDispatcher dispatcher) {
@@ -89,7 +90,7 @@ public class JavaExample extends HttpSessionAwareDirectives<MySession> {
     }
 
     private Route createRoutes() {
-        CheckHeader<MySession> checkHeader = new CheckHeader<>(getSessionManager());
+        CheckHeader<MyJavaSession> checkHeader = new CheckHeader<>(getSessionManager());
         return
             route(
                 pathSingleSlash(() ->
@@ -102,8 +103,8 @@ public class JavaExample extends HttpSessionAwareDirectives<MySession> {
                                 path("do_login", () ->
                                     post(() ->
                                         entity(Unmarshaller.entityToString(), body -> {
-                                                logger.info("Logging in {}", body);
-                                                return setSession(refreshable, sessionTransport, new MySession(body), () ->
+                                                LOGGER.info("Logging in {}", body);
+                                                return setSession(refreshable, sessionTransport, new MyJavaSession(body), () ->
                                                     setNewCsrfToken(checkHeader, () ->
                                                         extractRequestContext(ctx ->
                                                             onSuccess(() -> ctx.completeWith(HttpResponse.create()), routeResult ->
@@ -123,7 +124,7 @@ public class JavaExample extends HttpSessionAwareDirectives<MySession> {
                                         requiredSession(refreshable, sessionTransport, session ->
                                             invalidateSession(refreshable, sessionTransport, () ->
                                                 extractRequestContext(ctx -> {
-                                                        logger.info("Logging out {}", session.getUsername());
+                                                        LOGGER.info("Logging out {}", session.getUsername());
                                                         return onSuccess(() -> ctx.completeWith(HttpResponse.create()), routeResult ->
                                                             complete("ok")
                                                         );
@@ -139,7 +140,7 @@ public class JavaExample extends HttpSessionAwareDirectives<MySession> {
                                     get(() ->
                                         requiredSession(refreshable, sessionTransport, session ->
                                             extractRequestContext(ctx -> {
-                                                    logger.info("Current session: " + session);
+                                                    LOGGER.info("Current session: " + session);
                                                     return onSuccess(() -> ctx.completeWith(HttpResponse.create()), routeResult ->
                                                         complete(session.getUsername())
                                                     );

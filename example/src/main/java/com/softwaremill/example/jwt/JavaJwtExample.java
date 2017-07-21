@@ -1,4 +1,4 @@
-package com.softwaremill.example;
+package com.softwaremill.example.jwt;
 
 import akka.NotUsed;
 import akka.actor.ActorSystem;
@@ -36,7 +36,7 @@ import static com.softwaremill.session.javadsl.SessionTransports.CookieST;
 
 public class JavaJwtExample extends HttpSessionAwareDirectives<String> {
 
-    private static final Logger logger = LoggerFactory.getLogger(JavaJwtExample.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JavaJwtExample.class);
     private static final String SECRET = "c05ll3lesrinf39t7mc5h6un6r0c69lgfno69dsak3vabeqamouq4328cuaekros401ajdpkh60rrtpd8ro24rbuqmgtnd1ebag6ljnb65i8a55d482ok7o0nch0bfbe";
     private static final SessionEncoder<String> JWT_ENCODER = new JwtSessionEncoder<>(JwtSessionSerializers.StringToJValueSessionSerializer, JwtSessionSerializers.DefaultUtcDateFormat);
 
@@ -44,7 +44,7 @@ public class JavaJwtExample extends HttpSessionAwareDirectives<String> {
     private static final RefreshTokenStorage<String> REFRESH_TOKEN_STORAGE = new InMemoryRefreshTokenStorage<String>() {
         @Override
         public void log(String msg) {
-            logger.info(msg);
+            LOGGER.info(msg);
         }
     };
 
@@ -103,7 +103,7 @@ public class JavaJwtExample extends HttpSessionAwareDirectives<String> {
                                 path("do_login", () ->
                                     post(() ->
                                         entity(Unmarshaller.entityToString(), body -> {
-                                                logger.info("Logging in {}", body);
+                                                LOGGER.info("Logging in {}", body);
                                                 return setSession(refreshable, sessionTransport, body, () ->
                                                     setNewCsrfToken(checkHeader, () ->
                                                         extractRequestContext(ctx ->
@@ -124,7 +124,7 @@ public class JavaJwtExample extends HttpSessionAwareDirectives<String> {
                                         requiredSession(refreshable, sessionTransport, session ->
                                             invalidateSession(refreshable, sessionTransport, () ->
                                                 extractRequestContext(ctx -> {
-                                                        logger.info("Logging out {}", session);
+                                                        LOGGER.info("Logging out {}", session);
                                                         return onSuccess(() -> ctx.completeWith(HttpResponse.create()), routeResult ->
                                                             complete("ok")
                                                         );
@@ -140,7 +140,7 @@ public class JavaJwtExample extends HttpSessionAwareDirectives<String> {
                                     get(() ->
                                         requiredSession(refreshable, sessionTransport, session ->
                                             extractRequestContext(ctx -> {
-                                                    logger.info("Current session: " + session);
+                                                    LOGGER.info("Current session: " + session);
                                                     return onSuccess(() -> ctx.completeWith(HttpResponse.create()), routeResult ->
                                                         complete(session)
                                                     );

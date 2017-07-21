@@ -3,8 +3,10 @@ package com.softwaremill.session.javadsl;
 import akka.http.javadsl.server.AllDirectives;
 import akka.http.javadsl.server.Route;
 import com.softwaremill.session.CsrfCheckMode;
+import com.softwaremill.session.GetSessionTransport;
 import com.softwaremill.session.SessionContinuity;
 import com.softwaremill.session.SessionManager;
+import com.softwaremill.session.SessionResult;
 import com.softwaremill.session.SetSessionTransport;
 
 import java.util.Optional;
@@ -19,6 +21,9 @@ public class HttpSessionAwareDirectives<T> extends AllDirectives {
         this.sessionManager = sessionManager;
     }
 
+    public Route session(SessionContinuity sc, GetSessionTransport st, Function<SessionResult<T>, Route> continuity) {
+        return SessionDirectives$.MODULE$.session(sc, st, continuity);
+    }
 
     public Route setSession(SessionContinuity sc, SetSessionTransport st, T session, Supplier<Route> continuity) {
         return SessionDirectives$.MODULE$.setSession(sc, st, session, continuity);

@@ -2,31 +2,33 @@ package com.softwaremill.example
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.stream.ActorMaterializer
-import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.model.StatusCodes._
-import com.softwaremill.session._
+import akka.http.scaladsl.server.Directives._
+import akka.stream.ActorMaterializer
+import com.softwaremill.example.session.MyScalaSession
 import com.softwaremill.session.CsrfDirectives._
 import com.softwaremill.session.CsrfOptions._
 import com.softwaremill.session.SessionDirectives._
 import com.softwaremill.session.SessionOptions._
+import com.softwaremill.session._
 import com.typesafe.scalalogging.StrictLogging
 
 import scala.io.StdIn
-import scala.util.Try
 
 object Example extends App with StrictLogging {
   implicit val system = ActorSystem("example")
   implicit val materializer = ActorMaterializer()
+
   import system.dispatcher
 
   val sessionConfig = SessionConfig.default("c05ll3lesrinf39t7mc5h6un6r0c69lgfno69dsak3vabeqamouq4328cuaekros401ajdpkh60rrtpd8ro24rbuqmgtnd1ebag6ljnb65i8a55d482ok7o0nch0bfbe")
-  implicit val sessionManager = new SessionManager[ExampleSession](sessionConfig)
-  implicit val refreshTokenStorage = new InMemoryRefreshTokenStorage[ExampleSession] {
+  implicit val sessionManager = new SessionManager[MyScalaSession](sessionConfig)
+  implicit val refreshTokenStorage = new InMemoryRefreshTokenStorage[MyScalaSession] {
     def log(msg: String) = logger.info(msg)
   }
 
-  def mySetSession(v: ExampleSession) = setSession(refreshable, usingCookies, v)
+  def mySetSession(v: MyScalaSession) = setSession(refreshable, usingCookies, v)
+
   val myRequiredSession = requiredSession(refreshable, usingCookies)
   val myInvalidateSession = invalidateSession(refreshable, usingCookies)
 
@@ -41,7 +43,7 @@ object Example extends App with StrictLogging {
               entity(as[String]) { body =>
                 logger.info(s"Logging in $body")
 
-                mySetSession(ExampleSession(body)) {
+                mySetSession(MyScalaSession(body)) {
                   setNewCsrfToken(checkHeader) { ctx => ctx.complete("ok") }
                 }
               }
@@ -61,9 +63,10 @@ object Example extends App with StrictLogging {
             // This should be protected and accessible only when logged in
             path("current_login") {
               get {
-                myRequiredSession { session => ctx =>
-                  logger.info("Current session: " + session)
-                  ctx.complete(session.username)
+                myRequiredSession { session =>
+                  ctx =>
+                    logger.info("Current session: " + session)
+                    ctx.complete(session.username)
                 }
               }
             }
@@ -79,19 +82,11 @@ object Example extends App with StrictLogging {
   StdIn.readLine()
 
   import system.dispatcher
+
   bindingFuture
     .flatMap(_.unbind())
     .onComplete { _ =>
       system.terminate()
       println("Server stopped")
     }
-}
-
-case class ExampleSession(username: String)
-
-object ExampleSession {
-  implicit def serializer: SessionSerializer[ExampleSession, String] = new SingleValueSessionSerializer(
-    _.username,
-    (un: String) => Try { ExampleSession(un) }
-  )
 }

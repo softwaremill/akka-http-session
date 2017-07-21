@@ -3,16 +3,22 @@ package com.softwaremill.session.javadsl
 import java.util.Optional
 import java.util.function.Supplier
 
-import scala.compat.java8.OptionConverters._
-
 import akka.http.javadsl.server.Route
 import akka.http.javadsl.server.directives.RouteAdapter
 import com.softwaremill.session._
 
+import scala.compat.java8.OptionConverters._
+
 /**
-  * Java alternative for  com.softwaremill.session.SessionDirectives
+  * Java alternative for com.softwaremill.session.SessionDirectives
   */
 trait SessionDirectives extends OneOffSessionDirectives with RefreshableSessionDirectives {
+
+  def session[T](sc: SessionContinuity[T], st: GetSessionTransport, inner: java.util.function.Function[SessionResult[T], Route]): Route = RouteAdapter {
+    com.softwaremill.session.SessionDirectives.session(sc, st) { sessionResult =>
+      inner.apply(sessionResult).asInstanceOf[RouteAdapter].delegate
+    }
+  }
 
   def setSession[T](sc: SessionContinuity[T], st: SetSessionTransport, v: T, inner: Supplier[Route]): Route = RouteAdapter {
     com.softwaremill.session.SessionDirectives.setSession(sc, st, v) {
