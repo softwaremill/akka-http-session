@@ -106,36 +106,9 @@ and set a new session cookie), you need to use the `setSession` directive. See h
 Note that when using cookies, their size is limited to 4KB, so you shouldn't put too much data in there (the signature 
 takes about 50 characters). 
 
-You can require a session to be present, optionally require a session or get a full description of possible session 
-decode outcomes:
+You can require a session to be present, optionally require a session or get a full description of possible session decode outcomes. See examples for [java](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/java/com/softwaremill/example/session/VariousSessionsJava.java) and [scala](https://github.com/softwaremill/akka-http-session/blob/readme-update/example/src/main/scala/com/softwaremill/example/session/VariousSessionsScala.scala).
 
-````scala
-path("secret") {
-  get {
-    requiredSession(oneOff, usingCookies) { session => // type: Long, or whatever the T parameter is
-      complete { "treasure" }
-    }
-  }
-} ~
-path("open") {
-  get {
-    optionalSession(oneOff, usingCookies) { session => // type: Option[Long] (Option[T])
-      complete { "small treasure" }
-    }
-  }
-} ~
-path("detail") {
-  get {
-    // type: SessionResult[Long] (SessionResult[T])
-    // which can be: Decoded, CreatedFromToken, Expired, Corrupt, NoSession
-    session(oneOff, usingCookies) { session => 
-      complete { "small treasure" }
-    }
-  }
-}
-````
-
-If a required session is not present, by default a `403` HTTP status code is returned. Finally, a session can be invalidated:
+If a required session is not present, by default a `403` HTTP status code is returned. Finally, a session can be invalidated.
 
 ````scala
 path("logout") {

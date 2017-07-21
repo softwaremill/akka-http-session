@@ -24,7 +24,6 @@ object SetSessionScala extends App with StrictLogging {
   implicit val refreshTokenStorage = new InMemoryRefreshTokenStorage[MyScalaSession] {
     def log(msg: String) = logger.info(msg)
   }
-  val lol = Map(1 -> 2)
 
   def mySetSession(v: MyScalaSession) = setSession(refreshable, usingCookies, v)
 

@@ -1,21 +1,18 @@
-package com.softwaremill.example
+package com.softwaremill.example.session
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
-import com.softwaremill.example.session.MyScalaSession
-import com.softwaremill.session.CsrfDirectives._
-import com.softwaremill.session.CsrfOptions._
 import com.softwaremill.session.SessionDirectives._
 import com.softwaremill.session.SessionOptions._
+import com.softwaremill.session.SessionResult._
 import com.softwaremill.session._
 import com.typesafe.scalalogging.StrictLogging
 
 import scala.io.StdIn
 
-object Example extends App with StrictLogging {
+object VariousSessionsScala extends App with StrictLogging {
   implicit val system = ActorSystem("example")
   implicit val materializer = ActorMaterializer()
 
@@ -33,47 +30,53 @@ object Example extends App with StrictLogging {
   val myInvalidateSession = invalidateSession(refreshable, usingCookies)
 
   val routes =
-    path("") {
-      redirect("/site/index.html", Found)
-    } ~
-      randomTokenCsrfProtection(checkHeader) {
-        pathPrefix("api") {
-          path("do_login") {
-            post {
-              entity(as[String]) { body =>
-                logger.info(s"Logging in $body")
-
-                mySetSession(MyScalaSession(body)) {
-                  setNewCsrfToken(checkHeader) { ctx => ctx.complete("ok") }
-                }
-              }
-            }
-          } ~
-            // This should be protected and accessible only when logged in
-            path("do_logout") {
-              post {
-                myRequiredSession { session =>
-                  myInvalidateSession { ctx =>
-                    logger.info(s"Logging out $session")
-                    ctx.complete("ok")
-                  }
-                }
-              }
-            } ~
-            // This should be protected and accessible only when logged in
-            path("current_login") {
-              get {
-                myRequiredSession { session =>
-                  ctx =>
-                    logger.info("Current session: " + session)
-                    ctx.complete(session.username)
-                }
-              }
-            }
-        } ~
-          pathPrefix("site") {
-            getFromResourceDirectory("")
+    path("secret") {
+      get {
+        // type: Long, or whatever the T parameter is
+        requiredSession(oneOff, usingCookies) { session =>
+          complete {
+            "treasure"
           }
+        }
+      }
+    } ~
+      path("open") {
+        get {
+          // type: Option[Long] (Option[T])
+          optionalSession(oneOff, usingCookies) { session =>
+            complete {
+              "small treasure"
+            }
+          }
+        }
+      } ~
+      path("detail") {
+        get {
+          // type: SessionResult[Long] (SessionResult[T])
+          // which can be: Decoded, CreatedFromToken, Expired, Corrupt, NoSession
+          session(oneOff, usingCookies) { sessionResult =>
+            sessionResult match {
+              case Decoded(session) => complete {
+                "decoded"
+              }
+              case CreatedFromToken(session) => complete {
+                "created from token"
+              }
+              case NoSession => complete {
+                "no session"
+              }
+              case TokenNotFound => complete {
+                "token not found"
+              }
+              case Expired => complete {
+                "expired"
+              }
+              case Corrupt(exc) => complete {
+                "corrupt"
+              }
+            }
+          }
+        }
       }
 
   val bindingFuture = Http().bindAndHandle(routes, "localhost", 8080)
@@ -90,3 +93,4 @@ object Example extends App with StrictLogging {
       println("Server stopped")
     }
 }
+

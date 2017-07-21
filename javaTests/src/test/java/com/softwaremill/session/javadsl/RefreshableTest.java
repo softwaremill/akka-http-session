@@ -37,8 +37,10 @@ public class RefreshableTest extends HttpSessionAwareDirectivesTest {
                 ),
                 path("invalidate", () ->
                     testDirectives.invalidateSession(refreshable, sessionTransport, () -> complete("ok"))
+                ),
+                path("full", () ->
+                    testDirectives.session(refreshable, sessionTransport, sessionResult -> complete(sessionResult.toString()))
                 )
-
             );
     }
 
@@ -732,7 +734,75 @@ public class RefreshableTest extends HttpSessionAwareDirectivesTest {
         Assert.assertNotEquals(session1.value(), session3.value());
         // new token should be generated
         Assert.assertNotNull(token3);
+    }
 
+    @Test
+    public void shouldReturnCreatedFromTokenWhenTokenIsSent() {
+        // given
+        final Route route = createRoute(CookieST);
+
+        //and
+        TestRouteResult setRouteResult = testRoute(route)
+            .run(HttpRequest.GET("/set"));
+        HttpCookie refreshToken = getRefreshTokenCookieValues(setRouteResult.response());
+        
+        /* 2nd request */
+        // when
+        TestRouteResult fullResult = testRoute(route)
+            .run(
+                HttpRequest.GET("/full").addHeader(Cookie.create(refreshTokenCookieName, refreshToken.value()))
+            );
+
+        // then
+        fullResult.assertStatusCode(StatusCodes.OK);
+        fullResult.assertEntity("CreatedFromToken(my session object)");
+    }
+
+    @Test
+    public void shouldReturnCorruptWhenRefreshableSetButSessionCookieIsSent() {
+        // given
+        final Route route = createRoute(CookieST);
+
+        //and
+        TestRouteResult setRouteResult = testRoute(route)
+            .run(HttpRequest.GET("/set"));
+        HttpCookie refreshToken = getRefreshTokenCookieValues(setRouteResult.response());
+        
+        /* 2nd request */
+        // whenCreatedFromToken(my session object)
+        TestRouteResult fullResult = testRoute(route)
+            .run(
+                HttpRequest.GET("/full").addHeader(Cookie.create(sessionDataCookieName, refreshToken.value()))
+            );
+
+        // then
+        fullResult.assertStatusCode(StatusCodes.OK);
+        fullResult.assertEntity("Corrupt(java.lang.ArrayIndexOutOfBoundsException: 1)");
+    }
+
+    @Test
+    public void shouldReturnTokenNotFoundWhenNoTokenSend() {
+        // given
+        final Route route = createRoute(CookieST);
+
+        //and
+        TestRouteResult setRouteResult = testRoute(route)
+            .run(HttpRequest.GET("/set"));
+        HttpCookie refreshToken = getRefreshTokenCookieValues(setRouteResult.response());
+
+        testRoute(route)
+            .run(HttpRequest.GET("/invalidate")
+                .addHeader(Cookie.create(refreshTokenCookieName, refreshToken.value()))
+            );
+
+        TestRouteResult fullResult = testRoute(route)
+            .run(
+                HttpRequest.GET("/full").addHeader(Cookie.create(refreshTokenCookieName, refreshToken.value()))
+            );
+
+        // then
+        fullResult.assertStatusCode(StatusCodes.OK);
+        fullResult.assertEntity("TokenNotFound");
     }
 
 }

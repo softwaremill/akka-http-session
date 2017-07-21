@@ -37,8 +37,10 @@ public class OneOffTest extends HttpSessionAwareDirectivesTest {
                 ),
                 path("invalidate", () ->
                     testDirectives.invalidateSession(oneOff, sessionTransport, () -> complete("ok"))
+                ),
+                path("full", () ->
+                    testDirectives.session(oneOff, sessionTransport, sessionResult -> complete(sessionResult.toString()))
                 )
-
             );
     }
 
@@ -422,7 +424,70 @@ public class OneOffTest extends HttpSessionAwareDirectivesTest {
             );
 
         touchReqRouteResultAfter70Expired.assertStatusCode(StatusCodes.FORBIDDEN);
+    }
 
+    @Test
+    public void shouldReturnDecodedWhenSessionExists() {
+        // given
+        final Route route = createRoute(CookieST);
+
+        // when
+        TestRouteResult setRouteResult = testRoute(route).run(HttpRequest.GET("/set"));
+        HttpCookie sessionData = getSessionDataCookieValues(setRouteResult.response());
+
+        /* 2nd request */
+        // when
+        TestRouteResult fullResult = testRoute(route)
+            .run(
+                HttpRequest.GET("/full").addHeader(Cookie.create(sessionDataCookieName, sessionData.value()))
+            );
+
+        // then
+        fullResult.assertStatusCode(StatusCodes.OK);
+        fullResult.assertEntity("Decoded(my session object)");
+    }
+
+    @Test
+    public void shouldReturnNoSessionWhenNoSessionExists() {
+        // given
+        final Route route = createRoute(CookieST);
+
+        // when
+        TestRouteResult fullResult = testRoute(route)
+            .run(
+                HttpRequest.GET("/full")
+            );
+
+        // then
+        fullResult.assertStatusCode(StatusCodes.OK);
+        fullResult.assertEntity("NoSession");
+    }
+
+    @Test
+    public void shouldReturnExpiredWhenSessionExpires() {
+        final Route route_fixed = createRoute(CookieST, getExpiring60SessionManagerWithFixedTime());
+        final Route route_fixed_plus70s = createRoute(CookieST, getExpiring60Plus70SessionManagerWithFixedTime());
+
+        // given
+        TestRouteResult setRouteResult = testRoute(route_fixed)
+            .run(HttpRequest.GET("/set"));
+        HttpCookie session1 = getSessionDataCookieValues(setRouteResult.response());
+
+        TestRouteResult touchReqRouteResultAfter70Expired = testRoute(route_fixed_plus70s)
+            .run(HttpRequest.GET("/touchReq")
+                .addHeader(Cookie.create(sessionDataCookieName, session1.value()))
+            );
+        touchReqRouteResultAfter70Expired.assertStatusCode(StatusCodes.FORBIDDEN);
+
+        // when
+        TestRouteResult fullResult = testRoute(route_fixed_plus70s)
+            .run(HttpRequest.GET("/full")
+                .addHeader(Cookie.create(sessionDataCookieName, session1.value()))
+            );
+
+        // then
+        fullResult.assertStatusCode(StatusCodes.OK);
+        fullResult.assertEntity("Expired");
     }
 
 }
