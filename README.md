@@ -170,24 +170,6 @@ A new token can be generated using the `setNewCsrfToken` directive.
 
 By default the name of the CSRF cookie and the custom header matches what [AngularJS expects and sets](https://docs.angularjs.org/api/ng/service/$http).
 These can be customized in the config.
-
-Example usage:
-
-````scala
-import akka.http.scaladsl.server.Directives._
-
-import com.softwaremill.session.CsrfDirectives._
-import com.softwaremill.session.CsrfOptions._
-
-randomTokenCsrfProtection(checkHeader) {
-  get("site") {
-    // read from disk
-  } ~
-  post("transfer_money") {
-    // token already checked
-  }
-}
-````        
      
 ## Refresh tokens (a.k.a "remember me")
 

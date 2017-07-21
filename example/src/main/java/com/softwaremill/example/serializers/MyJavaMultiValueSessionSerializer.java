@@ -5,6 +5,7 @@ import com.softwaremill.session.MultiValueSessionSerializer;
 import com.softwaremill.session.converters.MapConverters;
 import scala.Function1;
 import scala.collection.immutable.Map;
+import scala.compat.java8.JFunction0;
 import scala.compat.java8.JFunction1;
 import scala.util.Try;
 
@@ -26,7 +27,8 @@ public class MyJavaMultiValueSessionSerializer extends MultiValueSessionSerializ
                 m.put("value", sjco.getValue());
                 return MapConverters.toImmutableMap(m);
             },
-            (JFunction1<Map<String, String>, Try<SomeJavaComplexObject>>) value -> Try.apply(() -> new SomeJavaComplexObject(value.get("value").get()))
+            (JFunction1<Map<String, String>, Try<SomeJavaComplexObject>>) value ->
+                Try.apply((JFunction0<SomeJavaComplexObject>) () -> new SomeJavaComplexObject(value.get("value").get()))
         );
     }
 }

@@ -1,4 +1,4 @@
-package com.softwaremill.example;
+package com.softwaremill.example.jwt;
 
 import akka.NotUsed;
 import akka.actor.ActorSystem;
