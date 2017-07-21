@@ -36,7 +36,7 @@ import static com.softwaremill.session.javadsl.SessionTransports.CookieST;
 
 public class JavaExample extends HttpSessionAwareDirectives<MyJavaSession> {
 
-    private static final Logger logger = LoggerFactory.getLogger(JavaExample.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JavaExample.class);
     private static final String SECRET = "c05ll3lesrinf39t7mc5h6un6r0c69lgfno69dsak3vabeqamouq4328cuaekros401ajdpkh60rrtpd8ro24rbuqmgtnd1ebag6ljnb65i8a55d482ok7o0nch0bfbe";
     private static final SessionEncoder<MyJavaSession> BASIC_ENCODER = new BasicSessionEncoder<>(MyJavaSession.getSerializer());
 
@@ -44,7 +44,7 @@ public class JavaExample extends HttpSessionAwareDirectives<MyJavaSession> {
     private static final RefreshTokenStorage<MyJavaSession> REFRESH_TOKEN_STORAGE = new InMemoryRefreshTokenStorage<MyJavaSession>() {
         @Override
         public void log(String msg) {
-            logger.info(msg);
+            LOGGER.info(msg);
         }
     };
 
@@ -103,7 +103,7 @@ public class JavaExample extends HttpSessionAwareDirectives<MyJavaSession> {
                                 path("do_login", () ->
                                     post(() ->
                                         entity(Unmarshaller.entityToString(), body -> {
-                                                logger.info("Logging in {}", body);
+                                                LOGGER.info("Logging in {}", body);
                                                 return setSession(refreshable, sessionTransport, new MyJavaSession(body), () ->
                                                     setNewCsrfToken(checkHeader, () ->
                                                         extractRequestContext(ctx ->
@@ -124,7 +124,7 @@ public class JavaExample extends HttpSessionAwareDirectives<MyJavaSession> {
                                         requiredSession(refreshable, sessionTransport, session ->
                                             invalidateSession(refreshable, sessionTransport, () ->
                                                 extractRequestContext(ctx -> {
-                                                        logger.info("Logging out {}", session.getUsername());
+                                                        LOGGER.info("Logging out {}", session.getUsername());
                                                         return onSuccess(() -> ctx.completeWith(HttpResponse.create()), routeResult ->
                                                             complete("ok")
                                                         );
@@ -140,7 +140,7 @@ public class JavaExample extends HttpSessionAwareDirectives<MyJavaSession> {
                                     get(() ->
                                         requiredSession(refreshable, sessionTransport, session ->
                                             extractRequestContext(ctx -> {
-                                                    logger.info("Current session: " + session);
+                                                    LOGGER.info("Current session: " + session);
                                                     return onSuccess(() -> ctx.completeWith(HttpResponse.create()), routeResult ->
                                                         complete(session.getUsername())
                                                     );

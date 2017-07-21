@@ -31,7 +31,7 @@ import static com.softwaremill.session.javadsl.SessionTransports.CookieST;
 
 public class SessionInvalidationJava extends HttpSessionAwareDirectives<MyJavaSession> {
 
-    private static final Logger logger = LoggerFactory.getLogger(com.softwaremill.example.JavaExample.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SessionInvalidationJava.class);
     private static final String SECRET = "c05ll3lesrinf39t7mc5h6un6r0c69lgfno69dsak3vabeqamouq4328cuaekros401ajdpkh60rrtpd8ro24rbuqmgtnd1ebag6ljnb65i8a55d482ok7o0nch0bfbe";
     private static final SessionEncoder<MyJavaSession> BASIC_ENCODER = new BasicSessionEncoder<>(MyJavaSession.getSerializer());
 
@@ -39,7 +39,7 @@ public class SessionInvalidationJava extends HttpSessionAwareDirectives<MyJavaSe
     private static final RefreshTokenStorage<MyJavaSession> REFRESH_TOKEN_STORAGE = new InMemoryRefreshTokenStorage<MyJavaSession>() {
         @Override
         public void log(String msg) {
-            logger.info(msg);
+            LOGGER.info(msg);
         }
     };
 
@@ -95,7 +95,7 @@ public class SessionInvalidationJava extends HttpSessionAwareDirectives<MyJavaSe
                                 requiredSession(refreshable, sessionTransport, session ->
                                     invalidateSession(refreshable, sessionTransport, () ->
                                         extractRequestContext(ctx -> {
-                                                logger.info("Logging out {}", session.getUsername());
+                                                LOGGER.info("Logging out {}", session.getUsername());
                                                 return onSuccess(() -> ctx.completeWith(HttpResponse.create()), routeResult ->
                                                     complete("ok")
                                                 );

@@ -41,13 +41,11 @@ session data that is sent to the client, and verified when the session token is 
 
 ## Example
 
-There are examples available in both [java](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/java/com/softwaremill/example/JavaExample.java) and [scala](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/ScalaExample.scala).
-
-You can try out a simple example by running `com.softwaremill.example.Example` in the [example](https://github.com/softwaremill/akka-http-session/blob/master/example/) project and opening [http://localhost:8080](http://localhost:8080).
+You can try out a simple example by running [`com.softwaremill.example.ScalaExample`](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/ScalaExample.scala) or [`com.softwaremill.example.JavaExample`](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/java/com/softwaremill/example/JavaExample.java) and opening [http://localhost:8080](http://localhost:8080).
 
 ## `SessionManager` & configuration
 
-All directives require an implicit instance of a `SessionManager[T]` (or `SessionManager<T>`), which can be created by providing a server 
+All directives require an (implicit for scala) instance of a `SessionManager[T]` (or `SessionManager<T>`), which can be created by providing a server 
 secret (via a `SessionConfig`). The secret should be a long, random string unique to each environment your app is
 running in. You can generate one with `SessionUtil.randomServerSecret()`. Note that when you change the secret, 
 all sessions will become invalid.
@@ -93,22 +91,23 @@ You can dynamically decide which transport to use, basing e.g. on the user-agent
 
 Sessions are typed. The `T` type parameter in `SessionManager[T]` (or `SessionManager<T>`) determines what data is stored in the session. 
 Basic types like `String`, `Int`, `Long`, `Float`, `Double` and `Map[String, String]` (`Map<String, String>`) are supported out-of-the box. 
-Support for other types can be added by providing an implicit `SessionSerializer[T, String]` (`SessionSerializer<T, String>`). For case classes, it's most 
+Support for other types can be added by providing a (an implicit for scala) `SessionSerializer[T, String]` (`SessionSerializer<T, String>`). For case classes, it's most 
 convenient to use a `MultiValueSessionSerializer[T]` or (`MultiValueSessionSerializer<T>`) which should convert the instance into a `String -> String` map 
 (nested types are not supported on purpose, as session data should be small & simple). Examples of `SessionSerializer` and `MultiValueSessionSerializer` 
-usage can be found [here](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/serializers) for scala [here](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/java/com/softwaremill/example/serializers) for java. 
+usage can be found [here](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/serializers) for scala and [here](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/java/com/softwaremill/example/serializers) for java. 
 
-Sample code that illustrates how to create a session manager where the session content will be a single `Long` number can be found [here](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/session/manager/MyScalaSessionManager.scala) for scala and [here](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/java/com/softwaremill/example/session/manager/MyJavaSessionManager.java) for java.
+Here are code samples in [scala](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/session/manager/MyScalaSessionManager.scala) and [java](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/java/com/softwaremill/example/session/manager/MyJavaSessionManager.java) illustrating how to create a session manager where the session content will be a single `Long` number.
 
 The basic directives enable you to set, read and invalidate the session. To create a new client-side session (create
-and set a new session cookie), you need to use the `setSession` directive. See how it's done in [scala](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/session/SetSessionScala.scala) and [java](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/java/com/softwaremill/example/session/SetSessionJava.java).
+and set a new session cookie), you need to use the `setSession` directive. See how it's done in [java](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/java/com/softwaremill/example/session/SetSessionJava.java) and [scala](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/session/SetSessionScala.scala).
 
 Note that when using cookies, their size is limited to 4KB, so you shouldn't put too much data in there (the signature 
 takes about 50 characters). 
 
-You can require a session to be present, optionally require a session or get a full description of possible session decode outcomes. See examples for [java](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/java/com/softwaremill/example/session/VariousSessionsJava.java) and [scala](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/session/VariousSessionsScala.scala).
+You can require a session to be present, optionally require a session or get a full description of possible session decode outcomes. 
+Check [java](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/java/com/softwaremill/example/session/VariousSessionsJava.java) and [scala](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/session/VariousSessionsScala.scala) examples for details.
 
-If a required session is not present, by default a `403` HTTP status code is returned. Finally, a session can be invalidated. See how it's done in See examples for [java](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/java/com/softwaremill/example/session/SessionInvalidationJava.java) and [scala](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/session/SessionInvalidationScala.scala).
+If a required session is not present, by default a `403` HTTP status code is returned. Finally, a session can be invalidated. See how it's done in examples for [java](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/java/com/softwaremill/example/session/SessionInvalidationJava.java) and [scala](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/session/SessionInvalidationScala.scala).
 
 ### Encrypting the session
 
@@ -135,7 +134,7 @@ You can also encode sessions in the [Json Web Tokens](http://jwt.io) format, by 
 [Java](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/java/com/softwaremill/example/session/manager/JWTSessionManagerJava.java) and [scala](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/session/manager/JWTSessionManagerScala.scala) JWT session managers. 
 
 When using JWT, you need to provide a serializer which serializes session data to a `JValue` instead of a `String`. 
-A number of implicit serializers for the basic types are present in `JValueSessionSerializer`, as well as a generic serializer for case classes (used above).
+A number of serializers for the basic types are present in `JValueSessionSerializer`, as well as a generic serializer for case classes (used above).
 
 You may also find it helpful to include the json4s-ext library which provides serializers for common Java types such as  `java.util.UUID`, `org.joda.time._` and Java enumerations.
 
@@ -181,7 +180,7 @@ a long time. Make sure to adjust the `akka.http.session.refresh-token.max-age` c
 You can dynamically decide, basing on the request properties (e.g. a query parameter), if a session should be
 refreshable or not. Just pass the right parameter to `setSession`.
 
-When using refreshable sessions, in addition to an implicit `SessionManager` instance, you need to provide an 
+When using refreshable sessions, in addition to an (implicit) `SessionManager` instance, you need to provide an 
 implementation of the `RefreshTokenStorage` trait. This trait has methods to lookup, store and delete refresh tokens. 
 Typically it would use some persistent storage.
 

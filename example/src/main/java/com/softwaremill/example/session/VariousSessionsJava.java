@@ -36,7 +36,7 @@ import static com.softwaremill.session.javadsl.SessionTransports.CookieST;
 
 public class VariousSessionsJava extends HttpSessionAwareDirectives<MyJavaSession> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(com.softwaremill.example.JavaExample.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(VariousSessionsJava.class);
 
     private static final String SECRET = "c05ll3lesrinf39t7mc5h6un6r0c69lgfno69dsak3vabeqamouq4328cuaekros401ajdpkh60rrtpd8ro24rbuqmgtnd1ebag6ljnb65i8a55d482ok7o0nch0bfbe";
     private static final SessionEncoder<MyJavaSession> BASIC_ENCODER = new BasicSessionEncoder<>(MyJavaSession.getSerializer());

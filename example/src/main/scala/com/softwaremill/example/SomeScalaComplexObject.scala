@@ -1,5 +1,3 @@
 package com.softwaremill.example
 
-class SomeScalaComplexObject(val value: String) {
-
-}
+class SomeScalaComplexObject(val value: String)
