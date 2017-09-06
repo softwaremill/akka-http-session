@@ -63,10 +63,9 @@ object Example extends App with StrictLogging {
             // This should be protected and accessible only when logged in
             path("current_login") {
               get {
-                myRequiredSession { session =>
-                  ctx =>
-                    logger.info("Current session: " + session)
-                    ctx.complete(session.username)
+                myRequiredSession { session => ctx =>
+                  logger.info("Current session: " + session)
+                  ctx.complete(session.username)
                 }
               }
             }

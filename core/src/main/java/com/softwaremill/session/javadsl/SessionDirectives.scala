@@ -10,8 +10,8 @@ import com.softwaremill.session._
 import scala.compat.java8.OptionConverters._
 
 /**
-  * Java alternative for com.softwaremill.session.SessionDirectives
-  */
+ * Java alternative for com.softwaremill.session.SessionDirectives
+ */
 trait SessionDirectives extends OneOffSessionDirectives with RefreshableSessionDirectives {
 
   def session[T](sc: SessionContinuity[T], st: GetSessionTransport, inner: java.util.function.Function[SessionResult[T], Route]): Route = RouteAdapter {

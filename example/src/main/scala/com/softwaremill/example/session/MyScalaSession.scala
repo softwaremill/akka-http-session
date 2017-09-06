@@ -11,6 +11,5 @@ object MyScalaSession {
     _.username,
     (un: String) => Try {
       MyScalaSession(un)
-    }
-  )
+    })
 }
