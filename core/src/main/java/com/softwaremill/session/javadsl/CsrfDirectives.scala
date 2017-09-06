@@ -7,8 +7,8 @@ import akka.http.javadsl.server.directives.RouteAdapter
 import com.softwaremill.session.CsrfCheckMode
 
 /**
-  * Java alternative for com.softwaremill.session.CsrfDirectives
-  */
+ * Java alternative for com.softwaremill.session.CsrfDirectives
+ */
 trait CsrfDirectives {
 
   def randomTokenCsrfProtection[T](checkMode: CsrfCheckMode[T], inner: Supplier[Route]): Route = RouteAdapter {
@@ -22,7 +22,6 @@ trait CsrfDirectives {
       inner.get.asInstanceOf[RouteAdapter].delegate
     }
   }
-
 
 }
 

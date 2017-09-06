@@ -52,8 +52,7 @@ class BasicSessionEncoder[T](implicit serializer: SessionSerializer[T, String]) 
 
       val signatureMatches = SessionUtil.constantTimeEquals(
         splitted(0),
-        Crypto.sign_HmacSHA1_hex(serialized, config.serverSecret)
-      )
+        Crypto.sign_HmacSHA1_hex(serialized, config.serverSecret))
 
       serializer.deserialize(serialized.substring(1)).map {
         DecodeResult(_, expiry, signatureMatches)

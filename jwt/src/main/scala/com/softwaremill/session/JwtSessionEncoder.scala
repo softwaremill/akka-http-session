@@ -24,8 +24,7 @@ class JwtSessionEncoder[T](implicit serializer: SessionSerializer[T, JValue], fo
 
     val signatureMatches = SessionUtil.constantTimeEquals(
       signature,
-      Crypto.sign_HmacSHA256_base64(s"$h.$p", config.serverSecret)
-    )
+      Crypto.sign_HmacSHA256_base64(s"$h.$p", config.serverSecret))
 
     for {
       jv <- decode(p)
@@ -35,8 +34,7 @@ class JwtSessionEncoder[T](implicit serializer: SessionSerializer[T, JValue], fo
 
   protected def createHeader: JValue = JObject(
     "alg" -> JString("HS256"),
-    "typ" -> JString("JWT")
-  )
+    "typ" -> JString("JWT"))
 
   protected def createPayload(t: T, nowMillis: Long, config: SessionConfig): JValue = {
     val exp = config.sessionMaxAgeSeconds

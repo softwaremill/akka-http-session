@@ -11,7 +11,7 @@ class OneOff[T] private[session] (implicit val manager: SessionManager[T]) exten
 
 class Refreshable[T] private[session] (implicit
   val manager: SessionManager[T],
-    val refreshTokenStorage: RefreshTokenStorage[T],
-    val ec: ExecutionContext) extends SessionContinuity[T] {
+  val refreshTokenStorage: RefreshTokenStorage[T],
+  val ec: ExecutionContext) extends SessionContinuity[T] {
   val refreshTokenManager = manager.createRefreshTokenManager(refreshTokenStorage)
 }

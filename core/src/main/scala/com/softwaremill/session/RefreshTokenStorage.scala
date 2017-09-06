@@ -18,8 +18,7 @@ case class RefreshTokenData[T](
   /**
    * Timestamp
    */
-  expires: Long
-)
+  expires: Long)
 
 case class RefreshTokenLookupResult[T](
   tokenHash: String,
@@ -27,8 +26,7 @@ case class RefreshTokenLookupResult[T](
    * Timestamp
    */
   expires: Long,
-  createSession: () => T
-)
+  createSession: () => T)
 
 /**
  * Useful for testing.

@@ -13,8 +13,7 @@ class SessionManagerJwtEncoderTest extends FlatSpec with Matchers {
     name: String,
     data: T,
     config: SessionConfig,
-    sessionSerializer: SessionSerializer[T, JValue]
-  )
+    sessionSerializer: SessionSerializer[T, JValue])
 
   import JValueSessionSerializer._
   val tests = List(
@@ -24,8 +23,7 @@ class SessionManagerJwtEncoderTest extends FlatSpec with Matchers {
     TestData("string, with max age and encryption", "username", configEncryptedMaxAge, implicitly[SessionSerializer[String, JValue]]),
     TestData("integer, default config", 12345, defaultConfig, implicitly[SessionSerializer[Int, JValue]]),
     TestData("case class, default config", SessionData("john", 10), defaultConfig, JValueSessionSerializer.caseClass[SessionData]),
-    TestData("case class, with max age and encryption", SessionData("john", 20), configEncryptedMaxAge, JValueSessionSerializer.caseClass[SessionData])
-  )
+    TestData("case class, with max age and encryption", SessionData("john", 20), configEncryptedMaxAge, JValueSessionSerializer.caseClass[SessionData]))
 
   tests.foreach { td =>
     it should s"encode+decode for ${td.name}" in {

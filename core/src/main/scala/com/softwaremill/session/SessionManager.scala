@@ -47,15 +47,13 @@ trait ClientSessionManager[T] {
     domain = config.sessionCookieConfig.domain,
     path = config.sessionCookieConfig.path,
     secure = config.sessionCookieConfig.secure,
-    httpOnly = config.sessionCookieConfig.httpOnly
-  )
+    httpOnly = config.sessionCookieConfig.httpOnly)
 
   def createHeader(data: T) = createHeaderWithValue(encode(data))
 
   def createHeaderWithValue(value: String) = RawHeader(
     name = config.sessionHeaderConfig.sendToClientHeaderName,
-    value = value
-  )
+    value = value)
 
   def encode(data: T): String = sessionEncoder.encode(data, nowMillis, config)
 
@@ -90,8 +88,7 @@ trait CsrfManager[T] {
     domain = config.csrfCookieConfig.domain,
     path = config.csrfCookieConfig.path,
     secure = config.csrfCookieConfig.secure,
-    httpOnly = config.csrfCookieConfig.httpOnly
-  )
+    httpOnly = config.csrfCookieConfig.httpOnly)
 }
 
 trait RefreshTokenManager[T] {
@@ -121,8 +118,7 @@ trait RefreshTokenManager[T] {
       forSession = session,
       selector = selector,
       tokenHash = Crypto.hash_SHA256(token),
-      expires = nowMillis + config.refreshTokenMaxAgeSeconds * 1000L
-    )).map(_ => encodeSelectorAndToken(selector, token))
+      expires = nowMillis + config.refreshTokenMaxAgeSeconds * 1000L)).map(_ => encodeSelectorAndToken(selector, token))
 
     existing.flatMap(decodeSelectorAndToken).foreach {
       case (s, _) =>
@@ -142,13 +138,11 @@ trait RefreshTokenManager[T] {
     domain = config.refreshTokenCookieConfig.domain,
     path = config.refreshTokenCookieConfig.path,
     secure = config.refreshTokenCookieConfig.secure,
-    httpOnly = config.refreshTokenCookieConfig.httpOnly
-  )
+    httpOnly = config.refreshTokenCookieConfig.httpOnly)
 
   def createHeader(value: String) = RawHeader(
     name = config.refreshTokenHeaderConfig.sendToClientHeaderName,
-    value = value
-  )
+    value = value)
 
   def sessionFromValue(value: String)(implicit ec: ExecutionContext): Future[SessionResult[T]] = {
     decodeSelectorAndToken(value) match {
