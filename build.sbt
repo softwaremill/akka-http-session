@@ -1,6 +1,7 @@
+import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import scalariform.formatter.preferences._
 
-lazy val commonSettings = scalariformSettings ++ Seq(
+lazy val commonSettings = Seq(
   organization := "com.softwaremill.akka-http-session",
   version := "0.5.1",
   scalaVersion := "2.11.8",
@@ -12,7 +13,8 @@ lazy val commonSettings = scalariformSettings ++ Seq(
     .setPreference(CompactControlReadability, true)
     .setPreference(SpacesAroundMultiImports, false),
   // Sonatype OSS deployment
-  publishTo <<= version { (v: String) =>
+  publishTo := {
+    val v = version.value
     val nexus = "https://oss.sonatype.org/"
     if (v.trim.endsWith("SNAPSHOT"))
       Some("snapshots" at nexus + "content/repositories/snapshots")
