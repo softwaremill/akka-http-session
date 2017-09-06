@@ -2,6 +2,8 @@ package com.softwaremill.session
 
 import org.scalacheck.{Gen, Prop, Properties}
 
+import scala.util.{Success, Try}
+
 object SessionManagerBasicEncoderTest extends Properties("SessionManagerBasicEncoder") {
 
   import Prop._
@@ -32,6 +34,22 @@ object SessionManagerBasicEncoderTest extends Properties("SessionManagerBasicEnc
       }.clientSessionManager
 
       managerFuture.decode(managerPast.encode(data)) == SessionResult.Expired
+    }
+  }
+
+  property("doesn't decode session with tampered expiry") = forAllNoShrink(secretGen) { (secret: String) =>
+    forAll { (data: Map[String, String], now: Long, delta: Int) =>
+      (delta >= 0) ==> {
+        val config = SessionConfig.default(secret)
+        val encoder = new BasicSessionEncoder[Map[String, String]]
+
+        val enc = encoder.encode(data, System.currentTimeMillis(), config)
+        val Array(sig, exp, payload) = enc.split("-", 3)
+        val tampered = s"$sig-${exp.toLong + delta}-$payload"
+
+        // the signature should only match if we didn't add anything to the expiry date
+        encoder.decode(tampered, config).map(_.signatureMatches) == Success(delta == 0L)
+      }
     }
   }
 }

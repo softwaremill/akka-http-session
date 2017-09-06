@@ -33,7 +33,7 @@ class BasicSessionEncoder[T](implicit serializer: SessionSerializer[T, String]) 
 
     val encrypted = if (config.sessionEncryptData) Crypto.encrypt_AES(withExpiry, config.serverSecret) else withExpiry
 
-    s"${Crypto.sign_HmacSHA1_hex(serialized, config.serverSecret)}-$encrypted"
+    s"${Crypto.sign_HmacSHA1_hex(withExpiry, config.serverSecret)}-$encrypted"
   }
 
   override def decode(s: String, config: SessionConfig) = {
@@ -52,7 +52,7 @@ class BasicSessionEncoder[T](implicit serializer: SessionSerializer[T, String]) 
 
       val signatureMatches = SessionUtil.constantTimeEquals(
         splitted(0),
-        Crypto.sign_HmacSHA1_hex(serialized, config.serverSecret))
+        Crypto.sign_HmacSHA1_hex(decrypted, config.serverSecret))
 
       serializer.deserialize(serialized.substring(1)).map {
         DecodeResult(_, expiry, signatureMatches)

@@ -101,6 +101,18 @@ class OneOffTest extends FlatSpec with ScalatestRouteTest with Matchers with Mul
       }
     }
 
+    p should "reject the request if the expiry is tampered with" in {
+      Get("/set") ~> routes ~> check {
+        val Some(s) = using.getSession
+        val Array(sig, exp, data) = s.split("-")
+        val tamperedSession = s"$sig-${exp.toLong + 1}-$data"
+
+        Get("/getReq") ~> addHeader(using.setSessionHeader(tamperedSession)) ~> routes ~> check {
+          rejection should be(AuthorizationFailedRejection)
+        }
+      }
+    }
+
     p should "invalidate a session" in {
       Get("/set") ~> routes ~> check {
         val Some(s1) = using.getSession
