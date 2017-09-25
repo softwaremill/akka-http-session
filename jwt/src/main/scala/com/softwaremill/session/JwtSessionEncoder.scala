@@ -1,6 +1,6 @@
 package com.softwaremill.session
 
-import javax.xml.bind.DatatypeConverter
+import java.util.Base64
 
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
@@ -73,8 +73,8 @@ class JwtSessionEncoder[T](implicit serializer: SessionSerializer[T, JValue], fo
     t.map((_, exp))
   }
 
-  protected def encode(jv: JValue): String = DatatypeConverter.printBase64Binary(compact(render(jv)).getBytes("utf-8"))
+  protected def encode(jv: JValue): String = Base64.getUrlEncoder().withoutPadding().encodeToString(compact(render(jv)).getBytes("utf-8"))
   protected def decode(s: String): Try[JValue] = Try {
-    parse(new String(DatatypeConverter.parseBase64Binary(s), "utf-8"))
+    parse(new String(Base64.getUrlDecoder().decode(s), "utf-8"))
   }
 }
