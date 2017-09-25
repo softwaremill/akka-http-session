@@ -13,10 +13,10 @@ public final class JwtSessionSerializers {
     public static final DefaultFormats$ DefaultUtcDateFormat = DefaultFormats$.MODULE$;
 
     public static final SessionSerializer<String, JsonAST.JValue> StringToJValueSessionSerializer = JValueSessionSerializer$.MODULE$.stringToJValueSessionSerializer();
-    public static final SessionSerializer IntToJValueSessionSerializer = JValueSessionSerializer$.MODULE$.intToJValueSessionSerializer();
-    public static final SessionSerializer LongToJValueSessionSerializer = JValueSessionSerializer$.MODULE$.longToJValueSessionSerializer();
-    public static final SessionSerializer FloatToJValueSessionSerializer = JValueSessionSerializer$.MODULE$.floatToJValueSessionSerializer();
-    public static final SessionSerializer DoubleToJValueSessionSerializer = JValueSessionSerializer$.MODULE$.doubleToJValueSessionSerializer();
+    public static final SessionSerializer<Integer, JsonAST.JValue> IntToJValueSessionSerializer = (SessionSerializer<Integer, JsonAST.JValue>) (SessionSerializer) JValueSessionSerializer$.MODULE$.intToJValueSessionSerializer();
+    public static final SessionSerializer<Long, JsonAST.JValue> LongToJValueSessionSerializer = (SessionSerializer<Long, JsonAST.JValue>) (SessionSerializer) JValueSessionSerializer$.MODULE$.longToJValueSessionSerializer();
+    public static final SessionSerializer<Float, JsonAST.JValue> FloatToJValueSessionSerializer = (SessionSerializer<Float, JsonAST.JValue>) (SessionSerializer) JValueSessionSerializer$.MODULE$.floatToJValueSessionSerializer();
+    public static final SessionSerializer<Double, JsonAST.JValue> DoubleToJValueSessionSerializer = (SessionSerializer<Double, JsonAST.JValue>) (SessionSerializer) JValueSessionSerializer$.MODULE$.doubleToJValueSessionSerializer();
 
     private JwtSessionSerializers() {
     }
