@@ -24,7 +24,7 @@ class MultiValueSessionSerializer[T](toMap: T => Map[String, String], fromMap: M
   import SessionSerializer._
 
   override def serialize(t: T) = toMap(t)
-    .map { case (k, v) => urlEncode(k) + "=" + urlEncode(v) }
+    .map { case (k, v) => urlEncode(k) + "~" + urlEncode(v) }
     .mkString("&")
 
   override def deserialize(s: String) = {
@@ -33,7 +33,7 @@ class MultiValueSessionSerializer[T](toMap: T => Map[String, String], fromMap: M
       else {
         s
           .split("&")
-          .map(_.split("=", 2))
+          .map(_.split("~", 2))
           .map(p => urlDecode(p(0)) -> urlDecode(p(1)))
           .toMap
       }
