@@ -14,6 +14,8 @@ is a need to maintain user sessions, make sure session data is secure and cannot
 `akka-http-session` provides directives for client-side session management in web and mobile applications, using cookies
 or custom headers + local storage, with optional [Json Web Tokens](http://jwt.io/) format support. 
 
+A [comprehensive FAQ](https://github.com/softwaremill/akka-http-session-faq) is available, along with code examples (in Java, but easy to translate to Scala) which answers many common questions on how sessions work, how to secure them and implement using akka-http.
+
 ## What is a session?
 
 Session data typically contains at least the `id` or `username` of the logged in user. This id must be secured so that a 
