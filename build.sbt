@@ -41,7 +41,7 @@ lazy val commonSettings = Seq(
   homepage := Some(new java.net.URL("http://softwaremill.com"))
 )
 
-val akkaHttpVersion = "10.0.3"
+val akkaHttpVersion = "10.1.0-RC1"
 
 val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 
@@ -58,6 +58,7 @@ lazy val core: Project = (project in file("core"))
     name := "core",
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
+      "com.typesafe.akka" %% "akka-stream" % "2.4.11",
       "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
       "org.scalacheck" %% "scalacheck" % "1.13.4" % "test",
       scalaTest
@@ -100,4 +101,3 @@ lazy val javaTests: Project = (project in file("javaTests"))
       scalaTest
     ))
   .dependsOn(core, jwt)
-
