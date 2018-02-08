@@ -15,7 +15,7 @@ object SessionEncoder {
   implicit def basic[T](implicit serializer: SessionSerializer[T, String]) = new BasicSessionEncoder[T]()
 }
 
-case class DecodeResult[T](t: T, expires: Option[Long], signatureMatches: Boolean)
+case class DecodeResult[T](t: T, expires: Option[Long], signatureMatches: Boolean, isLegacy: Boolean)
 
 /**
  * @param serializer Must create cookie-safe strings (only with allowed characters).
@@ -44,18 +44,42 @@ class BasicSessionEncoder[T](implicit serializer: SessionSerializer[T, String]) 
       }
     }
 
+    def verifySignature(tokenSignature: String, expectedValue: String) = {
+      SessionUtil.constantTimeEquals(
+        tokenSignature,
+        Crypto.sign_HmacSHA1_hex(expectedValue, config.serverSecret))
+    }
+
     Try {
       val splitted = s.split("-", 2)
       val decrypted = if (config.sessionEncryptData) Crypto.decrypt_AES(splitted(1), config.serverSecret) else splitted(1)
-
       val (expiry, serialized) = extractExpiry(decrypted)
 
-      val signatureMatches = SessionUtil.constantTimeEquals(
-        splitted(0),
-        Crypto.sign_HmacSHA1_hex(decrypted, config.serverSecret))
+      val (deserializedResult, deserializedLegacy) = {
+        val deserializedResult = serializer.deserialize(serialized.substring(1))
 
-      serializer.deserialize(serialized.substring(1)).map {
-        DecodeResult(_, expiry, signatureMatches)
+        if (deserializedResult.isFailure && config.tokenMigrationV0_5_3Enabled) {
+          // Try deserializer assuming pre-v0.5.3.
+          (serializer.deserializeV0_5_2(serialized.substring(1)), true)
+        }
+        else {
+          (deserializedResult, false)
+        }
+      }
+
+      deserializedResult.map { deserialized =>
+        val signatureMatches = verifySignature(splitted(0), decrypted)
+
+        if (!signatureMatches && config.tokenMigrationV0_5_2Enabled) {
+          // Try signature check assuming pre-v0.5.2.
+          val signatureMatchesLegacy = verifySignature(splitted(0), serialized)
+          val isLegacy = signatureMatchesLegacy || deserializedLegacy
+
+          DecodeResult(deserialized, expiry, signatureMatchesLegacy, isLegacy)
+        }
+        else {
+          DecodeResult(deserialized, expiry, signatureMatches, isLegacy = deserializedLegacy)
+        }
       }
     }.flatten
   }

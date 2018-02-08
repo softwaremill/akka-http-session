@@ -52,4 +52,47 @@ object SessionManagerBasicEncoderTest extends Properties("SessionManagerBasicEnc
       }
     }
   }
+
+  property("decodes v0.5.1 tokens with migration config") = forAllNoShrink(secretGen) { (secret: String) =>
+    forAll { (data: Map[String, String], now: Long, delta: Int, tokenMigrationV0_5_2Enabled: Boolean, tokenMigrationV0_5_3Enabled: Boolean) =>
+      (data.nonEmpty) ==> {
+        val config = SessionConfig.default(secret).copy(
+          tokenMigrationV0_5_2Enabled = tokenMigrationV0_5_2Enabled,
+          tokenMigrationV0_5_3Enabled = tokenMigrationV0_5_3Enabled)
+
+        val encoder = new BasicSessionEncoder[Map[String, String]]
+        val encodedLegacy = Legacy.encodeV0_5_1(data, System.currentTimeMillis(), config)
+        val decodedResult = encoder.decode(encodedLegacy, config)
+
+        // Decode should only work if the migrations between encoded version 0.5.1 and the current version are enabled.
+        if (tokenMigrationV0_5_2Enabled && tokenMigrationV0_5_3Enabled) {
+          decodedResult.map(_.signatureMatches) == Success(true)
+        }
+        else {
+          decodedResult.isFailure || decodedResult.map(_.signatureMatches) == Success(false)
+        }
+      }
+    }
+  }
+
+  property("decodes v0.5.2 tokens with migration config") = forAllNoShrink(secretGen) { (secret: String) =>
+    forAll { (data: Map[String, String], now: Long, delta: Int, tokenMigrationV0_5_3Enabled: Boolean) =>
+      (data.nonEmpty) ==> {
+        val config = SessionConfig.default(secret).copy(
+          tokenMigrationV0_5_3Enabled = tokenMigrationV0_5_3Enabled)
+
+        val encoder = new BasicSessionEncoder[Map[String, String]]
+        val encodedLegacy = Legacy.encodeV0_5_2(data, System.currentTimeMillis(), config)
+        val decodedResult = encoder.decode(encodedLegacy, config)
+
+        // Decode should only work if the migrations between encoded version 0.5.2 and the current version are enabled.
+        if (tokenMigrationV0_5_3Enabled) {
+          decodedResult.map(_.signatureMatches) == Success(true)
+        }
+        else {
+          decodedResult.isFailure || decodedResult.map(_.signatureMatches) == Success(false)
+        }
+      }
+    }
+  }
 }

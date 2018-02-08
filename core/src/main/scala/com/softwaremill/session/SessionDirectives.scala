@@ -126,9 +126,14 @@ trait OneOffSessionDirectives {
     }
 
   private[session] def oneOffSession[T](sc: SessionContinuity[T], st: GetSessionTransport): Directive1[SessionResult[T]] = {
-    read(sc, st).map {
-      case Some((v, _)) => sc.clientSessionManager.decode(v)
-      case None => SessionResult.NoSession
+    read(sc, st).flatMap {
+      case None => provide(SessionResult.NoSession)
+      case Some((v, setSt)) => {
+        sc.clientSessionManager.decode(v) match {
+          case s: SessionResult.DecodedLegacy[T] => setOneOffSession(sc, setSt, s.session) & provide(s: SessionResult[T])
+          case s => provide(s)
+        }
+      }
     }
   }
 

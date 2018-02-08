@@ -66,6 +66,9 @@ trait ClientSessionManager[T] {
       else if (!dr.signatureMatches) {
         SessionResult.Corrupt(new RuntimeException("Corrupt signature"))
       }
+      else if (dr.isLegacy) {
+        SessionResult.DecodedLegacy(dr.t)
+      }
       else {
         SessionResult.Decoded(dr.t)
       }
@@ -188,6 +191,7 @@ object SessionResult {
   }
 
   case class Decoded[T](session: T) extends SessionResult[T] with SessionValue[T]
+  case class DecodedLegacy[T](session: T) extends SessionResult[T] with SessionValue[T]
   case class CreatedFromToken[T](session: T) extends SessionResult[T] with SessionValue[T]
 
   case object NoSession extends SessionResult[Nothing] with NoSessionValue[Nothing]

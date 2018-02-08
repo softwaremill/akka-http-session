@@ -29,7 +29,7 @@ class JwtSessionEncoder[T](implicit serializer: SessionSerializer[T, JValue], fo
     for {
       jv <- decode(p)
       (t, exp) <- extractPayload(jv, config)
-    } yield DecodeResult(t, exp, signatureMatches)
+    } yield DecodeResult(t, exp, signatureMatches, isLegacy = false)
   }.flatten
 
   protected def createHeader: JValue = JObject(

@@ -53,11 +53,14 @@ object VariousSessionsScala extends App with StrictLogging {
       path("detail") {
         get {
           // type: SessionResult[Long] (SessionResult[T])
-          // which can be: Decoded, CreatedFromToken, Expired, Corrupt, NoSession
+          // which can be: Decoded, DecodedLegacy, CreatedFromToken, Expired, Corrupt, NoSession
           session(oneOff, usingCookies) { sessionResult =>
             sessionResult match {
               case Decoded(session) => complete {
                 "decoded"
+              }
+              case DecodedLegacy(session) => complete {
+                "decoded legacy"
               }
               case CreatedFromToken(session) => complete {
                 "created from token"

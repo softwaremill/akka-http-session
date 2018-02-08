@@ -16,4 +16,10 @@ object TestData {
   val manager_expires60_fixedTime_plus70s = new SessionManager[Map[String, String]](sessionConfig_expires60) {
     override def nowMillis = (3028L + 70L) * 1000L
   }
+
+  val sessionConfig_tokenMigrationFromV0_5_1 = sessionConfig.copy(tokenMigrationV0_5_2Enabled = true, tokenMigrationV0_5_3Enabled = true)
+  val manager_tokenMigrationFromV0_5_1 = new SessionManager[Map[String, String]](sessionConfig_tokenMigrationFromV0_5_1)
+
+  val sessionConfig_tokenMigrationFromV0_5_2 = sessionConfig.copy(tokenMigrationV0_5_3Enabled = true)
+  val manager_tokenMigrationFromV0_5_2 = new SessionManager[Map[String, String]](sessionConfig_tokenMigrationFromV0_5_2)
 }
