@@ -234,3 +234,20 @@ For `akka-http` version `10.0.3`:
 libraryDependencies += "com.softwaremill.akka-http-session" %% "core" % "0.5.3"
 libraryDependencies += "com.softwaremill.akka-http-session" %% "jwt"  % "0.5.3" // optional
 ````
+
+## Updating
+
+Certain releases changed the client token encoding/serialization. In those cases, it's important to enable the appropriate
+token migrations, otherwise existing client sessions will be invalid (and your users will be logged out).
+
+When updating from a version before 0.5.3, set `akka-http-session.token-migration.v0-5-3.enabled = true`.
+
+When updating from a version before 0.5.2, set `akka-http-session.token-migration.v0-5-2.enabled = true`.
+
+Note that when updating through multiple releases, be sure to enable all the appropriate migrations.
+
+For versions prior to 0.5.0, no migration path is provided. However, you can implement your own encoders/serializers
+to support migrating from whatever version you are using.
+
+Since token changes may be security related, migrations should be enabled for the shortest period of time
+after which the vast majority of client tokens have been migrated.
