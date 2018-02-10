@@ -46,7 +46,12 @@ case class SessionConfig(
    * When a refresh token is used to log in, a new one is generated. The old one should be deleted with a delay,
    * to properly serve concurrent requests using the old token.
    */
-  removeUsedRefreshTokenAfter: Long) {
+  removeUsedRefreshTokenAfter: Long,
+  /**
+   * Allow migrating tokens created with prior versions of this library.
+   */
+  tokenMigrationV0_5_2Enabled: Boolean,
+  tokenMigrationV0_5_3Enabled: Boolean) {
   require(serverSecret.length >= 64, "Server secret must be at least 64 characters long!")
 }
 
@@ -66,6 +71,7 @@ object SessionConfig {
     val scopedConfig = config.getConfig("akka.http.session")
     val csrfConfig = scopedConfig.getConfig("csrf")
     val refreshTokenConfig = scopedConfig.getConfig("refresh-token")
+    val tokenMigrationConfig = scopedConfig.getConfig("token-migration")
 
     SessionConfig(
       serverSecret = scopedConfig.getString("server-secret"),
@@ -97,7 +103,9 @@ object SessionConfig {
         sendToClientHeaderName = refreshTokenConfig.getString("header.send-to-client-name"),
         getFromClientHeaderName = refreshTokenConfig.getString("header.get-from-client-name")),
       refreshTokenMaxAgeSeconds = refreshTokenConfig.getDuration("max-age", TimeUnit.SECONDS),
-      removeUsedRefreshTokenAfter = refreshTokenConfig.getDuration("remove-used-token-after", TimeUnit.SECONDS))
+      removeUsedRefreshTokenAfter = refreshTokenConfig.getDuration("remove-used-token-after", TimeUnit.SECONDS),
+      tokenMigrationV0_5_2Enabled = tokenMigrationConfig.getBoolean("v0-5-2.enabled"),
+      tokenMigrationV0_5_3Enabled = tokenMigrationConfig.getBoolean("v0-5-3.enabled"))
   }
 
   /**

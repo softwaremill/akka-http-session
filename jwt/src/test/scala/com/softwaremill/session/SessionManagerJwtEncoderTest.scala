@@ -71,6 +71,26 @@ class SessionManagerJwtEncoderTest extends FlatSpec with Matchers {
 
     manager.decode("Bearer " + manager.encode(data)) should be (SessionResult.Decoded(data))
   }
+
+  it should "not decode v0.5.2 tokens without config" in {
+    implicit val ss = JValueSessionSerializer.caseClass[SessionData]
+    implicit val encoder = new JwtSessionEncoder[SessionData]
+    val manager = new SessionManager(defaultConfig).clientSessionManager
+
+    val data = SessionData("john", 50)
+
+    manager.decode("Bearer " + encoder.encodeV0_5_2(data, manager.nowMillis, manager.config)) shouldBe a[SessionResult.Corrupt]
+  }
+
+  it should "decode v0.5.2 tokens with config" in {
+    implicit val ss = JValueSessionSerializer.caseClass[SessionData]
+    implicit val encoder = new JwtSessionEncoder[SessionData]
+    val manager = new SessionManager(defaultConfig.copy(tokenMigrationV0_5_3Enabled = true)).clientSessionManager
+
+    val data = SessionData("john", 50)
+
+    manager.decode("Bearer " + encoder.encodeV0_5_2(data, manager.nowMillis, manager.config)) should be (SessionResult.DecodedLegacy(data))
+  }
 }
 
 case class SessionData(userName: String, userId: Int)

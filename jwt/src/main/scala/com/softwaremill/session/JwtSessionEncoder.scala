@@ -1,7 +1,7 @@
 package com.softwaremill.session
 
 import java.util.Base64
-
+import javax.xml.bind.DatatypeConverter
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 import scala.util.Try
@@ -18,18 +18,53 @@ class JwtSessionEncoder[T](implicit serializer: SessionSerializer[T, JValue], fo
     s"$base.$signature"
   }
 
+  // Legacy encoder function for testing migrations.
+  def encodeV0_5_2(t: T, nowMillis: Long, config: SessionConfig) = {
+    val h = encode(createHeader)
+    val p = encode(createPayload(t, nowMillis, config))
+    val base = s"$h.$p"
+    val signature = Crypto.sign_HmacSHA256_base64_v0_5_2(base, config.serverSecret)
+
+    s"$base.$signature"
+  }
+
   override def decode(s: String, config: SessionConfig) = Try {
     val sCleaned = if (s.startsWith("Bearer")) s.substring(7).trim else s
     val List(h, p, signature) = sCleaned.split("\\.").toList
 
-    val signatureMatches = SessionUtil.constantTimeEquals(
-      signature,
-      Crypto.sign_HmacSHA256_base64(s"$h.$p", config.serverSecret))
+    val (decodedValue, decodedLegacy) = {
+      val decodedValue = decode(p)
+
+      if (decodedValue.isFailure && config.tokenMigrationV0_5_3Enabled) {
+        // Try decoding assuming pre-v0.5.3.
+        (decodeV0_5_2(p), true)
+      }
+      else {
+        (decodedValue, false)
+      }
+    }
 
     for {
-      jv <- decode(p)
+      jv <- decodedValue
       (t, exp) <- extractPayload(jv, config)
-    } yield DecodeResult(t, exp, signatureMatches)
+    } yield {
+      val signatureMatches = SessionUtil.constantTimeEquals(
+        signature,
+        Crypto.sign_HmacSHA256_base64(s"$h.$p", config.serverSecret))
+
+      if (!signatureMatches && config.tokenMigrationV0_5_3Enabled) {
+        // Try signature check assuming pre-v0.5.3.
+        val signatureMatchesLegacy = SessionUtil.constantTimeEquals(
+          signature,
+          Crypto.sign_HmacSHA256_base64_v0_5_2(s"$h.$p", config.serverSecret))
+
+        val isLegacy = signatureMatchesLegacy || decodedLegacy
+        DecodeResult(t, exp, signatureMatchesLegacy, isLegacy = isLegacy)
+      }
+      else {
+        DecodeResult(t, exp, signatureMatches, isLegacy = decodedLegacy)
+      }
+    }
   }.flatten
 
   protected def createHeader: JValue = JObject(
@@ -76,5 +111,8 @@ class JwtSessionEncoder[T](implicit serializer: SessionSerializer[T, JValue], fo
   protected def encode(jv: JValue): String = Base64.getUrlEncoder().withoutPadding().encodeToString(compact(render(jv)).getBytes("utf-8"))
   protected def decode(s: String): Try[JValue] = Try {
     parse(new String(Base64.getUrlDecoder().decode(s), "utf-8"))
+  }
+  protected def decodeV0_5_2(s: String): Try[JValue] = Try {
+    parse(new String(DatatypeConverter.parseBase64Binary(s), "utf-8"))
   }
 }

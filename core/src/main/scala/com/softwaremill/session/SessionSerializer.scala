@@ -4,9 +4,11 @@ import java.net.{URLDecoder, URLEncoder}
 
 import scala.util.Try
 
-trait SessionSerializer[T, R] {
+abstract class SessionSerializer[T, R] {
   def serialize(t: T): R
   def deserialize(r: R): Try[T]
+
+  def deserializeV0_5_2(r: R): Try[T] = deserialize(r)
 }
 
 class SingleValueSessionSerializer[T, V](toValue: T => V, fromValue: V => Try[T])(
@@ -34,6 +36,19 @@ class MultiValueSessionSerializer[T](toMap: T => Map[String, String], fromMap: M
         s
           .split("&")
           .map(_.split("~", 2))
+          .map(p => urlDecode(p(0)) -> urlDecode(p(1)))
+          .toMap
+      }
+    }.flatMap(fromMap)
+  }
+
+  override def deserializeV0_5_2(s: String) = {
+    Try {
+      if (s == "") Map.empty[String, String]
+      else {
+        s
+          .split("&")
+          .map(_.split("=", 2))
           .map(p => urlDecode(p(0)) -> urlDecode(p(1)))
           .toMap
       }
