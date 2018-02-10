@@ -4,7 +4,7 @@ import java.net.{URLDecoder, URLEncoder}
 
 import scala.util.Try
 
-abstract class SessionSerializer[T, R] {
+trait SessionSerializer[T, R] {
   def serialize(t: T): R
   def deserialize(r: R): Try[T]
 
