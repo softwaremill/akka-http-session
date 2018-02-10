@@ -58,7 +58,7 @@ lazy val core: Project = (project in file("core"))
     name := "core",
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
-      "com.typesafe.akka" %% "akka-stream" % "2.4.11",
+      "com.typesafe.akka" %% "akka-stream" % "2.4.12",
       "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
       "org.scalacheck" %% "scalacheck" % "1.13.4" % "test",
       scalaTest
