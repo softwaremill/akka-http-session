@@ -3,7 +3,7 @@ import scalariform.formatter.preferences._
 
 lazy val commonSettings = Seq(
   organization := "com.softwaremill.akka-http-session",
-  version := "0.5.3",
+  version := "0.5.4",
   scalaVersion := "2.11.8",
   crossScalaVersions := Seq(scalaVersion.value, "2.12.1"),
   scalacOptions ++= Seq("-unchecked", "-deprecation"),
