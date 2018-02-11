@@ -82,7 +82,9 @@ lazy val example: Project = (project in file("example"))
     libraryDependencies ++= Seq(
       "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
       "ch.qos.logback" % "logback-classic" % "1.1.7",
-      "org.json4s" %% "json4s-ext" % "3.5.0"
+      "org.json4s" %% "json4s-ext" % "3.5.0",
+      "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
+      scalaTest
     ))
   .dependsOn(core, jwt)
 

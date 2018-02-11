@@ -15,7 +15,7 @@ import com.typesafe.scalalogging.StrictLogging
 
 import scala.io.StdIn
 
-object Example extends App with StrictLogging {
+object Example extends StrictLogging {
   implicit val system = ActorSystem("example")
   implicit val materializer = ActorMaterializer()
 
@@ -75,17 +75,20 @@ object Example extends App with StrictLogging {
           }
       }
 
-  val bindingFuture = Http().bindAndHandle(routes, "localhost", 8080)
 
-  println("Server started, press enter to stop. Visit http://localhost:8080 to see the demo.")
-  StdIn.readLine()
+  def main(args:Array[String]) {
+    val bindingFuture = Http().bindAndHandle(routes, "localhost", 8080)
 
-  import system.dispatcher
+    println("Server started, press enter to stop. Visit http://localhost:8080 to see the demo.")
+    StdIn.readLine()
 
-  bindingFuture
-    .flatMap(_.unbind())
-    .onComplete { _ =>
-      system.terminate()
-      println("Server stopped")
-    }
+    import system.dispatcher
+
+    bindingFuture
+      .flatMap(_.unbind())
+      .onComplete { _ =>
+        system.terminate()
+        println("Server stopped")
+      }
+  }
 }
