@@ -240,9 +240,9 @@ libraryDependencies += "com.softwaremill.akka-http-session" %% "jwt"  % "0.5.3" 
 Certain releases changed the client token encoding/serialization. In those cases, it's important to enable the appropriate
 token migrations, otherwise existing client sessions will be invalid (and your users will be logged out).
 
-When updating from a version before 0.5.3, set `akka-http-session.token-migration.v0-5-3.enabled = true`.
+When updating from a version before 0.5.3, set `akka.http.session.token-migration.v0-5-3.enabled = true`.
 
-When updating from a version before 0.5.2, set `akka-http-session.token-migration.v0-5-2.enabled = true`.
+When updating from a version before 0.5.2, set `akka.http.session.token-migration.v0-5-2.enabled = true`.
 
 Note that when updating through multiple releases, be sure to enable all the appropriate migrations.
 
