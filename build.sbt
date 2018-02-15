@@ -3,10 +3,10 @@ import scalariform.formatter.preferences._
 
 lazy val commonSettings = Seq(
   organization := "com.softwaremill.akka-http-session",
-  version := "0.5.4",
-  scalaVersion := "2.11.8",
-  crossScalaVersions := Seq(scalaVersion.value, "2.12.1"),
+  version            := "0.5.x",
+  crossScalaVersions := Seq(scalaVersion.value, "2.11.12"),
   scalacOptions ++= Seq("-unchecked", "-deprecation"),
+  scalaVersion       := "2.12.4",
   ScalariformKeys.preferences := ScalariformKeys.preferences.value
     .setPreference(DoubleIndentClassDeclaration, true)
     .setPreference(PreserveSpaceBeforeArguments, true)
@@ -42,8 +42,7 @@ lazy val commonSettings = Seq(
 )
 
 val akkaHttpVersion = "10.1.0-RC1"
-
-val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" % "test"
+val scalaTest = "org.scalatest" %% "scalatest" % "3.0.4" % Test
 
 lazy val rootProject = (project in file("."))
   .settings(commonSettings: _*)
@@ -58,9 +57,9 @@ lazy val core: Project = (project in file("core"))
     name := "core",
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
-      "com.typesafe.akka" %% "akka-stream" % "2.4.11",
+      "com.typesafe.akka" %% "akka-stream" % "2.5.9",
       "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
-      "org.scalacheck" %% "scalacheck" % "1.13.4" % "test",
+      "org.scalacheck"    %% "scalacheck" % "1.13.5" % Test,
       scalaTest
     )
   )
@@ -70,7 +69,7 @@ lazy val jwt: Project = (project in file("jwt"))
   .settings(
     name := "jwt",
     libraryDependencies ++= Seq(
-      "org.json4s" %% "json4s-jackson" % "3.5.0",
+      "org.json4s" %% "json4s-jackson" % "3.5.3",
       scalaTest
     )
   ) dependsOn (core)
@@ -80,8 +79,8 @@ lazy val example: Project = (project in file("example"))
   .settings(
     publishArtifact := false,
     libraryDependencies ++= Seq(
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
-      "ch.qos.logback" % "logback-classic" % "1.1.7",
+      "ch.qos.logback"             % "logback-classic"% "1.2.3",
+      "com.typesafe.scala-logging" %%"scala-logging"  % "3.7.2",
       "org.json4s" %% "json4s-ext" % "3.5.0"
     ))
   .dependsOn(core, jwt)
