@@ -45,6 +45,21 @@ session data that is sent to the client, and verified when the session token is 
 
 You can try out a simple example by running [`com.softwaremill.example.ScalaExample`](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/ScalaExample.scala) or [`com.softwaremill.example.JavaExample`](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/java/com/softwaremill/example/JavaExample.java) and opening [http://localhost:8080](http://localhost:8080).
 
+### Starting the server (especially in a Java 9+ environment)
+
+`sbt` Command line usage:
+1. Start `sbt` on the command line.
+2. Enter the `example/reStart` command.
+3. Choose one of the server applications, eg. ScalaExample by its number.
+4. Don't forget to kill the forked services by issuing a `reStop` command before an abnormal stop of the parent `sbt` process.
+(A normal sbt command will automatically issuing a `reStop`.)
+
+Discussion:
+
+In order to run in a Java 9+ environment, the `java.xml.bind` module must be added to the runtime. The only way to do so, is to fork a new JVM with the `--add-modules=java.xml.bind` option.
+
+With the `reStart` / `reStop` commands the forked server process can independently be controlled without disturbing the parent sbt process.   
+
 ## `SessionManager` & configuration
 
 All directives require an (implicit for scala) instance of a `SessionManager[T]` (or `SessionManager<T>`), which can be created by providing a server 
@@ -231,8 +246,8 @@ stored in Rails
 For `akka-http` version `10.0.3`:
 
 ````scala
-libraryDependencies += "com.softwaremill.akka-http-session" %% "core" % "0.5.3"
-libraryDependencies += "com.softwaremill.akka-http-session" %% "jwt"  % "0.5.3" // optional
+libraryDependencies += "com.softwaremill.akka-http-session" %% "core" % "0.5.x"
+libraryDependencies += "com.softwaremill.akka-http-session" %% "jwt"  % "0.5.x" // optional
 ````
 
 ## Updating

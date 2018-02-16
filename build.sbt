@@ -41,6 +41,7 @@ lazy val commonSettings = Seq(
 
 val akkaHttpVersion = "10.1.0-RC1"
 val scalaTest = "org.scalatest" %% "scalatest" % "3.0.4" % Test
+cancelable in Global := true // Gracefully stops your running app by ctrl+d or ctrl+z
 
 lazy val rootProject: Project = (project in file("."))
   .settings(commonSettings: _*)
@@ -70,6 +71,7 @@ lazy val jwt: Project = (project in file("jwt"))
 
 lazy val example: Project = (project in file("example"))
   .settings(commonSettings,
+    javaOptions ++= Seq("--add-modules=java.xml.bind"),
     publishArtifact := false,
     libraryDependencies ++= Seq(
       "ch.qos.logback"             % "logback-classic"% "1.2.3",
