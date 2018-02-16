@@ -2,7 +2,7 @@ package com.softwaremill.session
 
 import java.util.concurrent.TimeUnit
 
-import com.typesafe.config.{ConfigValueFactory, ConfigFactory, Config}
+import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
 
 case class CookieConfig(
   name: String,
@@ -59,12 +59,14 @@ object SessionConfig {
   private implicit class PimpedConfig(config: Config) {
     val noneValue = "none"
 
-    def getOptionalString(path: String) = if (config.getAnyRef(path) == noneValue) None else
-      Some(config.getString(path))
-    def getOptionalLong(path: String) = if (config.getAnyRef(path) == noneValue) None else
-      Some(config.getLong(path))
-    def getOptionalDurationSeconds(path: String) = if (config.getAnyRef(path) == noneValue) None else
-      Some(config.getDuration(path, TimeUnit.SECONDS))
+    def getOptionalString(path: String) =
+      if (config.getAnyRef(path) == noneValue) None else Some(config.getString(path))
+
+    def getOptionalLong(path: String) =
+      if (config.getAnyRef(path) == noneValue) None else Some(config.getLong(path))
+
+    def getOptionalDurationSeconds(path: String) =
+      if (config.getAnyRef(path) == noneValue) None else Some(config.getDuration(path, TimeUnit.SECONDS))
   }
 
   def fromConfig(config: Config = ConfigFactory.load()): SessionConfig = {
@@ -111,8 +113,8 @@ object SessionConfig {
   /**
    * Creates a default configuration using the given secret.
    */
-  def default(serverSecret: String): SessionConfig = fromConfig(ConfigFactory.load()
-    .withValue("akka.http.session.server-secret", ConfigValueFactory.fromAnyRef(serverSecret)))
+  def default(serverSecret: String): SessionConfig =
+    fromConfig(ConfigFactory.load().withValue("akka.http.session.server-secret", ConfigValueFactory.fromAnyRef(serverSecret)))
 
   def defaultConfig(serverSecret: String): SessionConfig = default(serverSecret) // required for javadsl directives, because default is a keyword
 }

@@ -24,7 +24,7 @@ public class OneOffSetRefreshableGetTest extends HttpSessionAwareDirectivesTest 
         return
             route(
                 path("set", () ->
-                    testDirectives.setSession(oneOff, sessionTransport, SESSION, () -> complete("ok"))
+                    testDirectives.setSession(oneOff, sessionTransport, SESSION, () -> complete(StatusCodes.OK))
                 ),
                 path("getOpt", () ->
                     testDirectives.optionalSession(refreshable, sessionTransport, session -> complete(session.toString()))
@@ -33,7 +33,7 @@ public class OneOffSetRefreshableGetTest extends HttpSessionAwareDirectivesTest 
                     testDirectives.touchRequiredSession(refreshable, sessionTransport, session -> complete(session))
                 ),
                 path("invalidate", () ->
-                    testDirectives.invalidateSession(refreshable, sessionTransport, () -> complete("ok"))
+                    testDirectives.invalidateSession(refreshable, sessionTransport, () -> complete(StatusCodes.OK))
                 )
 
             );

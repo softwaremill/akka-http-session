@@ -24,7 +24,7 @@ public class RefreshableTest extends HttpSessionAwareDirectivesTest {
         return
             route(
                 path("set", () ->
-                    testDirectives.setSession(refreshable, sessionTransport, SESSION, () -> complete("ok"))
+                        testDirectives.setSession(refreshable, sessionTransport, SESSION, () -> complete(StatusCodes.OK))
                 ),
                 path("getOpt", () ->
                     testDirectives.optionalSession(refreshable, sessionTransport, session -> complete(session.toString()))
@@ -36,7 +36,7 @@ public class RefreshableTest extends HttpSessionAwareDirectivesTest {
                     testDirectives.touchRequiredSession(refreshable, sessionTransport, session -> complete(session))
                 ),
                 path("invalidate", () ->
-                    testDirectives.invalidateSession(refreshable, sessionTransport, () -> complete("ok"))
+                        testDirectives.invalidateSession(refreshable, sessionTransport, () -> complete(StatusCodes.OK))
                 ),
                 path("full", () ->
                     testDirectives.session(refreshable, sessionTransport, sessionResult -> complete(sessionResult.toString()))
@@ -57,7 +57,7 @@ public class RefreshableTest extends HttpSessionAwareDirectivesTest {
         // then
         testRouteResult
             .assertStatusCode(StatusCodes.OK)
-            .assertEntity("ok");
+            .assertEntity("OK");
 
         // and
         HttpCookie refreshToken = getRefreshTokenCookieValues(testRouteResult.response());
@@ -77,7 +77,7 @@ public class RefreshableTest extends HttpSessionAwareDirectivesTest {
         // then
         testRouteResult
             .assertStatusCode(StatusCodes.OK)
-            .assertEntity("ok");
+            .assertEntity("OK");
 
         // and
         HttpResponse response = testRouteResult.response();
@@ -103,7 +103,7 @@ public class RefreshableTest extends HttpSessionAwareDirectivesTest {
         // then
         testRouteResult
             .assertStatusCode(StatusCodes.OK)
-            .assertEntity("ok");
+            .assertEntity("OK");
 
         // and
         HttpResponse response = testRouteResult.response();

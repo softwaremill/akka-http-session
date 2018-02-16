@@ -2,12 +2,14 @@ package com.softwaremill.session
 
 import java.util.Base64
 import javax.xml.bind.DatatypeConverter
+
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
+
 import scala.util.Try
 
 class JwtSessionEncoder[T](implicit serializer: SessionSerializer[T, JValue], formats: Formats = DefaultFormats)
-    extends SessionEncoder[T] {
+  extends SessionEncoder[T] {
 
   override def encode(t: T, nowMillis: Long, config: SessionConfig) = {
     val h = encode(createHeader)
@@ -108,9 +110,9 @@ class JwtSessionEncoder[T](implicit serializer: SessionSerializer[T, JValue], fo
     t.map((_, exp))
   }
 
-  protected def encode(jv: JValue): String = Base64.getUrlEncoder().withoutPadding().encodeToString(compact(render(jv)).getBytes("utf-8"))
+  protected def encode(jv: JValue): String = Base64.getUrlEncoder.withoutPadding().encodeToString(compact(render(jv)).getBytes("utf-8"))
   protected def decode(s: String): Try[JValue] = Try {
-    parse(new String(Base64.getUrlDecoder().decode(s), "utf-8"))
+    parse(new String(Base64.getUrlDecoder.decode(s), "utf-8"))
   }
   protected def decodeV0_5_2(s: String): Try[JValue] = Try {
     parse(new String(DatatypeConverter.parseBase64Binary(s), "utf-8"))

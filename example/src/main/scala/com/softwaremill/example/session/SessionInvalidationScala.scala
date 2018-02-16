@@ -2,6 +2,7 @@ package com.softwaremill.example.session
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import com.softwaremill.session.SessionDirectives._
@@ -32,9 +33,9 @@ object SessionInvalidationScala extends App with StrictLogging {
     path("logout") {
       post {
         myRequiredSession { session =>
-          myInvalidateSession { ctx =>
+          myInvalidateSession {
             logger.info(s"Logging out $session")
-            ctx.complete("ok")
+            complete(StatusCodes.OK)
           }
         }
       }

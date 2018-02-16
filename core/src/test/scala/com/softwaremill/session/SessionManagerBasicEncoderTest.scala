@@ -2,7 +2,7 @@ package com.softwaremill.session
 
 import org.scalacheck.{Gen, Prop, Properties}
 
-import scala.util.{Success, Try}
+import scala.util.Success
 
 object SessionManagerBasicEncoderTest extends Properties("SessionManagerBasicEncoder") {
 

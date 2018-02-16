@@ -8,6 +8,7 @@ import akka.http.javadsl.Http;
 import akka.http.javadsl.ServerBinding;
 import akka.http.javadsl.model.HttpRequest;
 import akka.http.javadsl.model.HttpResponse;
+import akka.http.javadsl.model.StatusCodes;
 import akka.http.javadsl.server.Route;
 import akka.http.javadsl.unmarshalling.Unmarshaller;
 import akka.stream.ActorMaterializer;
@@ -94,7 +95,7 @@ public class SetSessionJava extends HttpSessionAwareDirectives<MyJavaSession> {
                                             setNewCsrfToken(checkHeader, () ->
                                                 extractRequestContext(ctx ->
                                                     onSuccess(() -> ctx.completeWith(HttpResponse.create()), routeResult ->
-                                                        complete("ok")
+                                                        complete(StatusCodes.OK)
                                                     )
                                                 )
                                             )
@@ -108,4 +109,3 @@ public class SetSessionJava extends HttpSessionAwareDirectives<MyJavaSession> {
             );
     }
 }
-

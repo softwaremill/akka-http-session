@@ -1,5 +1,6 @@
 package com.softwaremill.session
 
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.softwaremill.session.SessionDirectives._
@@ -17,7 +18,7 @@ class OneOffSetRefreshableGetTest extends FlatSpec with ScalatestRouteTest with 
   def createRoutes(using: TestUsingTransport)(implicit manager: SessionManager[Map[String, String]]) = get {
     path("set") {
       setSession(oneOff, using.setSessionTransport, Map("k1" -> "v1")) {
-        complete { "ok" }
+        complete(StatusCodes.OK)
       }
     } ~
       path("getOpt") {
@@ -32,7 +33,7 @@ class OneOffSetRefreshableGetTest extends FlatSpec with ScalatestRouteTest with 
       } ~
       path("invalidate") {
         invalidateSession(refreshable, using.getSessionTransport) {
-          complete { "ok" }
+          complete(StatusCodes.OK)
         }
       }
   }

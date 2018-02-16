@@ -1,5 +1,6 @@
 package com.softwaremill.session
 
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.AuthorizationFailedRejection
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
@@ -17,9 +18,7 @@ class RefreshableTest extends FlatSpec with ScalatestRouteTest with Matchers wit
 
   def createRoutes(using: TestUsingTransport)(implicit manager: SessionManager[Map[String, String]]) = get {
     path("set") {
-      setSession(refreshable, using.setSessionTransport, Map("k1" -> "v1")) {
-        complete { "ok" }
-      }
+      setSession(refreshable, using.setSessionTransport, Map("k1" -> "v1")) { complete(StatusCodes.OK) }
     } ~
       path("getOpt") {
         optionalSession(refreshable, using.getSessionTransport) { session =>
@@ -37,15 +36,13 @@ class RefreshableTest extends FlatSpec with ScalatestRouteTest with Matchers wit
         }
       } ~
       path("invalidate") {
-        invalidateSession(refreshable, using.getSessionTransport) {
-          complete { "ok" }
-        }
+        invalidateSession(refreshable, using.getSessionTransport) { complete(StatusCodes.OK) }
       }
   }
 
   "Using cookies" should "set the refresh token cookie to expire" in {
     Get("/set") ~> createRoutes(TestUsingCookies) ~> check {
-      responseAs[String] should be("ok")
+      responseAs[String] should be("OK")
 
       TestUsingCookies.cookiesMap.get(TestUsingCookies.refreshTokenCookieName).flatMap(_.maxAge)
         .getOrElse(0L) should be > (60L * 60L * 24L * 29)
@@ -58,7 +55,7 @@ class RefreshableTest extends FlatSpec with ScalatestRouteTest with Matchers wit
 
     p should "set both the session and refresh token" in {
       Get("/set") ~> routes ~> check {
-        responseAs[String] should be("ok")
+        responseAs[String] should be("OK")
 
         using.getSession should be('defined)
         using.getRefreshToken should be('defined)

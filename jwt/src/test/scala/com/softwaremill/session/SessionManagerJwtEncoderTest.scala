@@ -1,7 +1,7 @@
 package com.softwaremill.session
 
 import org.json4s.JValue
-import org.scalatest.{Matchers, FlatSpec}
+import org.scalatest.{FlatSpec, Matchers}
 
 class SessionManagerJwtEncoderTest extends FlatSpec with Matchers {
   val defaultConfig = SessionConfig.default("1234567890123456789012345678901234567890123456789012345678901234567890")

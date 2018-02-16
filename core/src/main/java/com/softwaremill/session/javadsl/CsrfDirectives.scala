@@ -4,7 +4,7 @@ import java.util.function.Supplier
 
 import akka.http.javadsl.server.Route
 import akka.http.javadsl.server.directives.RouteAdapter
-import com.softwaremill.session.CsrfCheckMode
+import com.softwaremill.session.{CsrfCheckMode, CsrfDirectives => _CsrfDirectives}
 
 /**
  * Java alternative for com.softwaremill.session.CsrfDirectives
@@ -12,13 +12,13 @@ import com.softwaremill.session.CsrfCheckMode
 trait CsrfDirectives {
 
   def randomTokenCsrfProtection[T](checkMode: CsrfCheckMode[T], inner: Supplier[Route]): Route = RouteAdapter {
-    com.softwaremill.session.CsrfDirectives.randomTokenCsrfProtection(checkMode) {
+    _CsrfDirectives.randomTokenCsrfProtection(checkMode) {
       inner.get.asInstanceOf[RouteAdapter].delegate
     }
   }
 
   def setNewCsrfToken[T](checkMode: CsrfCheckMode[T], inner: Supplier[Route]): Route = RouteAdapter {
-    com.softwaremill.session.CsrfDirectives.setNewCsrfToken(checkMode) {
+    _CsrfDirectives.setNewCsrfToken(checkMode) {
       inner.get.asInstanceOf[RouteAdapter].delegate
     }
   }

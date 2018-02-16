@@ -2,12 +2,11 @@ package com.softwaremill.session
 
 import java.util.concurrent.TimeUnit
 
+import akka.http.scaladsl.model.headers.{HttpCookie, RawHeader}
 import akka.http.scaladsl.server.AuthorizationFailedRejection
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
-
-import akka.http.scaladsl.model.headers.{RawHeader, HttpCookie}
 
 class SessionManager[T](val config: SessionConfig)(implicit sessionEncoder: SessionEncoder[T]) { manager =>
 
@@ -49,13 +48,13 @@ trait ClientSessionManager[T] {
     secure = config.sessionCookieConfig.secure,
     httpOnly = config.sessionCookieConfig.httpOnly)
 
+  def encode(data: T): String = sessionEncoder.encode(data, nowMillis, config)
+
   def createHeader(data: T) = createHeaderWithValue(encode(data))
 
   def createHeaderWithValue(value: String) = RawHeader(
     name = config.sessionHeaderConfig.sendToClientHeaderName,
     value = value)
-
-  def encode(data: T): String = sessionEncoder.encode(data, nowMillis, config)
 
   def decode(data: String): SessionResult[T] = {
     sessionEncoder.decode(data, config).map { dr =>
@@ -82,7 +81,6 @@ trait CsrfManager[T] {
   def config: SessionConfig
 
   def tokenInvalidRejection = AuthorizationFailedRejection
-  def createToken(): String = SessionUtil.randomString(64)
 
   def createCookie() = HttpCookie(
     name = config.csrfCookieConfig.name,
@@ -92,22 +90,14 @@ trait CsrfManager[T] {
     path = config.csrfCookieConfig.path,
     secure = config.csrfCookieConfig.secure,
     httpOnly = config.csrfCookieConfig.httpOnly)
+
+  def createToken(): String = SessionUtil.randomString(64)
 }
 
 trait RefreshTokenManager[T] {
   def config: SessionConfig
   def nowMillis: Long
   def storage: RefreshTokenStorage[T]
-
-  def createSelector(): String = SessionUtil.randomString(16)
-  def createToken(): String = SessionUtil.randomString(64)
-
-  def decodeSelectorAndToken(value: String): Option[(String, String)] = {
-    val s = value.split(":", 2)
-    if (s.length == 2) Some((s(0), s(1))) else None
-  }
-
-  def encodeSelectorAndToken(selector: String, token: String): String = s"$selector:$token"
 
   /**
    * Creates and stores a new token, removing the old one after a configured period of time, if it exists.
@@ -133,6 +123,12 @@ trait RefreshTokenManager[T] {
     storeFuture
   }
 
+  def createSelector(): String = SessionUtil.randomString(16)
+
+  def createToken(): String = SessionUtil.randomString(64)
+
+  def encodeSelectorAndToken(selector: String, token: String): String = s"$selector:$token"
+
   def createCookie(value: String) = HttpCookie(
     name = config.refreshTokenCookieConfig.name,
     value = value,
@@ -152,21 +148,20 @@ trait RefreshTokenManager[T] {
       case Some((selector, token)) =>
         storage.lookup(selector).flatMap {
           case Some(lookupResult) =>
-            if (lookupResult.expires < nowMillis) {
-              storage.remove(selector).map(_ => SessionResult.Expired)
-            }
-            else if (!SessionUtil.constantTimeEquals(Crypto.hash_SHA256(token), lookupResult.tokenHash)) {
+            if (lookupResult.expires < nowMillis) storage.remove(selector).map(_ => SessionResult.Expired)
+            else if (!SessionUtil.constantTimeEquals(Crypto.hash_SHA256(token), lookupResult.tokenHash))
               storage.remove(selector).map(_ => SessionResult.Corrupt(new RuntimeException("Corrupt token hash")))
-            }
-            else {
-              Future.successful(SessionResult.CreatedFromToken(lookupResult.createSession()))
-            }
+            else Future.successful(SessionResult.CreatedFromToken(lookupResult.createSession()))
 
-          case None =>
-            Future.successful(SessionResult.TokenNotFound)
+          case None => Future.successful(SessionResult.TokenNotFound)
         }
       case None => Future.successful(SessionResult.Corrupt(new RuntimeException("Cannot decode selector/token")))
     }
+  }
+
+  def decodeSelectorAndToken(value: String): Option[(String, String)] = {
+    val s = value.split(":", 2)
+    if (s.length == 2) Some((s(0), s(1))) else None
   }
 
   def removeToken(value: String)(implicit ec: ExecutionContext): Future[Unit] = {
@@ -193,9 +188,9 @@ object SessionResult {
   case class Decoded[T](session: T) extends SessionResult[T] with SessionValue[T]
   case class DecodedLegacy[T](session: T) extends SessionResult[T] with SessionValue[T]
   case class CreatedFromToken[T](session: T) extends SessionResult[T] with SessionValue[T]
+  case class Corrupt(e: Exception) extends SessionResult[Nothing] with NoSessionValue[Nothing]
 
   case object NoSession extends SessionResult[Nothing] with NoSessionValue[Nothing]
   case object TokenNotFound extends SessionResult[Nothing] with NoSessionValue[Nothing]
   case object Expired extends SessionResult[Nothing] with NoSessionValue[Nothing]
-  case class Corrupt(e: Exception) extends SessionResult[Nothing] with NoSessionValue[Nothing]
 }

@@ -40,7 +40,7 @@ trait CsrfDirectives {
     headerValueByName(checkMode.manager.config.csrfSubmittedName).recover { rejections =>
       checkMode match {
         case c: CheckHeaderAndForm[T] =>
-          import c.materializer
+
           formField(checkMode.manager.config.csrfSubmittedName)
         case _ => reject(rejections: _*)
       }

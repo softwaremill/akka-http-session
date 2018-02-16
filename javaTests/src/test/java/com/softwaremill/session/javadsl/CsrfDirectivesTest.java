@@ -23,18 +23,14 @@ public class CsrfDirectivesTest extends HttpSessionAwareDirectivesTest {
             testDirectives.randomTokenCsrfProtection(csrfCheckMode, () ->
                 route(
                     get(() ->
-                        path("site", () ->
-                            complete("ok")
-                        )
+                        path("site", () -> complete(StatusCodes.OK))
                     ),
                     post(() ->
                         route(
                             path("login", () ->
                                 testDirectives.setNewCsrfToken(csrfCheckMode, () ->
-                                    complete("ok"))),
-                            path("transfer_money", () ->
-                                complete("ok")
-                            )
+                                    complete(StatusCodes.OK))),
+                            path("transfer_money", () -> complete(StatusCodes.OK))
                         )
                     )
                 )
@@ -55,7 +51,7 @@ public class CsrfDirectivesTest extends HttpSessionAwareDirectivesTest {
         // then
         testRouteResult
             .assertStatusCode(StatusCodes.OK)
-            .assertEntity("ok");
+            .assertEntity("OK");
 
         // and
         HttpResponse response = testRouteResult.response();
@@ -72,7 +68,7 @@ public class CsrfDirectivesTest extends HttpSessionAwareDirectivesTest {
         // then
         testRouteResult2
             .assertStatusCode(StatusCodes.OK)
-            .assertEntity("ok");
+            .assertEntity("OK");
 
         // and
         HttpResponse response2 = testRouteResult2.response();
@@ -162,7 +158,7 @@ public class CsrfDirectivesTest extends HttpSessionAwareDirectivesTest {
         // then
         testRouteResult2
             .assertStatusCode(StatusCodes.OK)
-            .assertEntity("ok");
+            .assertEntity("OK");
 
     }
 
@@ -195,7 +191,7 @@ public class CsrfDirectivesTest extends HttpSessionAwareDirectivesTest {
         // then
         testRouteResult2
             .assertStatusCode(StatusCodes.OK)
-            .assertEntity("ok");
+            .assertEntity("OK");
     }
 
     @Test
@@ -225,7 +221,7 @@ public class CsrfDirectivesTest extends HttpSessionAwareDirectivesTest {
         // then
         testRouteResult2
             .assertStatusCode(StatusCodes.OK)
-            .assertEntity("ok");
+            .assertEntity("OK");
 
         // and
         HttpCookie csrfCookie2 = getCsrfTokenCookieValues(testRouteResult2.response());

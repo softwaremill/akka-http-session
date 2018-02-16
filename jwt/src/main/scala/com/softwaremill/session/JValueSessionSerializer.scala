@@ -2,7 +2,7 @@ package com.softwaremill.session
 
 import org.json4s._
 
-import scala.util.{Success, Failure, Try}
+import scala.util.{Failure, Success, Try}
 
 object JValueSessionSerializer {
   implicit def stringToJValueSessionSerializer: SessionSerializer[String, JValue] = new SessionSerializer[String, JValue] {

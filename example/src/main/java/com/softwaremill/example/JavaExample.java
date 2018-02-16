@@ -51,7 +51,7 @@ public class JavaExample extends HttpSessionAwareDirectives<MyJavaSession> {
     private Refreshable<MyJavaSession> refreshable;
     private SetSessionTransport sessionTransport;
 
-    public JavaExample(MessageDispatcher dispatcher) {
+    private JavaExample(MessageDispatcher dispatcher) {
         super(new SessionManager<>(
                 SessionConfig.defaultConfig(SECRET),
                 BASIC_ENCODER
@@ -122,7 +122,7 @@ public class JavaExample extends HttpSessionAwareDirectives<MyJavaSession> {
                                                 extractRequestContext(ctx -> {
                                                         LOGGER.info("Logging out {}", session.getUsername());
                                                         return onSuccess(() -> ctx.completeWith(HttpResponse.create()), routeResult ->
-                                                            complete("ok")
+                                                            complete(StatusCodes.OK)
                                                         );
                                                     }
                                                 )

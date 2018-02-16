@@ -21,7 +21,7 @@ class SingleValueSessionSerializer[T, V](toValue: T => V, fromValue: V => Try[T]
 }
 
 class MultiValueSessionSerializer[T](toMap: T => Map[String, String], fromMap: Map[String, String] => Try[T])
-    extends SessionSerializer[T, String] {
+  extends SessionSerializer[T, String] {
 
   import SessionSerializer._
 

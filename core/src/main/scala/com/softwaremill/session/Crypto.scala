@@ -3,8 +3,8 @@ package com.softwaremill.session
 import java.security.MessageDigest
 import java.util
 import java.util.Base64
-import javax.crypto.{Cipher, Mac}
 import javax.crypto.spec.SecretKeySpec
+import javax.crypto.{Cipher, Mac}
 import javax.xml.bind.DatatypeConverter
 
 import com.softwaremill.session.SessionUtil._
@@ -21,7 +21,7 @@ object Crypto {
     val key = secret.getBytes("UTF-8")
     val mac = Mac.getInstance("HmacSHA256")
     mac.init(new SecretKeySpec(key, "HmacSHA256"))
-    Base64.getUrlEncoder().withoutPadding().encodeToString(mac.doFinal(message.getBytes("utf-8")))
+    Base64.getUrlEncoder.withoutPadding().encodeToString(mac.doFinal(message.getBytes("utf-8")))
   }
 
   def sign_HmacSHA256_base64_v0_5_2(message: String, secret: String): String = {

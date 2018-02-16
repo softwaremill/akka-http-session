@@ -2,6 +2,7 @@ package com.softwaremill.example.session
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import com.softwaremill.session.CsrfDirectives._
@@ -38,7 +39,7 @@ object SetSessionScala extends App with StrictLogging {
             entity(as[String]) { body =>
               logger.info(s"Logging in $body")
               mySetSession(MyScalaSession(body)) {
-                setNewCsrfToken(checkHeader) { ctx => ctx.complete("ok") }
+                setNewCsrfToken(checkHeader) { complete(StatusCodes.OK) }
               }
             }
           }

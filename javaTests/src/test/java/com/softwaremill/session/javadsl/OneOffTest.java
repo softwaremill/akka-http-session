@@ -24,7 +24,7 @@ public class OneOffTest extends HttpSessionAwareDirectivesTest {
         return
             route(
                 path("set", () ->
-                    testDirectives.setSession(oneOff, sessionTransport, SESSION, () -> complete("ok"))
+                        testDirectives.setSession(oneOff, sessionTransport, SESSION, () -> complete(StatusCodes.OK))
                 ),
                 path("getOpt", () ->
                     testDirectives.optionalSession(oneOff, sessionTransport, session -> complete(session.toString()))
@@ -36,7 +36,7 @@ public class OneOffTest extends HttpSessionAwareDirectivesTest {
                     testDirectives.touchRequiredSession(oneOff, sessionTransport, session -> complete(session))
                 ),
                 path("invalidate", () ->
-                    testDirectives.invalidateSession(oneOff, sessionTransport, () -> complete("ok"))
+                        testDirectives.invalidateSession(oneOff, sessionTransport, () -> complete(StatusCodes.OK))
                 ),
                 path("full", () ->
                     testDirectives.session(oneOff, sessionTransport, sessionResult -> complete(sessionResult.toString()))
@@ -56,7 +56,7 @@ public class OneOffTest extends HttpSessionAwareDirectivesTest {
         // then
         testRouteResult
             .assertStatusCode(StatusCodes.OK)
-            .assertEntity("ok");
+            .assertEntity("OK");
 
         // and
         HttpResponse response = testRouteResult.response();
@@ -77,7 +77,7 @@ public class OneOffTest extends HttpSessionAwareDirectivesTest {
         // then
         testRouteResult
             .assertStatusCode(StatusCodes.OK)
-            .assertEntity("ok");
+            .assertEntity("OK");
 
         // and
         HttpResponse response = testRouteResult.response();
@@ -100,7 +100,7 @@ public class OneOffTest extends HttpSessionAwareDirectivesTest {
         // then
         testRouteResult
             .assertStatusCode(StatusCodes.OK)
-            .assertEntity("ok");
+            .assertEntity("OK");
 
         // and
         HttpResponse response = testRouteResult.response();

@@ -1,6 +1,8 @@
 package com.softwaremill.session
 
-import scala.collection.mutable
+import java.time.Instant
+
+import scala.collection.concurrent
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 
@@ -33,11 +35,11 @@ case class RefreshTokenLookupResult[T](
  */
 trait InMemoryRefreshTokenStorage[T] extends RefreshTokenStorage[T] {
   case class Store(session: T, tokenHash: String, expires: Long)
-  private val _store = mutable.Map[String, Store]()
+  private val _store = concurrent.TrieMap[String, Store]()
 
   def store: Map[String, Store] = _store.toMap
 
-  override def lookup(selector: String) = {
+  override def lookup(selector: String): Future[Option[RefreshTokenLookupResult[T]]] = {
     Future.successful {
       val r = _store.get(selector).map(s => RefreshTokenLookupResult[T](s.tokenHash, s.expires,
         () => s.session))
@@ -46,18 +48,19 @@ trait InMemoryRefreshTokenStorage[T] extends RefreshTokenStorage[T] {
     }
   }
 
-  override def store(data: RefreshTokenData[T]) = {
-    log(s"Storing token for selector: ${data.selector}, user: ${data.forSession}, " +
-      s"expires: ${data.expires}, now: ${System.currentTimeMillis()}")
+  override def store(data: RefreshTokenData[T]): Future[Unit] = {
+    log(s"Storing token for selector: ${data.selector}, user: ${data.forSession}, expires: ${
+      Instant.ofEpochMilli(data.expires)
+    }, now: ${Instant.ofEpochMilli(System.currentTimeMillis())}")
     Future.successful(_store.put(data.selector, Store(data.forSession, data.tokenHash, data.expires)))
   }
 
-  override def remove(selector: String) = {
+  override def remove(selector: String): Future[Unit] = {
     log(s"Removing token for selector: $selector")
     Future.successful(_store.remove(selector))
   }
 
-  override def schedule[S](after: Duration)(op: => Future[S]) = {
+  override def schedule[S](after: Duration)(op: => Future[S]): Unit = {
     log("Running scheduled operation immediately")
     op
     Future.successful(())

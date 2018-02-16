@@ -36,7 +36,7 @@ class BasicSessionEncoder[T](implicit serializer: SessionSerializer[T, String]) 
     s"${Crypto.sign_HmacSHA1_hex(withExpiry, config.serverSecret)}-$encrypted"
   }
 
-  override def decode(s: String, config: SessionConfig) = {
+  override def decode(s: String, config: SessionConfig): Try[DecodeResult[T]] = {
     def extractExpiry(data: String): (Option[Long], String) = {
       config.sessionMaxAgeSeconds.fold((Option.empty[Long], data)) { maxAge =>
         val splitted = data.split("-", 2)
@@ -58,13 +58,9 @@ class BasicSessionEncoder[T](implicit serializer: SessionSerializer[T, String]) 
       val (deserializedResult, deserializedLegacy) = {
         val deserializedResult = serializer.deserialize(serialized.substring(1))
 
-        if (deserializedResult.isFailure && config.tokenMigrationV0_5_3Enabled) {
-          // Try deserializer assuming pre-v0.5.3.
-          (serializer.deserializeV0_5_2(serialized.substring(1)), true)
-        }
-        else {
-          (deserializedResult, false)
-        }
+        if (deserializedResult.isFailure && config.tokenMigrationV0_5_3Enabled)
+          (serializer.deserializeV0_5_2(serialized.substring(1)), true) // Try deserializer assuming pre-v0.5.3.
+        else (deserializedResult, false)
       }
 
       deserializedResult.map { deserialized =>
@@ -77,9 +73,7 @@ class BasicSessionEncoder[T](implicit serializer: SessionSerializer[T, String]) 
 
           DecodeResult(deserialized, expiry, signatureMatchesLegacy, isLegacy)
         }
-        else {
-          DecodeResult(deserialized, expiry, signatureMatches, isLegacy = deserializedLegacy)
-        }
+        else DecodeResult(deserialized, expiry, signatureMatches, isLegacy = deserializedLegacy)
       }
     }.flatten
   }

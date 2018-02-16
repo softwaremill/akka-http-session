@@ -4,7 +4,7 @@ import scala.util.Try
 
 object Legacy {
   class MultiValueSessionSerializerV0_5_2[T](toMap: T => Map[String, String], fromMap: Map[String, String] => Try[T])
-      extends SessionSerializer[T, String] {
+    extends SessionSerializer[T, String] {
 
     import SessionSerializer._
 

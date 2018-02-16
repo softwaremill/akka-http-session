@@ -37,8 +37,11 @@ import static com.softwaremill.session.javadsl.SessionTransports.CookieST;
 public class JavaJwtExample extends HttpSessionAwareDirectives<String> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JavaJwtExample.class);
-    private static final String SECRET = "c05ll3lesrinf39t7mc5h6un6r0c69lgfno69dsak3vabeqamouq4328cuaekros401ajdpkh60rrtpd8ro24rbuqmgtnd1ebag6ljnb65i8a55d482ok7o0nch0bfbe";
-    private static final SessionEncoder<String> JWT_ENCODER = new JwtSessionEncoder<>(JwtSessionSerializers.StringToJValueSessionSerializer, JwtSessionSerializers.DefaultUtcDateFormat);
+    private static final String SECRET =
+            "c05ll3lesrinf39t7mc5h6un6r0c69lgfno69dsak3vabeqamouq4328cuaekros401ajdpkh60rrtpd8ro24rbuqmgtnd1ebag6ljnb65i8a55d482ok7o0nch0bfbe";
+    private static final SessionEncoder<String> JWT_ENCODER =
+            new JwtSessionEncoder<String>
+                    (JwtSessionSerializers.StringToJValueSessionSerializer, JwtSessionSerializers.DefaultUtcDateFormat);
 
     // in-memory refresh token storage
     private static final RefreshTokenStorage<String> REFRESH_TOKEN_STORAGE = new InMemoryRefreshTokenStorage<String>() {
@@ -51,7 +54,7 @@ public class JavaJwtExample extends HttpSessionAwareDirectives<String> {
     private Refreshable<String> refreshable;
     private SetSessionTransport sessionTransport;
 
-    public JavaJwtExample(MessageDispatcher dispatcher) {
+    private JavaJwtExample(MessageDispatcher dispatcher) {
         super(new SessionManager<>(
                 SessionConfig.defaultConfig(SECRET),
                 JWT_ENCODER
@@ -108,7 +111,7 @@ public class JavaJwtExample extends HttpSessionAwareDirectives<String> {
                                                     setNewCsrfToken(checkHeader, () ->
                                                         extractRequestContext(ctx ->
                                                             onSuccess(() -> ctx.completeWith(HttpResponse.create()), routeResult ->
-                                                                complete("ok")
+                                                                complete(StatusCodes.OK)
                                                             )
                                                         )
                                                     )
@@ -126,7 +129,7 @@ public class JavaJwtExample extends HttpSessionAwareDirectives<String> {
                                                 extractRequestContext(ctx -> {
                                                         LOGGER.info("Logging out {}", session);
                                                         return onSuccess(() -> ctx.completeWith(HttpResponse.create()), routeResult ->
-                                                            complete("ok")
+                                                            complete(StatusCodes.OK)
                                                         );
                                                     }
                                                 )

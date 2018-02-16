@@ -8,6 +8,7 @@ import akka.http.javadsl.Http;
 import akka.http.javadsl.ServerBinding;
 import akka.http.javadsl.model.HttpRequest;
 import akka.http.javadsl.model.HttpResponse;
+import akka.http.javadsl.model.StatusCodes;
 import akka.http.javadsl.server.Route;
 import akka.stream.ActorMaterializer;
 import akka.stream.javadsl.Flow;
@@ -97,7 +98,7 @@ public class SessionInvalidationJava extends HttpSessionAwareDirectives<MyJavaSe
                                         extractRequestContext(ctx -> {
                                                 LOGGER.info("Logging out {}", session.getUsername());
                                                 return onSuccess(() -> ctx.completeWith(HttpResponse.create()), routeResult ->
-                                                    complete("ok")
+                                                    complete(StatusCodes.OK)
                                                 );
                                             }
                                         )
@@ -110,4 +111,3 @@ public class SessionInvalidationJava extends HttpSessionAwareDirectives<MyJavaSe
             );
     }
 }
-
