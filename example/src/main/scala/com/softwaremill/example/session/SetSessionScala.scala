@@ -2,17 +2,17 @@ package com.softwaremill.example.session
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Directives.{as, entity, path, pathPrefix, post}
 import akka.stream.ActorMaterializer
-import com.softwaremill.session.CsrfDirectives._
-import com.softwaremill.session.CsrfOptions._
-import com.softwaremill.session.SessionDirectives._
-import com.softwaremill.session.SessionOptions._
-import com.softwaremill.session._
+import com.softwaremill.example.completeOK
+import com.softwaremill.session.CsrfDirectives.{randomTokenCsrfProtection, setNewCsrfToken}
+import com.softwaremill.session.CsrfOptions.checkHeader
+import com.softwaremill.session.SessionDirectives.{invalidateSession, requiredSession, setSession}
+import com.softwaremill.session.SessionOptions.{refreshable, usingCookies}
+import com.softwaremill.session.{InMemoryRefreshTokenStorage, SessionConfig, SessionManager}
 import com.typesafe.scalalogging.StrictLogging
 
-import scala.io.StdIn
+import scala.util.{Failure, Success}
 
 object SetSessionScala extends App with StrictLogging {
   implicit val system = ActorSystem("example")
@@ -39,7 +39,9 @@ object SetSessionScala extends App with StrictLogging {
             entity(as[String]) { body =>
               logger.info(s"Logging in $body")
               mySetSession(MyScalaSession(body)) {
-                setNewCsrfToken(checkHeader) { complete(StatusCodes.OK) }
+                setNewCsrfToken(checkHeader) {
+                  completeOK
+                }
               }
             }
           }
@@ -47,17 +49,16 @@ object SetSessionScala extends App with StrictLogging {
       }
     }
 
-  val bindingFuture = Http().bindAndHandle(routes, "localhost", 8080)
+  val bindingFuture = Http().bindAndHandle(routes, httpHost, httpPort)
 
-  println("Server started, press enter to stop. Visit http://localhost:8080 to see the demo.")
-  StdIn.readLine()
+  def httpHost = "localhost"
 
-  import system.dispatcher
+  def httpPort = 8080
 
-  bindingFuture
-    .flatMap(_.unbind())
-    .onComplete { _ =>
+  bindingFuture.onComplete {
+    case Success(Http.ServerBinding(localAddress)) => logger.info("Listening on {}", localAddress)
+    case Failure(cause) =>
+      logger.error( /*cause,*/ s"Terminating, because can't bind to http://$httpHost:$httpPort!")
       system.terminate()
-      println("Server stopped")
-    }
+  }
 }

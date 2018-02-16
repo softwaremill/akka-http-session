@@ -6,11 +6,11 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import com.softwaremill.example.session.MyScalaSession
-import com.softwaremill.session.CsrfDirectives._
-import com.softwaremill.session.CsrfOptions._
-import com.softwaremill.session.SessionDirectives._
-import com.softwaremill.session.SessionOptions._
-import com.softwaremill.session._
+import com.softwaremill.session.CsrfDirectives.{randomTokenCsrfProtection, setNewCsrfToken}
+import com.softwaremill.session.CsrfOptions.checkHeader
+import com.softwaremill.session.SessionDirectives.{invalidateSession, requiredSession, setSession}
+import com.softwaremill.session.SessionOptions.{refreshable, usingCookies}
+import com.softwaremill.session.{InMemoryRefreshTokenStorage, SessionConfig, SessionManager}
 import com.typesafe.scalalogging.StrictLogging
 
 import scala.util.{Failure, Success}
@@ -39,7 +39,7 @@ object ScalaExample extends App with StrictLogging {
 
                 mySetSession(MyScalaSession(body)) {
                   setNewCsrfToken(checkHeader) {
-                    complete(StatusCodes.OK)
+                    completeOK
                   }
                 }
               }
@@ -51,7 +51,7 @@ object ScalaExample extends App with StrictLogging {
                 myRequiredSession { session =>
                   myInvalidateSession {
                     logger.info(s"Logging out $session")
-                    complete(StatusCodes.OK)
+                    completeOK
                   }
                 }
               }

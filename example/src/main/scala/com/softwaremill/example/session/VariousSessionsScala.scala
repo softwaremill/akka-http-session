@@ -5,12 +5,12 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import com.softwaremill.session.SessionDirectives._
-import com.softwaremill.session.SessionOptions._
+import com.softwaremill.session.SessionOptions.{oneOff, refreshable, usingCookies}
 import com.softwaremill.session.SessionResult._
-import com.softwaremill.session._
+import com.softwaremill.session.{InMemoryRefreshTokenStorage, SessionConfig, SessionManager}
 import com.typesafe.scalalogging.StrictLogging
 
-import scala.io.StdIn
+import scala.util.{Failure, Success}
 
 object VariousSessionsScala extends App with StrictLogging {
   implicit val system = ActorSystem("example")
@@ -67,18 +67,17 @@ object VariousSessionsScala extends App with StrictLogging {
         }
       }
 
-  val bindingFuture = Http().bindAndHandle(routes, "localhost", 8080)
+  val bindingFuture = Http().bindAndHandle(routes, httpHost, httpPort)
 
-  println("Server started, press enter to stop. Visit http://localhost:8080 to see the demo.")
-  StdIn.readLine()
+  def httpHost = "localhost"
 
-  import system.dispatcher
+  def httpPort = 8080
 
-  bindingFuture
-    .flatMap(_.unbind())
-    .onComplete { _ =>
+  bindingFuture.onComplete {
+    case Success(Http.ServerBinding(localAddress)) => logger.info("Listening on {}", localAddress)
+    case Failure(cause) =>
+      logger.error( /*cause,*/ s"Terminating, because can't bind to http://$httpHost:$httpPort!")
       system.terminate()
-      println("Server stopped")
-    }
+  }
 }
 
