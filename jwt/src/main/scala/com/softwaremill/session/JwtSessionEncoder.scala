@@ -12,20 +12,20 @@ class JwtSessionEncoder[T](implicit serializer: SessionSerializer[T, JValue], fo
   extends SessionEncoder[T] {
 
   override def encode(t: T, nowMillis: Long, config: SessionConfig) = {
-    val h = encode(createHeader)
-    val p = encode(createPayload(t, nowMillis, config))
+    def h = encode(createHeader)
+    def p = encode(createPayload(t, nowMillis, config))
     val base = s"$h.$p"
-    val signature = Crypto.sign_HmacSHA256_base64(base, config.serverSecret)
+    def signature = Crypto.sign_HmacSHA256_base64(base, config.serverSecret)
 
     s"$base.$signature"
   }
 
   // Legacy encoder function for testing migrations.
   def encodeV0_5_2(t: T, nowMillis: Long, config: SessionConfig) = {
-    val h = encode(createHeader)
-    val p = encode(createPayload(t, nowMillis, config))
+    def h = encode(createHeader)
+    def p = encode(createPayload(t, nowMillis, config))
     val base = s"$h.$p"
-    val signature = Crypto.sign_HmacSHA256_base64_v0_5_2(base, config.serverSecret)
+    def signature = Crypto.sign_HmacSHA256_base64_v0_5_2(base, config.serverSecret)
 
     s"$base.$signature"
   }

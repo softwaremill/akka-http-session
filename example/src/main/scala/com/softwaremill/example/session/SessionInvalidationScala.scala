@@ -6,7 +6,7 @@ import akka.http.scaladsl.server.Directives.{path, post}
 import akka.stream.ActorMaterializer
 import com.softwaremill.example.completeOK
 import com.softwaremill.session.{InMemoryRefreshTokenStorage, SessionConfig, SessionManager}
-import com.softwaremill.session.SessionDirectives.{setSession,requiredSession,invalidateSession}
+import com.softwaremill.session.SessionDirectives.{setSession, requiredSession, invalidateSession}
 import com.softwaremill.session.SessionOptions.{refreshable, usingCookies}
 import com.typesafe.scalalogging.StrictLogging
 
@@ -50,7 +50,7 @@ object SessionInvalidationScala extends App with StrictLogging {
   bindingFuture.onComplete {
     case Success(Http.ServerBinding(localAddress)) => logger.info("Listening on {}", localAddress)
     case Failure(cause) =>
-      logger.error(/*cause,*/ s"Terminating, because can't bind to http://$httpHost:$httpPort!")
+      logger.error( /*cause,*/ s"Terminating, because can't bind to http://$httpHost:$httpPort!")
       system.terminate()
   }
 

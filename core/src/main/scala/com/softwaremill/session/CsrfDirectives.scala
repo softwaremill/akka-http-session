@@ -66,7 +66,7 @@ class CheckHeaderAndForm[T] private[session] (implicit
   val materializer: Materializer) extends CsrfCheckMode[T]
 
 object CsrfOptions {
-  def checkHeader[T](implicit manager: SessionManager[T]): CheckHeader[T] = new CheckHeader[T]()
-  def checkHeaderAndForm[T](implicit manager: SessionManager[T], materializer: Materializer): CheckHeaderAndForm[T] =
+  def checkHeader[T](implicit manager: SessionManager[T]) = new CheckHeader[T]()
+  def checkHeaderAndForm[T](implicit manager: SessionManager[T], materializer: Materializer) =
     new CheckHeaderAndForm[T]()
 }

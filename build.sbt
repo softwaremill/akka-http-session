@@ -39,8 +39,9 @@ lazy val commonSettings = Seq(
     </developers>
 )
 
-val akkaHttpVersion = "10.1.0-RC1"
-val scalaTest = "org.scalatest" %% "scalatest" % "3.0.4" % Test
+val akkaHttpVersion = "10.1.0-RC2"
+val json4sVersion = "3.5.3"
+val scalaTest = "org.scalatest" %% "scalatest" % "3.0.5" % Test
 cancelable in Global := true // Gracefully stops your running app by ctrl+d or ctrl+z
 
 lazy val rootProject: Project = (project in file("."))
@@ -64,7 +65,7 @@ lazy val jwt: Project = (project in file("jwt"))
   .settings(commonSettings,
     name := "jwt",
     libraryDependencies ++= Seq(
-      "org.json4s" %% "json4s-jackson" % "3.5.3",
+      "org.json4s" %% "json4s-jackson" % json4sVersion,
       scalaTest
     )
   ) dependsOn core
@@ -75,8 +76,8 @@ lazy val example: Project = (project in file("example"))
     publishArtifact := false,
     libraryDependencies ++= Seq(
       "ch.qos.logback"             % "logback-classic"% "1.2.3",
-      "com.typesafe.scala-logging" %%"scala-logging"  % "3.7.2",
-      "org.json4s"                 %% "json4s-ext"    % "3.5.0"
+      "com.typesafe.scala-logging" %%"scala-logging"  % "3.8.0",
+      "org.json4s"                 %% "json4s-ext"    % json4sVersion
     ))
   .dependsOn(core, jwt)
 

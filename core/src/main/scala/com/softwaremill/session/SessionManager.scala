@@ -107,7 +107,7 @@ trait RefreshTokenManager[T] {
     val selector = createSelector()
     val token = createToken()
 
-    val storeFuture = storage.store(new RefreshTokenData[T](
+    val storeFuture = storage.store(RefreshTokenData[T](
       forSession = session,
       selector = selector,
       tokenHash = Crypto.hash_SHA256(token),

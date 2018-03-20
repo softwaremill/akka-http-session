@@ -22,8 +22,9 @@ object ScalaExample extends App with StrictLogging {
   implicit val refreshTokenStorage = new InMemoryRefreshTokenStorage[MyScalaSession] {
     def log(msg: String) = logger.info(msg)
   }
+  val sessionConfig =
+    SessionConfig.default("c05ll3lesrinf39t7mc5h6un6r0c69lgfno69dsak3vabeqamouq4328cuaekros401ajdpkh60rrtpd8ro24rbuqmgtnd1ebag6ljnb65i8a55d482ok7o0nch0bfbe")
   implicit val sessionManager = new SessionManager[MyScalaSession](sessionConfig)
-  val sessionConfig = SessionConfig.default("c05ll3lesrinf39t7mc5h6un6r0c69lgfno69dsak3vabeqamouq4328cuaekros401ajdpkh60rrtpd8ro24rbuqmgtnd1ebag6ljnb65i8a55d482ok7o0nch0bfbe")
   val myRequiredSession = requiredSession(refreshable, usingCookies)
   val myInvalidateSession = invalidateSession(refreshable, usingCookies)
   val routes =
@@ -37,7 +38,7 @@ object ScalaExample extends App with StrictLogging {
               entity(as[String]) { body =>
                 logger.info(s"Logging in $body")
 
-                mySetSession(MyScalaSession(body)) {
+                setSession(refreshable, usingCookies, MyScalaSession(body)) {
                   setNewCsrfToken(checkHeader) {
                     completeOK
                   }
@@ -71,8 +72,6 @@ object ScalaExample extends App with StrictLogging {
           }
       }
   val bindingFuture = Http().bindAndHandle(routes, httpHost, httpPort)
-
-  def mySetSession(v: MyScalaSession) = setSession(refreshable, usingCookies, v)
 
   def httpHost = "localhost"
 
