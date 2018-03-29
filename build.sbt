@@ -41,7 +41,7 @@ lazy val commonSettings = Seq(
   homepage := Some(new java.net.URL("http://softwaremill.com"))
 )
 
-val akkaHttpVersion = "10.1.0-RC1"
+val akkaHttpVersion = "10.1.0"
 
 val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 
