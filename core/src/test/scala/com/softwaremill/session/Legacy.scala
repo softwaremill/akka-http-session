@@ -8,16 +8,16 @@ object Legacy {
 
     import SessionSerializer._
 
-    override def serialize(t: T) = toMap(t)
-      .map { case (k, v) => urlEncode(k) + "=" + urlEncode(v) }
-      .mkString("&")
+    override def serialize(t: T) =
+      toMap(t)
+        .map { case (k, v) => urlEncode(k) + "=" + urlEncode(v) }
+        .mkString("&")
 
     override def deserialize(s: String) = {
       Try {
         if (s == "") Map.empty[String, String]
         else {
-          s
-            .split("&")
+          s.split("&")
             .map(_.split("=", 2))
             .map(p => urlDecode(p(0)) -> urlDecode(p(1)))
             .toMap

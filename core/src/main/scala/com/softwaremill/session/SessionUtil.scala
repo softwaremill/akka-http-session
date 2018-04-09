@@ -12,8 +12,8 @@ object SessionUtil {
   }
 
   /**
-   * Utility method for generating a good server secret.
-   */
+    * Utility method for generating a good server secret.
+    */
   def randomServerSecret(): String = randomString(128)
 
   // Do not change this unless you understand the security issues behind timing attacks.
@@ -22,8 +22,7 @@ object SessionUtil {
   def constantTimeEquals(a: String, b: String): Boolean = {
     if (a.length != b.length) {
       false
-    }
-    else {
+    } else {
       var equal = 0
       for (i <- Array.range(0, a.length)) {
         equal |= a(i) ^ b(i)

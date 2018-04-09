@@ -11,26 +11,24 @@ trait RefreshTokenStorage[T] {
   def schedule[S](after: Duration)(op: => Future[S]): Unit
 }
 
-case class RefreshTokenData[T](
-  forSession: T,
-  selector: String,
-  tokenHash: String,
-  /**
-   * Timestamp
-   */
-  expires: Long)
+case class RefreshTokenData[T](forSession: T,
+                               selector: String,
+                               tokenHash: String,
+                               /**
+                                 * Timestamp
+                                 */
+                               expires: Long)
 
-case class RefreshTokenLookupResult[T](
-  tokenHash: String,
-  /**
-   * Timestamp
-   */
-  expires: Long,
-  createSession: () => T)
+case class RefreshTokenLookupResult[T](tokenHash: String,
+                                       /**
+                                         * Timestamp
+                                         */
+                                       expires: Long,
+                                       createSession: () => T)
 
 /**
- * Useful for testing.
- */
+  * Useful for testing.
+  */
 trait InMemoryRefreshTokenStorage[T] extends RefreshTokenStorage[T] {
   case class Store(session: T, tokenHash: String, expires: Long)
   private val _store = mutable.Map[String, Store]()
@@ -39,16 +37,16 @@ trait InMemoryRefreshTokenStorage[T] extends RefreshTokenStorage[T] {
 
   override def lookup(selector: String) = {
     Future.successful {
-      val r = _store.get(selector).map(s => RefreshTokenLookupResult[T](s.tokenHash, s.expires,
-        () => s.session))
+      val r = _store.get(selector).map(s => RefreshTokenLookupResult[T](s.tokenHash, s.expires, () => s.session))
       log(s"Looking up token for selector: $selector, found: ${r.isDefined}")
       r
     }
   }
 
   override def store(data: RefreshTokenData[T]) = {
-    log(s"Storing token for selector: ${data.selector}, user: ${data.forSession}, " +
-      s"expires: ${data.expires}, now: ${System.currentTimeMillis()}")
+    log(
+      s"Storing token for selector: ${data.selector}, user: ${data.forSession}, " +
+        s"expires: ${data.expires}, now: ${System.currentTimeMillis()}")
     Future.successful(_store.put(data.selector, Store(data.forSession, data.tokenHash, data.expires)))
   }
 

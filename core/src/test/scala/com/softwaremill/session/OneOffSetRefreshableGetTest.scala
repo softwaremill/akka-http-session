@@ -62,8 +62,8 @@ class OneOffSetRefreshableGetTest extends FlatSpec with ScalatestRouteTest with 
           addHeader(using.setSessionHeader(session)) ~>
           routes ~>
           check {
-            using.isSessionExpired should be (true)
-            using.getRefreshToken should be (None)
+            using.isSessionExpired should be(true)
+            using.getRefreshToken should be(None)
           }
       }
     }
@@ -85,15 +85,15 @@ class OneOffSetRefreshableGetTest extends FlatSpec with ScalatestRouteTest with 
             session1 should not be (session2)
 
             // No refresh token should be set
-            token2Opt should be (None)
+            token2Opt should be(None)
 
             // 70 seconds from the initial session, only the touched one should work
             Get("/touchReq") ~>
               addHeader(using.setSessionHeader(session2)) ~>
               routes(manager_expires60_fixedTime_plus70s) ~>
               check {
-                responseAs[String] should be ("Map(k1 -> v1)")
-                using.getRefreshToken should be (None)
+                responseAs[String] should be("Map(k1 -> v1)")
+                using.getRefreshToken should be(None)
               }
           }
       }

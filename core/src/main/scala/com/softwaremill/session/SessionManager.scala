@@ -39,40 +39,42 @@ trait ClientSessionManager[T] {
 
   def createCookie(data: T) = createCookieWithValue(encode(data))
 
-  def createCookieWithValue(value: String) = HttpCookie(
-    name = config.sessionCookieConfig.name,
-    value = value,
-    expires = None,
-    maxAge = None,
-    domain = config.sessionCookieConfig.domain,
-    path = config.sessionCookieConfig.path,
-    secure = config.sessionCookieConfig.secure,
-    httpOnly = config.sessionCookieConfig.httpOnly)
+  def createCookieWithValue(value: String) =
+    HttpCookie(
+      name = config.sessionCookieConfig.name,
+      value = value,
+      expires = None,
+      maxAge = None,
+      domain = config.sessionCookieConfig.domain,
+      path = config.sessionCookieConfig.path,
+      secure = config.sessionCookieConfig.secure,
+      httpOnly = config.sessionCookieConfig.httpOnly
+    )
 
   def createHeader(data: T) = createHeaderWithValue(encode(data))
 
-  def createHeaderWithValue(value: String) = RawHeader(
-    name = config.sessionHeaderConfig.sendToClientHeaderName,
-    value = value)
+  def createHeaderWithValue(value: String) =
+    RawHeader(name = config.sessionHeaderConfig.sendToClientHeaderName, value = value)
 
   def encode(data: T): String = sessionEncoder.encode(data, nowMillis, config)
 
   def decode(data: String): SessionResult[T] = {
-    sessionEncoder.decode(data, config).map { dr =>
-      val expired = config.sessionMaxAgeSeconds.fold(false)(_ => nowMillis > dr.expires.getOrElse(Long.MaxValue))
-      if (expired) {
-        SessionResult.Expired
+    sessionEncoder
+      .decode(data, config)
+      .map { dr =>
+        val expired = config.sessionMaxAgeSeconds.fold(false)(_ => nowMillis > dr.expires.getOrElse(Long.MaxValue))
+        if (expired) {
+          SessionResult.Expired
+        } else if (!dr.signatureMatches) {
+          SessionResult.Corrupt(new RuntimeException("Corrupt signature"))
+        } else if (dr.isLegacy) {
+          SessionResult.DecodedLegacy(dr.t)
+        } else {
+          SessionResult.Decoded(dr.t)
+        }
       }
-      else if (!dr.signatureMatches) {
-        SessionResult.Corrupt(new RuntimeException("Corrupt signature"))
-      }
-      else if (dr.isLegacy) {
-        SessionResult.DecodedLegacy(dr.t)
-      }
-      else {
-        SessionResult.Decoded(dr.t)
-      }
-    }.recover { case t: Exception => SessionResult.Corrupt(t) }.get
+      .recover { case t: Exception => SessionResult.Corrupt(t) }
+      .get
   }
 
   def sessionMissingRejection = AuthorizationFailedRejection
@@ -84,14 +86,16 @@ trait CsrfManager[T] {
   def tokenInvalidRejection = AuthorizationFailedRejection
   def createToken(): String = SessionUtil.randomString(64)
 
-  def createCookie() = HttpCookie(
-    name = config.csrfCookieConfig.name,
-    value = createToken(),
-    expires = None,
-    domain = config.csrfCookieConfig.domain,
-    path = config.csrfCookieConfig.path,
-    secure = config.csrfCookieConfig.secure,
-    httpOnly = config.csrfCookieConfig.httpOnly)
+  def createCookie() =
+    HttpCookie(
+      name = config.csrfCookieConfig.name,
+      value = createToken(),
+      expires = None,
+      domain = config.csrfCookieConfig.domain,
+      path = config.csrfCookieConfig.path,
+      secure = config.csrfCookieConfig.secure,
+      httpOnly = config.csrfCookieConfig.httpOnly
+    )
 }
 
 trait RefreshTokenManager[T] {
@@ -110,18 +114,20 @@ trait RefreshTokenManager[T] {
   def encodeSelectorAndToken(selector: String, token: String): String = s"$selector:$token"
 
   /**
-   * Creates and stores a new token, removing the old one after a configured period of time, if it exists.
-   */
+    * Creates and stores a new token, removing the old one after a configured period of time, if it exists.
+    */
   def rotateToken(session: T, existing: Option[String])(implicit ec: ExecutionContext): Future[String] = {
 
     val selector = createSelector()
     val token = createToken()
 
-    val storeFuture = storage.store(new RefreshTokenData[T](
-      forSession = session,
-      selector = selector,
-      tokenHash = Crypto.hash_SHA256(token),
-      expires = nowMillis + config.refreshTokenMaxAgeSeconds * 1000L)).map(_ => encodeSelectorAndToken(selector, token))
+    val storeFuture = storage
+      .store(
+        new RefreshTokenData[T](forSession = session,
+                                selector = selector,
+                                tokenHash = Crypto.hash_SHA256(token),
+                                expires = nowMillis + config.refreshTokenMaxAgeSeconds * 1000L))
+      .map(_ => encodeSelectorAndToken(selector, token))
 
     existing.flatMap(decodeSelectorAndToken).foreach {
       case (s, _) =>
@@ -133,19 +139,20 @@ trait RefreshTokenManager[T] {
     storeFuture
   }
 
-  def createCookie(value: String) = HttpCookie(
-    name = config.refreshTokenCookieConfig.name,
-    value = value,
-    expires = None,
-    maxAge = Some(config.refreshTokenMaxAgeSeconds),
-    domain = config.refreshTokenCookieConfig.domain,
-    path = config.refreshTokenCookieConfig.path,
-    secure = config.refreshTokenCookieConfig.secure,
-    httpOnly = config.refreshTokenCookieConfig.httpOnly)
+  def createCookie(value: String) =
+    HttpCookie(
+      name = config.refreshTokenCookieConfig.name,
+      value = value,
+      expires = None,
+      maxAge = Some(config.refreshTokenMaxAgeSeconds),
+      domain = config.refreshTokenCookieConfig.domain,
+      path = config.refreshTokenCookieConfig.path,
+      secure = config.refreshTokenCookieConfig.secure,
+      httpOnly = config.refreshTokenCookieConfig.httpOnly
+    )
 
-  def createHeader(value: String) = RawHeader(
-    name = config.refreshTokenHeaderConfig.sendToClientHeaderName,
-    value = value)
+  def createHeader(value: String) =
+    RawHeader(name = config.refreshTokenHeaderConfig.sendToClientHeaderName, value = value)
 
   def sessionFromValue(value: String)(implicit ec: ExecutionContext): Future[SessionResult[T]] = {
     decodeSelectorAndToken(value) match {
@@ -154,11 +161,9 @@ trait RefreshTokenManager[T] {
           case Some(lookupResult) =>
             if (lookupResult.expires < nowMillis) {
               storage.remove(selector).map(_ => SessionResult.Expired)
-            }
-            else if (!SessionUtil.constantTimeEquals(Crypto.hash_SHA256(token), lookupResult.tokenHash)) {
+            } else if (!SessionUtil.constantTimeEquals(Crypto.hash_SHA256(token), lookupResult.tokenHash)) {
               storage.remove(selector).map(_ => SessionResult.Corrupt(new RuntimeException("Corrupt token hash")))
-            }
-            else {
+            } else {
               Future.successful(SessionResult.CreatedFromToken(lookupResult.createSession()))
             }
 
@@ -172,7 +177,7 @@ trait RefreshTokenManager[T] {
   def removeToken(value: String)(implicit ec: ExecutionContext): Future[Unit] = {
     decodeSelectorAndToken(value) match {
       case Some((s, _)) => storage.remove(s)
-      case None => Future.successful(())
+      case None         => Future.successful(())
     }
   }
 }

@@ -12,7 +12,8 @@ object SessionManagerBasicEncoderTest extends Properties("SessionManagerBasicEnc
 
   property("encode+decode") = forAllNoShrink(secretGen) { (secret: String) =>
     forAll { (encrypt: Boolean, useMaxAgeSeconds: Boolean, data: Map[String, String]) =>
-      val config = SessionConfig.default(secret)
+      val config = SessionConfig
+        .default(secret)
         .copy(sessionEncryptData = encrypt)
         .copy(sessionMaxAgeSeconds = if (useMaxAgeSeconds) Some(3600L) else None)
       val manager = new SessionManager[Map[String, String]](config).clientSessionManager
@@ -23,7 +24,8 @@ object SessionManagerBasicEncoderTest extends Properties("SessionManagerBasicEnc
 
   property("doesn't decode expired session") = forAllNoShrink(secretGen) { (secret: String) =>
     forAll { (encrypt: Boolean, data: Map[String, String]) =>
-      val config = SessionConfig.default(secret)
+      val config = SessionConfig
+        .default(secret)
         .copy(sessionEncryptData = encrypt)
         .copy(sessionMaxAgeSeconds = Some(20L)) // expires after 20s
       val managerPast = new SessionManager[Map[String, String]](config) {
@@ -54,32 +56,36 @@ object SessionManagerBasicEncoderTest extends Properties("SessionManagerBasicEnc
   }
 
   property("decodes v0.5.1 tokens with migration config") = forAllNoShrink(secretGen) { (secret: String) =>
-    forAll { (data: Map[String, String], now: Long, delta: Int, tokenMigrationV0_5_2Enabled: Boolean, tokenMigrationV0_5_3Enabled: Boolean) =>
-      (data.nonEmpty) ==> {
-        val config = SessionConfig.default(secret).copy(
-          tokenMigrationV0_5_2Enabled = tokenMigrationV0_5_2Enabled,
-          tokenMigrationV0_5_3Enabled = tokenMigrationV0_5_3Enabled)
+    forAll {
+      (data: Map[String, String],
+       now: Long,
+       delta: Int,
+       tokenMigrationV0_5_2Enabled: Boolean,
+       tokenMigrationV0_5_3Enabled: Boolean) =>
+        (data.nonEmpty) ==> {
+          val config = SessionConfig
+            .default(secret)
+            .copy(tokenMigrationV0_5_2Enabled = tokenMigrationV0_5_2Enabled,
+                  tokenMigrationV0_5_3Enabled = tokenMigrationV0_5_3Enabled)
 
-        val encoder = new BasicSessionEncoder[Map[String, String]]
-        val encodedLegacy = Legacy.encodeV0_5_1(data, System.currentTimeMillis(), config)
-        val decodedResult = encoder.decode(encodedLegacy, config)
+          val encoder = new BasicSessionEncoder[Map[String, String]]
+          val encodedLegacy = Legacy.encodeV0_5_1(data, System.currentTimeMillis(), config)
+          val decodedResult = encoder.decode(encodedLegacy, config)
 
-        // Decode should only work if the migrations between encoded version 0.5.1 and the current version are enabled.
-        if (tokenMigrationV0_5_2Enabled && tokenMigrationV0_5_3Enabled) {
-          decodedResult.map(_.signatureMatches) == Success(true)
+          // Decode should only work if the migrations between encoded version 0.5.1 and the current version are enabled.
+          if (tokenMigrationV0_5_2Enabled && tokenMigrationV0_5_3Enabled) {
+            decodedResult.map(_.signatureMatches) == Success(true)
+          } else {
+            decodedResult.isFailure || decodedResult.map(_.signatureMatches) == Success(false)
+          }
         }
-        else {
-          decodedResult.isFailure || decodedResult.map(_.signatureMatches) == Success(false)
-        }
-      }
     }
   }
 
   property("decodes v0.5.2 tokens with migration config") = forAllNoShrink(secretGen) { (secret: String) =>
     forAll { (data: Map[String, String], now: Long, delta: Int, tokenMigrationV0_5_3Enabled: Boolean) =>
       (data.nonEmpty) ==> {
-        val config = SessionConfig.default(secret).copy(
-          tokenMigrationV0_5_3Enabled = tokenMigrationV0_5_3Enabled)
+        val config = SessionConfig.default(secret).copy(tokenMigrationV0_5_3Enabled = tokenMigrationV0_5_3Enabled)
 
         val encoder = new BasicSessionEncoder[Map[String, String]]
         val encodedLegacy = Legacy.encodeV0_5_2(data, System.currentTimeMillis(), config)
@@ -88,8 +94,7 @@ object SessionManagerBasicEncoderTest extends Properties("SessionManagerBasicEnc
         // Decode should only work if the migrations between encoded version 0.5.2 and the current version are enabled.
         if (tokenMigrationV0_5_3Enabled) {
           decodedResult.map(_.signatureMatches) == Success(true)
-        }
-        else {
+        } else {
           decodedResult.isFailure || decodedResult.map(_.signatureMatches) == Success(false)
         }
       }

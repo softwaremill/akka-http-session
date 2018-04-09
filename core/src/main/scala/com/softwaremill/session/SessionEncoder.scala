@@ -8,18 +8,19 @@ trait SessionEncoder[T] {
 }
 
 object SessionEncoder {
+
   /**
-   * Default low-priority implicit encoder. If you wish to use another one, provide an implicit encoder in a
-   * higher-priority implicit scope, e.g. as an implicit value declared next to `SessionManager`.
-   */
+    * Default low-priority implicit encoder. If you wish to use another one, provide an implicit encoder in a
+    * higher-priority implicit scope, e.g. as an implicit value declared next to `SessionManager`.
+    */
   implicit def basic[T](implicit serializer: SessionSerializer[T, String]) = new BasicSessionEncoder[T]()
 }
 
 case class DecodeResult[T](t: T, expires: Option[Long], signatureMatches: Boolean, isLegacy: Boolean)
 
 /**
- * @param serializer Must create cookie-safe strings (only with allowed characters).
- */
+  * @param serializer Must create cookie-safe strings (only with allowed characters).
+  */
 class BasicSessionEncoder[T](implicit serializer: SessionSerializer[T, String]) extends SessionEncoder[T] {
 
   override def encode(t: T, nowMillis: Long, config: SessionConfig) = {
@@ -45,14 +46,13 @@ class BasicSessionEncoder[T](implicit serializer: SessionSerializer[T, String]) 
     }
 
     def verifySignature(tokenSignature: String, expectedValue: String) = {
-      SessionUtil.constantTimeEquals(
-        tokenSignature,
-        Crypto.sign_HmacSHA1_hex(expectedValue, config.serverSecret))
+      SessionUtil.constantTimeEquals(tokenSignature, Crypto.sign_HmacSHA1_hex(expectedValue, config.serverSecret))
     }
 
     Try {
       val splitted = s.split("-", 2)
-      val decrypted = if (config.sessionEncryptData) Crypto.decrypt_AES(splitted(1), config.serverSecret) else splitted(1)
+      val decrypted =
+        if (config.sessionEncryptData) Crypto.decrypt_AES(splitted(1), config.serverSecret) else splitted(1)
       val (expiry, serialized) = extractExpiry(decrypted)
 
       val (deserializedResult, deserializedLegacy) = {
@@ -61,8 +61,7 @@ class BasicSessionEncoder[T](implicit serializer: SessionSerializer[T, String]) 
         if (deserializedResult.isFailure && config.tokenMigrationV0_5_3Enabled) {
           // Try deserializer assuming pre-v0.5.3.
           (serializer.deserializeV0_5_2(serialized.substring(1)), true)
-        }
-        else {
+        } else {
           (deserializedResult, false)
         }
       }
@@ -76,8 +75,7 @@ class BasicSessionEncoder[T](implicit serializer: SessionSerializer[T, String]) 
           val isLegacy = signatureMatchesLegacy || deserializedLegacy
 
           DecodeResult(deserialized, expiry, signatureMatchesLegacy, isLegacy)
-        }
-        else {
+        } else {
           DecodeResult(deserialized, expiry, signatureMatches, isLegacy = deserializedLegacy)
         }
       }

@@ -71,7 +71,7 @@ class OneOffTest extends FlatSpec with ScalatestRouteTest with Matchers with Mul
         val sessionOption = using.getSession
         sessionOption should be('defined)
 
-        using.isSessionExpired should be (false)
+        using.isSessionExpired should be(false)
       }
     }
 
@@ -120,7 +120,7 @@ class OneOffTest extends FlatSpec with ScalatestRouteTest with Matchers with Mul
         Get("/invalidate") ~> addHeader(using.setSessionHeader(s1)) ~> routes ~> check {
           responseAs[String] should be("ok")
 
-          using.isSessionExpired should be (true)
+          using.isSessionExpired should be(true)
         }
       }
     }
@@ -186,7 +186,7 @@ class OneOffTest extends FlatSpec with ScalatestRouteTest with Matchers with Mul
         val legacySession = Legacy.encodeV0_5_1(data, now, sessionConfig)
 
         Get("/getReq") ~> addHeader(using.setSessionHeader(legacySession)) ~> routes(manager_tokenMigrationFromV0_5_1) ~> check {
-          using.getSession should be ('defined)
+          using.getSession should be('defined)
           responseAs[String] should be(data.toString)
         }
       }
@@ -211,7 +211,7 @@ class OneOffTest extends FlatSpec with ScalatestRouteTest with Matchers with Mul
         val legacySession = Legacy.encodeV0_5_2(data, now, sessionConfig)
 
         Get("/getReq") ~> addHeader(using.setSessionHeader(legacySession)) ~> routes(manager_tokenMigrationFromV0_5_2) ~> check {
-          using.getSession should be ('defined)
+          using.getSession should be('defined)
           responseAs[String] should be(data.toString)
         }
       }

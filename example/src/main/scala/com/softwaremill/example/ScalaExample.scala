@@ -21,7 +21,8 @@ object Example extends App with StrictLogging {
 
   import system.dispatcher
 
-  val sessionConfig = SessionConfig.default("c05ll3lesrinf39t7mc5h6un6r0c69lgfno69dsak3vabeqamouq4328cuaekros401ajdpkh60rrtpd8ro24rbuqmgtnd1ebag6ljnb65i8a55d482ok7o0nch0bfbe")
+  val sessionConfig = SessionConfig.default(
+    "c05ll3lesrinf39t7mc5h6un6r0c69lgfno69dsak3vabeqamouq4328cuaekros401ajdpkh60rrtpd8ro24rbuqmgtnd1ebag6ljnb65i8a55d482ok7o0nch0bfbe")
   implicit val sessionManager = new SessionManager[MyScalaSession](sessionConfig)
   implicit val refreshTokenStorage = new InMemoryRefreshTokenStorage[MyScalaSession] {
     def log(msg: String) = logger.info(msg)
@@ -44,7 +45,9 @@ object Example extends App with StrictLogging {
                 logger.info(s"Logging in $body")
 
                 mySetSession(MyScalaSession(body)) {
-                  setNewCsrfToken(checkHeader) { ctx => ctx.complete("ok") }
+                  setNewCsrfToken(checkHeader) { ctx =>
+                    ctx.complete("ok")
+                  }
                 }
               }
             }

@@ -47,7 +47,9 @@ class RefreshableTest extends FlatSpec with ScalatestRouteTest with Matchers wit
     Get("/set") ~> createRoutes(TestUsingCookies) ~> check {
       responseAs[String] should be("ok")
 
-      TestUsingCookies.cookiesMap.get(TestUsingCookies.refreshTokenCookieName).flatMap(_.maxAge)
+      TestUsingCookies.cookiesMap
+        .get(TestUsingCookies.refreshTokenCookieName)
+        .flatMap(_.maxAge)
         .getOrElse(0L) should be > (60L * 60L * 24L * 29)
     }
   }
@@ -181,8 +183,8 @@ class RefreshableTest extends FlatSpec with ScalatestRouteTest with Matchers wit
           addHeader(using.setRefreshTokenHeader(token)) ~>
           routes ~>
           check {
-            using.isSessionExpired should be (true)
-            using.isRefreshTokenExpired should be (true)
+            using.isSessionExpired should be(true)
+            using.isRefreshTokenExpired should be(true)
           }
       }
     }
@@ -253,7 +255,7 @@ class RefreshableTest extends FlatSpec with ScalatestRouteTest with Matchers wit
 
                 // new token should be generated
                 session1 should not be (session3)
-                token3Opt should be ('defined)
+                token3Opt should be('defined)
               }
           }
       }

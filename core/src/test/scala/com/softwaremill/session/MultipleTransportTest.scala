@@ -29,8 +29,8 @@ trait MultipleTransportTest { this: ScalatestRouteTest =>
 
     val transportName = "cookies"
 
-    def cookiesMap: Map[String, HttpCookie] = headers
-      .collect { case `Set-Cookie`(cookie) => cookie.name -> cookie }.toMap
+    def cookiesMap: Map[String, HttpCookie] =
+      headers.collect { case `Set-Cookie`(cookie) => cookie.name -> cookie }.toMap
 
     def getSession = cookiesMap.get(sessionCookieName).map(_.value)
     def setSessionHeader(s: String) = Cookie(sessionCookieName, s)

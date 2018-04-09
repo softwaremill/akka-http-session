@@ -5,10 +5,11 @@ import org.json4s._
 import scala.util.{Success, Failure, Try}
 
 object JValueSessionSerializer {
-  implicit def stringToJValueSessionSerializer: SessionSerializer[String, JValue] = new SessionSerializer[String, JValue] {
-    override def serialize(t: String) = JString(t)
-    override def deserialize(s: JValue) = failIfNoMatch(s) { case JString(v) => v }
-  }
+  implicit def stringToJValueSessionSerializer: SessionSerializer[String, JValue] =
+    new SessionSerializer[String, JValue] {
+      override def serialize(t: String) = JString(t)
+      override def deserialize(s: JValue) = failIfNoMatch(s) { case JString(v) => v }
+    }
 
   implicit def intToJValueSessionSerializer: SessionSerializer[Int, JValue] = new SessionSerializer[Int, JValue] {
     override def serialize(t: Int) = JInt(t)
@@ -25,10 +26,11 @@ object JValueSessionSerializer {
     override def deserialize(s: JValue) = failIfNoMatch(s) { case JDouble(v) => v.toFloat }
   }
 
-  implicit def doubleToJValueSessionSerializer: SessionSerializer[Double, JValue] = new SessionSerializer[Double, JValue] {
-    override def serialize(t: Double) = JDouble(t)
-    override def deserialize(s: JValue) = failIfNoMatch(s) { case JDouble(v) => v }
-  }
+  implicit def doubleToJValueSessionSerializer: SessionSerializer[Double, JValue] =
+    new SessionSerializer[Double, JValue] {
+      override def serialize(t: Double) = JDouble(t)
+      override def deserialize(s: JValue) = failIfNoMatch(s) { case JDouble(v) => v }
+    }
 
   def caseClass[T <: Product: Manifest](implicit formats: Formats = DefaultFormats): SessionSerializer[T, JValue] =
     new SessionSerializer[T, JValue] {
