@@ -1,6 +1,7 @@
 package com.softwaremill.session
 
 import java.math.BigInteger
+import java.util.Base64
 import java.util.concurrent.ThreadLocalRandom
 
 object SessionUtil {
@@ -58,5 +59,13 @@ object SessionUtil {
     }
 
     data
+  }
+
+  def toBase64_v0_5_2(bytes: Array[Byte]): String = {
+    Base64.getUrlEncoder.encodeToString(bytes)
+  }
+
+  def parseBase64_v0_5_2(s: String): Array[Byte] = {
+    Base64.getUrlDecoder.decode(s)
   }
 }
