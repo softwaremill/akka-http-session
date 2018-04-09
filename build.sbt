@@ -1,6 +1,5 @@
 lazy val commonSettings = commonSmlBuildSettings ++ ossPublishSettings  ++ Seq(
   organization := "com.softwaremill.akka-http-session",
-  version := "0.5.4",
   scalaVersion := "2.12.5",
   crossScalaVersions := Seq(scalaVersion.value, "2.11.12")
 )
