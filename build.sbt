@@ -4,8 +4,8 @@ import scalariform.formatter.preferences._
 lazy val commonSettings = Seq(
   organization := "com.softwaremill.akka-http-session",
   version := "0.5.4",
-  scalaVersion := "2.11.8",
-  crossScalaVersions := Seq(scalaVersion.value, "2.12.1"),
+  scalaVersion := "2.12.5",
+  crossScalaVersions := Seq(scalaVersion.value, "2.11.12"),
   scalacOptions ++= Seq("-unchecked", "-deprecation"),
   ScalariformKeys.preferences := ScalariformKeys.preferences.value
     .setPreference(DoubleIndentClassDeclaration, true)
@@ -41,9 +41,11 @@ lazy val commonSettings = Seq(
   homepage := Some(new java.net.URL("http://softwaremill.com"))
 )
 
-val akkaHttpVersion = "10.1.0"
+val akkaHttpVersion = "10.1.1"
+val json4sVersion = "3.5.3"
+val akkaStreamsProvided = "com.typesafe.akka" %% "akka-stream" % "2.5.11" % "provided"
 
-val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" % "test"
+val scalaTest = "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 
 lazy val rootProject = (project in file("."))
   .settings(commonSettings: _*)
@@ -58,9 +60,9 @@ lazy val core: Project = (project in file("core"))
     name := "core",
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
-      "com.typesafe.akka" %% "akka-stream" % "2.4.12",
+      akkaStreamsProvided,
       "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
-      "org.scalacheck" %% "scalacheck" % "1.13.4" % "test",
+      "org.scalacheck" %% "scalacheck" % "1.13.5" % "test",
       scalaTest
     )
   )
@@ -70,7 +72,8 @@ lazy val jwt: Project = (project in file("jwt"))
   .settings(
     name := "jwt",
     libraryDependencies ++= Seq(
-      "org.json4s" %% "json4s-jackson" % "3.5.0",
+      "org.json4s" %% "json4s-jackson" % json4sVersion,
+      akkaStreamsProvided,
       scalaTest
     )
   ) dependsOn (core)
@@ -80,9 +83,10 @@ lazy val example: Project = (project in file("example"))
   .settings(
     publishArtifact := false,
     libraryDependencies ++= Seq(
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
-      "ch.qos.logback" % "logback-classic" % "1.1.7",
-      "org.json4s" %% "json4s-ext" % "3.5.0"
+      akkaStreamsProvided,
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.8.0",
+      "ch.qos.logback" % "logback-classic" % "1.2.3",
+      "org.json4s" %% "json4s-ext" % json4sVersion
     ))
   .dependsOn(core, jwt)
 
@@ -94,6 +98,7 @@ lazy val javaTests: Project = (project in file("javaTests"))
     crossPaths := false, // https://github.com/sbt/junit-interface/issues/35
     publishArtifact := false,
     libraryDependencies ++= Seq(
+      akkaStreamsProvided,
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
       "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
       "junit" % "junit" % "4.12" % "test",
