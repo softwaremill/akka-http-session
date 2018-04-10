@@ -231,8 +231,8 @@ stored in Rails
 For `akka-http` version `10+`:
 
 ````scala
-libraryDependencies += "com.softwaremill.akka-http-session" %% "core" % "0.5.4"
-libraryDependencies += "com.softwaremill.akka-http-session" %% "jwt"  % "0.5.4" // optional
+libraryDependencies += "com.softwaremill.akka-http-session" %% "core" % "0.5.5"
+libraryDependencies += "com.softwaremill.akka-http-session" %% "jwt"  % "0.5.5" // optional
 ````
 
 ## Updating
