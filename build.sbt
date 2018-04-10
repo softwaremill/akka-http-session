@@ -1,4 +1,4 @@
-lazy val commonSettings = commonSmlBuildSettings ++ ossPublishSettings  ++ Seq(
+lazy val commonSettings = commonSmlBuildSettings ++ ossPublishSettings ++ Seq(
   organization := "com.softwaremill.akka-http-session",
   scalaVersion := "2.12.5",
   crossScalaVersions := Seq(scalaVersion.value, "2.11.12")
@@ -12,9 +12,7 @@ val scalaTest = "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 
 lazy val rootProject = (project in file("."))
   .settings(commonSettings: _*)
-  .settings(
-    publishArtifact := false,
-    name := "akka-http-session")
+  .settings(publishArtifact := false, name := "akka-http-session")
   .aggregate(core, jwt, example, javaTests)
 
 lazy val core: Project = (project in file("core"))
@@ -50,7 +48,8 @@ lazy val example: Project = (project in file("example"))
       "com.typesafe.scala-logging" %% "scala-logging" % "3.8.0",
       "ch.qos.logback" % "logback-classic" % "1.2.3",
       "org.json4s" %% "json4s-ext" % json4sVersion
-    ))
+    )
+  )
   .dependsOn(core, jwt)
 
 lazy val javaTests: Project = (project in file("javaTests"))
@@ -67,5 +66,6 @@ lazy val javaTests: Project = (project in file("javaTests"))
       "junit" % "junit" % "4.12" % "test",
       "com.novocode" % "junit-interface" % "0.11" % "test",
       scalaTest
-    ))
+    )
+  )
   .dependsOn(core, jwt)
