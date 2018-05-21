@@ -220,7 +220,7 @@ containing an implementation of client-side sessions
 code was taken
 * [Rails security guide](http://guides.rubyonrails.org/security.html#session-storage), a description of how sessions are
 stored in Rails
-* [Akka issue 16855](https://github.com/akka/akka/issues/16855) for implementing similar functionality straight in Akka
+* [Akka-Http issue 114](https://github.com/akka/akka-http/issues/114) for implementing similar functionality straight in Akka-Http
 * [Implementing remember me](https://paragonie.com/blog/2015/04/secure-authentication-php-with-long-term-persistence#title.2)
 * [The definitive guide to form-based website authorization](http://stackoverflow.com/questions/549/the-definitive-guide-to-form-based-website-authentication)
 * [The Anatomy of a JSON Web Token](https://scotch.io/tutorials/the-anatomy-of-a-json-web-token)
