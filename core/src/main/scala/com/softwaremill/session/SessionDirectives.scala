@@ -1,7 +1,9 @@
 package com.softwaremill.session
 
+import akka.http.scaladsl.model.headers.{HttpCookie, `Set-Cookie`}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{Directive0, Directive1}
+import com.softwaremill.session.SessionDirectives.respondWithDefaultCookie
 
 import scala.concurrent.ExecutionContext
 
@@ -88,7 +90,16 @@ trait SessionDirectives extends OneOffSessionDirectives with RefreshableSessionD
 
 }
 
-object SessionDirectives extends SessionDirectives
+object SessionDirectives extends SessionDirectives {
+  private[session] def respondWithDefaultCookie(defaultCookie: HttpCookie) =
+    mapResponseHeaders { headers =>
+      val cookieExists = headers.exists {
+        case `Set-Cookie`(c) => c.name == defaultCookie.name
+        case _               => false
+      }
+      if (cookieExists) headers else `Set-Cookie`(defaultCookie) +: headers
+    }
+}
 
 object SessionOptions {
   def oneOff[T](implicit manager: SessionManager[T]): OneOff[T] = new OneOff[T]()(manager)
@@ -107,8 +118,9 @@ object SessionOptions {
 trait OneOffSessionDirectives {
   private[session] def setOneOffSession[T](sc: SessionContinuity[T], st: SetSessionTransport, v: T): Directive0 =
     st match {
-      case CookieST => setCookie(sc.clientSessionManager.createCookie(v))
-      case HeaderST => respondWithHeader(sc.clientSessionManager.createHeader(v))
+      // respondWithDefault* directives let us avoid header/cookie duplication when session has already been set because of refreshable sessions.
+      case CookieST => respondWithDefaultCookie(sc.clientSessionManager.createCookie(v))
+      case HeaderST => respondWithDefaultHeader(sc.clientSessionManager.createHeader(v))
     }
 
   private[session] def setOneOffSessionSameTransport[T](sc: SessionContinuity[T],
@@ -219,12 +231,13 @@ trait RefreshableSessionDirectives { this: OneOffSessionDirectives =>
       val newToken = sc.refreshTokenManager.rotateToken(v, existing.map(_._1))
 
       st match {
+        // respondWithDefault* directives let us avoid header/cookie duplication when session has already been set because of refreshable sessions.
         case CookieST =>
           val createCookie = newToken.map(sc.refreshTokenManager.createCookie)
-          onSuccess(createCookie).flatMap(c => setCookie(c))
+          onSuccess(createCookie).flatMap(c => respondWithDefaultCookie(c))
         case HeaderST =>
           val createHeader = newToken.map(sc.refreshTokenManager.createHeader)
-          onSuccess(createHeader).flatMap(c => respondWithHeader(c))
+          onSuccess(createHeader).flatMap(c => respondWithDefaultHeader(c))
       }
     }
   }
