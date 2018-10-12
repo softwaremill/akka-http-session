@@ -118,6 +118,7 @@ object SessionOptions {
 trait OneOffSessionDirectives {
   private[session] def setOneOffSession[T](sc: SessionContinuity[T], st: SetSessionTransport, v: T): Directive0 =
     st match {
+      // respondWithDefault* directives let us avoid header/cookie duplication when session has already been set because of refreshable sessions.
       case CookieST => respondWithDefaultCookie(sc.clientSessionManager.createCookie(v))
       case HeaderST => respondWithDefaultHeader(sc.clientSessionManager.createHeader(v))
     }
@@ -230,6 +231,7 @@ trait RefreshableSessionDirectives { this: OneOffSessionDirectives =>
       val newToken = sc.refreshTokenManager.rotateToken(v, existing.map(_._1))
 
       st match {
+        // respondWithDefault* directives let us avoid header/cookie duplication when session has already been set because of refreshable sessions.
         case CookieST =>
           val createCookie = newToken.map(sc.refreshTokenManager.createCookie)
           onSuccess(createCookie).flatMap(c => respondWithDefaultCookie(c))
