@@ -63,7 +63,9 @@ class RefreshableTest extends FlatSpec with ScalatestRouteTest with Matchers wit
         responseAs[String] should be("ok")
 
         using.getSession should be('defined)
+        using.countSessionHeaders should be(1)
         using.getRefreshToken should be('defined)
+        using.countRefreshTokenHeaders should be(1)
       }
     }
 
@@ -90,6 +92,8 @@ class RefreshableTest extends FlatSpec with ScalatestRouteTest with Matchers wit
           addHeader(using.setRefreshTokenHeader(token)) ~>
           routes ~>
           check {
+            using.countSessionHeaders should be(0)
+            using.countRefreshTokenHeaders should be(0)
             responseAs[String] should be("Some(Map(k1 -> v1))")
           }
       }
@@ -103,6 +107,8 @@ class RefreshableTest extends FlatSpec with ScalatestRouteTest with Matchers wit
           addHeader(using.setSessionHeader(session)) ~>
           routes ~>
           check {
+            using.countSessionHeaders should be(0)
+            using.countRefreshTokenHeaders should be(0)
             responseAs[String] should be("Some(Map(k1 -> v1))")
           }
       }
@@ -118,6 +124,8 @@ class RefreshableTest extends FlatSpec with ScalatestRouteTest with Matchers wit
           addHeader(using.setRefreshTokenHeader(token1)) ~>
           routes ~>
           check {
+            using.countSessionHeaders should be(1)
+            using.countRefreshTokenHeaders should be(1)
             val session2 = using.getSession
             session2 should be('defined)
             session2 should not be (session1)
@@ -127,6 +135,8 @@ class RefreshableTest extends FlatSpec with ScalatestRouteTest with Matchers wit
 
     p should "read an optional session when none is set" in {
       Get("/getOpt") ~> routes ~> check {
+        using.countSessionHeaders should be(0)
+        using.countRefreshTokenHeaders should be(0)
         responseAs[String] should be("None")
       }
     }
@@ -139,6 +149,8 @@ class RefreshableTest extends FlatSpec with ScalatestRouteTest with Matchers wit
           addHeader(using.setRefreshTokenHeader(token)) ~>
           routes ~>
           check {
+            using.countSessionHeaders should be(1)
+            using.countRefreshTokenHeaders should be(1)
             responseAs[String] should be("Some(Map(k1 -> v1))")
           }
       }
@@ -152,6 +164,8 @@ class RefreshableTest extends FlatSpec with ScalatestRouteTest with Matchers wit
           addHeader(using.setRefreshTokenHeader(token1)) ~>
           routes ~>
           check {
+            using.countSessionHeaders should be(1)
+            using.countRefreshTokenHeaders should be(1)
             val Some(token2) = using.getRefreshToken
             token1 should not be (token2)
           }
@@ -168,6 +182,8 @@ class RefreshableTest extends FlatSpec with ScalatestRouteTest with Matchers wit
           addHeader(using.setRefreshTokenHeader(token)) ~>
           routes ~>
           check {
+            using.countSessionHeaders should be(0)
+            using.countRefreshTokenHeaders should be(0)
             responseAs[String] should be("Map(k1 -> v1)")
           }
       }
@@ -183,6 +199,8 @@ class RefreshableTest extends FlatSpec with ScalatestRouteTest with Matchers wit
           addHeader(using.setRefreshTokenHeader(token)) ~>
           routes ~>
           check {
+            using.countSessionHeaders should be(1)
+            using.countRefreshTokenHeaders should be(1)
             using.isSessionExpired should be(true)
             using.isRefreshTokenExpired should be(true)
           }
@@ -257,6 +275,44 @@ class RefreshableTest extends FlatSpec with ScalatestRouteTest with Matchers wit
                 session1 should not be (session3)
                 token3Opt should be('defined)
               }
+          }
+      }
+    }
+
+    p should "re-create an expired session and send back new tokens without duplicate headers" in {
+      Get("/set") ~> routes(manager_expires60_fixedTime) ~> check {
+        val Some(session1) = using.getSession
+        val Some(token1) = using.getRefreshToken
+
+        Get("/touchReq") ~>
+          addHeader(using.setSessionHeader(session1)) ~>
+          addHeader(using.setRefreshTokenHeader(token1)) ~>
+          routes(manager_expires60_fixedTime_plus70s) ~>
+          check {
+            using.countSessionHeaders should be(1)
+            using.countRefreshTokenHeaders should be(1)
+
+            using.getSession should not be session1
+            using.getRefreshToken should not be token1
+          }
+      }
+    }
+
+    p should "touch the session and send back session without duplicate headers" in {
+      Get("/set") ~> routes(manager_expires60_fixedTime) ~> check {
+        val Some(session1) = using.getSession
+        val Some(token1) = using.getRefreshToken
+
+        Get("/touchReq") ~>
+          addHeader(using.setSessionHeader(session1)) ~>
+          addHeader(using.setRefreshTokenHeader(token1)) ~>
+          routes(manager_expires60_fixedTime_plus30s) ~>
+          check {
+            using.countSessionHeaders should be(1)
+            using.countRefreshTokenHeaders should be(0)
+
+            using.getSession should not be session1
+            using.getRefreshToken should not be defined
           }
       }
     }
