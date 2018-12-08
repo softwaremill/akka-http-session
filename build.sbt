@@ -1,12 +1,12 @@
 lazy val commonSettings = commonSmlBuildSettings ++ ossPublishSettings ++ Seq(
   organization := "com.softwaremill.akka-http-session",
-  scalaVersion := "2.12.7",
+  scalaVersion := "2.12.8",
   crossScalaVersions := Seq(scalaVersion.value, "2.11.12")
 )
 
 val akkaHttpVersion = "10.1.5"
 val json4sVersion = "3.5.3"
-val akkaStreamsProvided = "com.typesafe.akka" %% "akka-stream" % "2.5.17" % "provided"
+val akkaStreamsProvided = "com.typesafe.akka" %% "akka-stream" % "2.5.19" % "provided"
 
 val scalaTest = "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 
@@ -23,7 +23,7 @@ lazy val core: Project = (project in file("core"))
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
       akkaStreamsProvided,
       "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
-      "org.scalacheck" %% "scalacheck" % "1.13.5" % "test",
+      "org.scalacheck" %% "scalacheck" % "1.14.0" % "test",
       scalaTest
     )
   )
