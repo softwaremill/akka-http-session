@@ -2,7 +2,9 @@ package com.softwaremill.session
 
 import java.util.concurrent.TimeUnit
 
-import com.typesafe.config.{ConfigValueFactory, ConfigFactory, Config}
+import com.softwaremill.session.JwsAlgorithm.{HmacSHA256, Rsa}
+import com.softwaremill.session.SessionConfig.JwsConfig
+import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
 
 case class CookieConfig(name: String, domain: Option[String], path: Option[String], secure: Boolean, httpOnly: Boolean)
 
@@ -10,10 +12,11 @@ case class HeaderConfig(sendToClientHeaderName: String, getFromClientHeaderName:
 
 case class SessionConfig(
                          /**
-                           * Should be different on each environment and **kept secret!**. It's used to sign and encrypt cookie data.
+                           * Should be different on each environment and **kept secret!**. It's used to sign and encrypt session data.
                            * This should be a long random string.
                            */
                          serverSecret: String,
+                         jws: JwsConfig,
                          sessionCookieConfig: CookieConfig,
                          sessionHeaderConfig: HeaderConfig,
                          /**
@@ -24,7 +27,7 @@ case class SessionConfig(
                          sessionMaxAgeSeconds: Option[Long],
                          /**
                            * By default the session data won't be encrypted, only signed with a hash. Set this to true if you'd like the data
-                           * to be encrypted using a symmetrical key.
+                           * to be encrypted.
                            */
                          sessionEncryptData: Boolean,
                          csrfCookieConfig: CookieConfig,
@@ -44,11 +47,12 @@ case class SessionConfig(
                            * Allow migrating tokens created with prior versions of this library.
                            */
                          tokenMigrationV0_5_2Enabled: Boolean,
-                         tokenMigrationV0_5_3Enabled: Boolean) {
-  require(serverSecret.length >= 64, "Server secret must be at least 64 characters long!")
-}
+                         tokenMigrationV0_5_3Enabled: Boolean) {}
 
 object SessionConfig {
+
+  case class JwsConfig(alg: JwsAlgorithm)
+
   private implicit class PimpedConfig(config: Config) {
     val noneValue = "none"
 
@@ -74,6 +78,17 @@ object SessionConfig {
 
     SessionConfig(
       serverSecret = scopedConfig.getString("server-secret"),
+      jws = JwsConfig {
+        val jwsConfig = scopedConfig.getConfig("jws")
+        jwsConfig.getString("alg").toUpperCase match {
+          case "HS256" =>
+            HmacSHA256(scopedConfig.getString("server-secret"))
+          case "RS256" =>
+            Rsa.fromConfig(jwsConfig).get
+          case oth =>
+            throw new IllegalArgumentException(s"Unsupported JWS alg '$oth'. Supported algorithms are: HS256, RS256")
+        }
+      },
       sessionCookieConfig = CookieConfig(
         name = scopedConfig.getString("cookie.name"),
         domain = scopedConfig.getOptionalString("cookie.domain"),
