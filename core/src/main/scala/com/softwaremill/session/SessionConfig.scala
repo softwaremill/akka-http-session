@@ -27,7 +27,7 @@ case class SessionConfig(
                          sessionMaxAgeSeconds: Option[Long],
                          /**
                            * By default the session data won't be encrypted, only signed with a hash. Set this to true if you'd like the data
-                           * to be encrypted.
+                           * to be encrypted using a symmetrical key.
                            */
                          sessionEncryptData: Boolean,
                          csrfCookieConfig: CookieConfig,
@@ -47,7 +47,9 @@ case class SessionConfig(
                            * Allow migrating tokens created with prior versions of this library.
                            */
                          tokenMigrationV0_5_2Enabled: Boolean,
-                         tokenMigrationV0_5_3Enabled: Boolean) {}
+                         tokenMigrationV0_5_3Enabled: Boolean) {
+  require(serverSecret.length >= 64, "Server secret must be at least 64 characters long!")
+}
 
 object SessionConfig {
 

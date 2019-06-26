@@ -10,6 +10,8 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class SessionConfigTest extends FlatSpec with Matchers {
 
+  val fakeServerSecret = s"f4k3S3rv3rS3cr37-${"x" * 64}"
+
   def referenceConfWithSecret(serverSecret: String): Config =
     ConfigFactory
       .load("reference")
@@ -18,10 +20,9 @@ class SessionConfigTest extends FlatSpec with Matchers {
   def configWith(stringValue: String): Config =
     ConfigFactory
       .parseString(stringValue)
-      .withFallback(referenceConfWithSecret("wh4t3v3r"))
+      .withFallback(referenceConfWithSecret(fakeServerSecret))
 
   it should "load and parse default (HS256) JWS config" in {
-    val fakeServerSecret = "f4k3S3rv3rS3cr37"
     val fakeConfig = referenceConfWithSecret(fakeServerSecret)
     fakeConfig.getString("akka.http.session.jws.alg") should equal("HS256")
 
@@ -30,7 +31,6 @@ class SessionConfigTest extends FlatSpec with Matchers {
   }
 
   it should "load and parse HS256 JWS config" in {
-    val fakeServerSecret = "f4k3S3rv3rS3cr37"
     val fakeConfig = referenceConfWithSecret(fakeServerSecret)
 
     val config = SessionConfig.fromConfig(fakeConfig)
@@ -89,7 +89,7 @@ class SessionConfigTest extends FlatSpec with Matchers {
          |}
       """.stripMargin)
     val ex = intercept[IllegalArgumentException] {
-      SessionConfig.fromConfig(fakeConfig).serverSecret should equal("whatever")
+      SessionConfig.fromConfig(fakeConfig)
     }
     ex.getMessage should equal("Invalid RSA private key")
   }
