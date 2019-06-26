@@ -13,12 +13,12 @@ object JValueSessionSerializer {
 
   implicit def intToJValueSessionSerializer: SessionSerializer[Int, JValue] = new SessionSerializer[Int, JValue] {
     override def serialize(t: Int) = JInt(t)
-    override def deserialize(s: JValue) = failIfNoMatch(s) { case JInt(v) => v.intValue() }
+    override def deserialize(s: JValue) = failIfNoMatch(s) { case JInt(v) => v.intValue }
   }
 
   implicit def longToJValueSessionSerializer: SessionSerializer[Long, JValue] = new SessionSerializer[Long, JValue] {
     override def serialize(t: Long) = JInt(t)
-    override def deserialize(s: JValue) = failIfNoMatch(s) { case JInt(v) => v.longValue() }
+    override def deserialize(s: JValue) = failIfNoMatch(s) { case JInt(v) => v.longValue }
   }
 
   implicit def floatToJValueSessionSerializer: SessionSerializer[Float, JValue] = new SessionSerializer[Float, JValue] {

@@ -88,7 +88,7 @@ class JwtSessionEncoder[T](implicit serializer: SessionSerializer[T, JValue], fo
 
   protected def extractPayload(p: JValue, config: SessionConfig): Try[(T, Option[Long])] = {
     val exp = p \\ "exp" match {
-      case JInt(e) => Some(e.longValue() * 1000L)
+      case JInt(e) => Some(e.longValue * 1000L)
       case _       => None
     }
 
