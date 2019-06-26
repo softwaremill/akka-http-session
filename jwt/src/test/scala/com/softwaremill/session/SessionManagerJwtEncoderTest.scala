@@ -1,13 +1,29 @@
 package com.softwaremill.session
 
+import java.security.{KeyPairGenerator, PrivateKey}
+
+import com.softwaremill.session.JwsAlgorithm.HmacSHA256
+import com.softwaremill.session.SessionConfig.JwsConfig
 import org.json4s.JValue
-import org.scalatest.{Matchers, FlatSpec}
+import org.scalatest.{FlatSpec, Matchers}
 
 class SessionManagerJwtEncoderTest extends FlatSpec with Matchers {
   val defaultConfig = SessionConfig.default("1234567890123456789012345678901234567890123456789012345678901234567890")
   val configMaxAge = defaultConfig.copy(sessionMaxAgeSeconds = Some(3600))
   val configEncrypted = defaultConfig.copy(sessionEncryptData = true)
   val configEncryptedMaxAge = configMaxAge.copy(sessionEncryptData = true)
+
+  def rsaSigConfig() = {
+    val privateKey: PrivateKey = {
+      val keyPairGen = KeyPairGenerator.getInstance("RSA")
+      keyPairGen.initialize(4096)
+      val kp = keyPairGen.generateKeyPair()
+      kp.getPrivate
+    }
+
+    defaultConfig.copy(jws = JwsConfig(alg = JwsAlgorithm.Rsa(privateKey)))
+  }
+  val hmacSha256Config = defaultConfig.copy(jws = JwsConfig(alg = HmacSHA256(defaultConfig.serverSecret)))
 
   case class TestData[T](name: String, data: T, config: SessionConfig, sessionSerializer: SessionSerializer[T, JValue])
 
@@ -28,7 +44,12 @@ class SessionManagerJwtEncoderTest extends FlatSpec with Matchers {
     TestData("case class, with max age and encryption",
              SessionData("john", 20),
              configEncryptedMaxAge,
-             JValueSessionSerializer.caseClass[SessionData])
+             JValueSessionSerializer.caseClass[SessionData]),
+    TestData("string, RSA signature", "username", rsaSigConfig(), implicitly[SessionSerializer[String, JValue]]),
+    TestData("string, HMAC SHA256 signature",
+             "username",
+             hmacSha256Config,
+             implicitly[SessionSerializer[String, JValue]])
   )
 
   tests.foreach { td =>
@@ -66,6 +87,39 @@ class SessionManagerJwtEncoderTest extends FlatSpec with Matchers {
     }.clientSessionManager
 
     managerHour3.decode(managerHour1.encode(SessionData("john", 40))) should be(SessionResult.Expired)
+  }
+
+  it should "not decode a token with a corrupted signature [HMAC SHA256]" in {
+    implicit val ss = JValueSessionSerializer.caseClass[SessionData]
+    implicit val encoder = new JwtSessionEncoder[SessionData]
+
+    val managerHmac1 = new SessionManager(hmacSha256Config).clientSessionManager
+    val managerHmac2 = new SessionManager(
+      hmacSha256Config
+        .copy(jws = JwsConfig(HmacSHA256(serverSecret = hmacSha256Config.serverSecret.reverse)))).clientSessionManager
+
+    managerHmac1.decode(managerHmac2.encode(SessionData("john", 40))) shouldBe a[SessionResult.Corrupt]
+  }
+
+  it should "not decode a token with a corrupted signature [RSA]" in {
+    implicit val ss = JValueSessionSerializer.caseClass[SessionData]
+    implicit val encoder = new JwtSessionEncoder[SessionData]
+
+    val managerRsa1 = new SessionManager(rsaSigConfig()).clientSessionManager
+    val managerRsa2 = new SessionManager(rsaSigConfig()).clientSessionManager
+
+    managerRsa1.decode(managerRsa2.encode(SessionData("john", 40))) shouldBe a[SessionResult.Corrupt]
+  }
+
+  it should "not decode a token with a non compatible signatures [RSA vs HMAC SHA256]" in {
+    implicit val ss = JValueSessionSerializer.caseClass[SessionData]
+    implicit val encoder = new JwtSessionEncoder[SessionData]
+
+    val managerHmac = new SessionManager(hmacSha256Config).clientSessionManager
+    val managerRsa = new SessionManager(rsaSigConfig()).clientSessionManager
+
+    managerHmac.decode(managerRsa.encode(SessionData("john", 40))) shouldBe a[SessionResult.Corrupt]
+    managerRsa.decode(managerHmac.encode(SessionData("john", 40))) shouldBe a[SessionResult.Corrupt]
   }
 
   it should "decode a token with 'Bearer' prefix" in {

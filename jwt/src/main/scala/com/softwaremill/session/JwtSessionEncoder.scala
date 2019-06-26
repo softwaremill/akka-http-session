@@ -12,7 +12,7 @@ class JwtSessionEncoder[T](implicit serializer: SessionSerializer[T, JValue], fo
     val h = encode(createHeader)
     val p = encode(createPayload(t, nowMillis, config))
     val base = s"$h.$p"
-    val signature = Crypto.sign_HmacSHA256_base64(base, config.serverSecret)
+    val signature = config.jws.alg.sign(base)
 
     s"$base.$signature"
   }
@@ -48,7 +48,7 @@ class JwtSessionEncoder[T](implicit serializer: SessionSerializer[T, JValue], fo
         (t, exp) <- extractPayload(jv, config)
       } yield {
         val signatureMatches =
-          SessionUtil.constantTimeEquals(signature, Crypto.sign_HmacSHA256_base64(s"$h.$p", config.serverSecret))
+          SessionUtil.constantTimeEquals(signature, config.jws.alg.sign(s"$h.$p"))
 
         if (!signatureMatches && config.tokenMigrationV0_5_3Enabled) {
           // Try signature check assuming pre-v0.5.3.
