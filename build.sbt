@@ -4,11 +4,13 @@ lazy val commonSettings = commonSmlBuildSettings ++ ossPublishSettings ++ Seq(
   crossScalaVersions := Seq(scalaVersion.value, "2.11.12")
 )
 
-val akkaHttpVersion = "10.1.5"
-val json4sVersion = "3.5.3"
-val akkaStreamsProvided = "com.typesafe.akka" %% "akka-stream" % "2.5.19" % "provided"
+val akkaHttpVersion = "10.1.8"
+val akkaStreamsVersion = "2.5.23"
+val json4sVersion = "3.6.6"
+val akkaStreamsProvided = "com.typesafe.akka" %% "akka-stream" % akkaStreamsVersion % "provided"
+val akkaStreamsTestkit = "com.typesafe.akka" %% "akka-stream-testkit" % akkaStreamsVersion % "test"
 
-val scalaTest = "org.scalatest" %% "scalatest" % "3.0.5" % "test"
+val scalaTest = "org.scalatest" %% "scalatest" % "3.0.8" % "test"
 
 lazy val rootProject = (project in file("."))
   .settings(commonSettings: _*)
@@ -23,6 +25,7 @@ lazy val core: Project = (project in file("core"))
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
       akkaStreamsProvided,
       "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
+      akkaStreamsTestkit,
       "org.scalacheck" %% "scalacheck" % "1.14.0" % "test",
       scalaTest
     )
@@ -45,7 +48,7 @@ lazy val example: Project = (project in file("example"))
     publishArtifact := false,
     libraryDependencies ++= Seq(
       akkaStreamsProvided,
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
       "ch.qos.logback" % "logback-classic" % "1.2.3",
       "org.json4s" %% "json4s-ext" % json4sVersion
     )
@@ -63,6 +66,7 @@ lazy val javaTests: Project = (project in file("javaTests"))
       akkaStreamsProvided,
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
       "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
+      akkaStreamsTestkit,
       "junit" % "junit" % "4.12" % "test",
       "com.novocode" % "junit-interface" % "0.11" % "test",
       scalaTest
