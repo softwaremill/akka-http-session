@@ -39,8 +39,13 @@ lazy val jwt: Project = (project in file("jwt"))
       "org.json4s" %% "json4s-jackson" % json4sVersion,
       akkaStreamsProvided,
       scalaTest
-    )
-  ) dependsOn (core)
+    ),
+    // generating docs for 2.13 causes an error: "not found: type DefaultFormats$"
+    sources in (Compile, doc) := {
+      val original = (sources in (Compile, doc)).value
+      if (scalaVersion.value.startsWith("2.13")) Seq.empty else original
+    }
+  ) dependsOn(core)
 
 lazy val example: Project = (project in file("example"))
   .settings(commonSettings: _*)
