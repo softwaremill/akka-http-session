@@ -3,11 +3,11 @@ package com.softwaremill.session
 import java.nio.charset.StandardCharsets.UTF_8
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.{KeyFactory, PrivateKey, Signature}
-import java.util.{Base64, NoSuchElementException}
+import java.util.Base64
 
 import com.typesafe.config.Config
 
-import scala.util.{Failure, Try}
+import scala.util.{Failure, Success, Try}
 
 sealed trait JwsAlgorithm {
   def sign(message: String): String
@@ -31,15 +31,15 @@ object JwsAlgorithm {
     def fromConfig(jwsConfig: Config): Try[Rsa] = {
 
       def readKeyFromConf(): Try[String] = {
-        Try {
-          val configKey = "rsa-private-key"
-          Option(jwsConfig.hasPath(configKey))
-            .filter(identity)
-            .flatMap(_ => Option(jwsConfig.getString(configKey)))
-            .filter(_.trim.nonEmpty)
-            .map(_.replaceAll("\\s", "").replaceAll("-----[^-]+-----", ""))
-            .get
-        }
+        val configKey = "rsa-private-key"
+        Option(jwsConfig.hasPath(configKey))
+          .filter(identity)
+          .flatMap(_ => Option(jwsConfig.getString(configKey)))
+          .filter(_.trim.nonEmpty)
+          .map(_.replaceAll("\\s", "").replaceAll("-----[^-]+-----", ""))
+          .map(Success(_))
+          .getOrElse(Failure(new IllegalArgumentException(
+            "akka.http.session.jws.rsa-private-key must be defined in order to use alg = RS256")))
       }
 
       readKeyFromConf()
@@ -48,14 +48,9 @@ object JwsAlgorithm {
             val keyFactory = KeyFactory.getInstance("RSA")
             val privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(Base64.getDecoder.decode(key)))
             Rsa(privateKey)
+          }.recoverWith {
+            case ex => Failure(new IllegalArgumentException("Invalid RSA private key", ex))
           }
-        }
-        .recoverWith {
-          case _: NoSuchElementException =>
-            Failure(
-              new IllegalArgumentException(
-                "akka.http.session.jws.rsa-private-key must be defined in order to use alg = RS256"))
-          case ex => Failure(new IllegalArgumentException("Invalid RSA private key", ex))
         }
     }
   }
