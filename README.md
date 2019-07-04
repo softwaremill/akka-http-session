@@ -160,7 +160,7 @@ In order to start using RSA algorithm you have to configure `akka.http.session.j
 akka.http.session {
   jws {
     alg = "RS256"
-    rsa-private-key = "<your private PKCS1-v1_5 key goes here>"
+    rsa-private-key = "<your private PKCS#8 key goes here>"
   }
 }
 ````
