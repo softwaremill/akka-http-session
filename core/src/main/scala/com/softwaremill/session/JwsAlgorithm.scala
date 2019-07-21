@@ -10,12 +10,15 @@ import com.typesafe.config.Config
 import scala.util.{Failure, Success, Try}
 
 sealed trait JwsAlgorithm {
+  def value: String
   def sign(message: String): String
 }
 
 object JwsAlgorithm {
 
   case class Rsa(privateKey: PrivateKey) extends JwsAlgorithm {
+
+    override val value: String = "RS256"
 
     override def sign(message: String): String = {
       val privateSignature: Signature = Signature.getInstance("SHA256withRSA")
@@ -56,6 +59,7 @@ object JwsAlgorithm {
   }
 
   case class HmacSHA256(serverSecret: String) extends JwsAlgorithm {
+    override val value: String = "HS256"
     override def sign(message: String): String = Crypto.sign_HmacSHA256_base64(message, serverSecret)
   }
 

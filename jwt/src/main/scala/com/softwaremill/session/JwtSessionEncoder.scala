@@ -9,7 +9,7 @@ class JwtSessionEncoder[T](implicit serializer: SessionSerializer[T, JValue], fo
     extends SessionEncoder[T] {
 
   override def encode(t: T, nowMillis: Long, config: SessionConfig) = {
-    val h = encode(createHeader)
+    val h = encode(createHeader(config))
     val p = encode(createPayload(t, nowMillis, config))
     val base = s"$h.$p"
     val signature = config.jws.alg.sign(base)
@@ -19,7 +19,7 @@ class JwtSessionEncoder[T](implicit serializer: SessionSerializer[T, JValue], fo
 
   // Legacy encoder function for testing migrations.
   def encodeV0_5_2(t: T, nowMillis: Long, config: SessionConfig) = {
-    val h = encode(createHeader)
+    val h = encode(createHeader(config))
     val p = encode(createPayload(t, nowMillis, config))
     val base = s"$h.$p"
     val signature = Crypto.sign_HmacSHA256_base64_v0_5_2(base, config.serverSecret)
@@ -64,7 +64,7 @@ class JwtSessionEncoder[T](implicit serializer: SessionSerializer[T, JValue], fo
       }
     }.flatten
 
-  protected def createHeader: JValue = JObject("alg" -> JString("HS256"), "typ" -> JString("JWT"))
+  protected def createHeader(config: SessionConfig): JValue = JObject("alg" -> JString(config.jws.alg.value), "typ" -> JString("JWT"))
 
   protected def createPayload(t: T, nowMillis: Long, config: SessionConfig): JValue = {
     val exp = config.sessionMaxAgeSeconds

@@ -1,10 +1,13 @@
 package com.softwaremill.session
 
 import java.security.{KeyPairGenerator, PrivateKey}
+import java.util.Base64
 
 import com.softwaremill.session.JwsAlgorithm.HmacSHA256
 import com.softwaremill.session.SessionConfig.JwsConfig
 import org.json4s.JValue
+import org.json4s.JsonAST.{JObject, JString}
+import org.json4s.jackson.JsonMethods.parse
 import org.scalatest.{FlatSpec, Matchers}
 
 class SessionManagerJwtEncoderTest extends FlatSpec with Matchers {
@@ -74,6 +77,22 @@ class SessionManagerJwtEncoderTest extends FlatSpec with Matchers {
     println(s"Test on: http://jwt.io/#debugger:\n$encoded")
 
     encoded.count(_ == '.') should be(2)
+  }
+
+  for {
+    (alg, config) <- List(("HS256", defaultConfig), ("RS256", rsaSigConfig()))
+  } {
+    it should s"encode a correct JWT header (alg = $alg)" in {
+      val encoder = new JwtSessionEncoder[String]
+      val encoded = encoder.encode("test", 1447416197071L, config)
+
+      val header = encoded.split("\\.").head
+      val headerJson = parse(new String(Base64.getUrlDecoder.decode(header), "utf-8"))
+      headerJson should equal(JObject(
+        "alg" -> JString(alg),
+        "typ" -> JString("JWT")
+      ))
+    }
   }
 
   it should "not decode an expired session" in {
