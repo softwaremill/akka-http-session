@@ -6,12 +6,17 @@ import java.security.{KeyFactory, PrivateKey, Signature}
 import java.util.Base64
 
 import com.typesafe.config.Config
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
 
 import scala.util.{Failure, Success, Try}
 
 sealed trait JwsAlgorithm {
   def value: String
   def sign(message: String): String
+
+  protected def encode(bytes: Array[Byte]): String =
+    Base64.getUrlEncoder.withoutPadding().encodeToString(bytes)
 }
 
 object JwsAlgorithm {
@@ -25,7 +30,7 @@ object JwsAlgorithm {
       privateSignature.initSign(privateKey)
       privateSignature.update(message.getBytes(UTF_8))
 
-      Base64.getEncoder.encodeToString(privateSignature.sign())
+      encode(privateSignature.sign())
     }
   }
 
@@ -60,7 +65,12 @@ object JwsAlgorithm {
 
   case class HmacSHA256(serverSecret: String) extends JwsAlgorithm {
     override val value: String = "HS256"
-    override def sign(message: String): String = Crypto.sign_HmacSHA256_base64(message, serverSecret)
+    override def sign(message: String): String = {
+      val key = serverSecret.getBytes("UTF-8")
+      val mac = Mac.getInstance("HmacSHA256")
+      mac.init(new SecretKeySpec(key, "HmacSHA256"))
+      encode(mac.doFinal(message.getBytes("utf-8")))
+    }
   }
 
 }
