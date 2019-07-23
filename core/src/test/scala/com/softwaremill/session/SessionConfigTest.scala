@@ -6,9 +6,11 @@ import java.util.Base64
 import com.softwaremill.session.JwsAlgorithm.HmacSHA256
 import com.typesafe.config.ConfigValueFactory.fromAnyRef
 import com.typesafe.config.{Config, ConfigFactory}
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{FlatSpec, Matchers, OptionValues}
 
-class SessionConfigTest extends FlatSpec with Matchers {
+import scala.concurrent.duration._
+
+class SessionConfigTest extends FlatSpec with Matchers with OptionValues {
 
   val fakeServerSecret = s"f4k3S3rv3rS3cr37-${"x" * 64}"
 
@@ -100,6 +102,67 @@ class SessionConfigTest extends FlatSpec with Matchers {
       SessionConfig.fromConfig(fakeConfig)
     }
     ex.getMessage should equal(s"Unsupported JWS alg 'UNSUPPORTED1'. Supported algorithms are: HS256, RS256")
+  }
+
+  it should "load JWT config" in {
+    val fakeConfig = configWith(
+      """akka.http.session.jwt {
+        |iss = "testIssuer"
+        |sub = "testSubject"
+        |aud = "testAudience"
+        |exp-timeout = 12 hours
+        |nbf-timeout = 5 minutes
+        |include-iat = true
+        |include-jti = true
+        |} """.stripMargin)
+    val config = SessionConfig.fromConfig(fakeConfig)
+
+    config.jwt.issuer.value should equal("testIssuer")
+    config.jwt.subject.value should equal("testSubject")
+    config.jwt.audience.value should equal("testAudience")
+    config.jwt.expirationTimeout.value should equal(12.hours.toSeconds)
+    config.jwt.notBeforeTimeout.value should equal(5.minutes.toSeconds)
+    config.jwt.includeIssuedAt shouldBe true
+    config.jwt.includeRandomJwtId shouldBe true
+  }
+
+  it should "fallback to empty JWT config (with default exp-timeout) if absent" in {
+    val config = SessionConfig.fromConfig(configWith("akka.http.session.jwt = {}"))
+
+    config.jwt.issuer should not be defined
+    config.jwt.subject should not be defined
+    config.jwt.audience should not be defined
+    // fallback to the session-max-age
+    config.jwt.expirationTimeout should equal(config.sessionMaxAgeSeconds)
+    config.jwt.notBeforeTimeout should not be defined
+    config.jwt.includeIssuedAt shouldBe false
+    config.jwt.includeRandomJwtId shouldBe false
+  }
+
+  it should "fallback to empty JWT config (without default exp-timeout) if absent" in {
+    val config = SessionConfig.fromConfig(configWith(
+      """akka.http.session {
+        |  jwt {}
+        |  max-age = "none"
+        |}""".stripMargin))
+
+    config.jwt.issuer should not be defined
+    config.jwt.subject should not be defined
+    config.jwt.audience should not be defined
+    // fallback to the session-max-age
+    config.jwt.expirationTimeout should not be defined
+    config.jwt.notBeforeTimeout should not be defined
+    config.jwt.includeIssuedAt shouldBe false
+    config.jwt.includeRandomJwtId shouldBe false
+  }
+
+  it should "use max-age as a default value for jwt.expirationTimeout" in {
+    val config = SessionConfig.fromConfig(configWith(
+      """akka.http.session {
+        |  max-age = 10 seconds
+        |}""".stripMargin))
+
+    config.jwt.expirationTimeout.value should equal(10L)
   }
 
 }

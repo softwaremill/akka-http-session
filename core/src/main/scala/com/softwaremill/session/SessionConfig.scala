@@ -3,7 +3,7 @@ package com.softwaremill.session
 import java.util.concurrent.TimeUnit
 
 import com.softwaremill.session.JwsAlgorithm.{HmacSHA256, Rsa}
-import com.softwaremill.session.SessionConfig.JwsConfig
+import com.softwaremill.session.SessionConfig.{JwsConfig, JwtConfig}
 import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
 
 case class CookieConfig(name: String, domain: Option[String], path: Option[String], secure: Boolean, httpOnly: Boolean)
@@ -17,6 +17,7 @@ case class SessionConfig(
                            */
                          serverSecret: String,
                          jws: JwsConfig,
+                         jwt: JwtConfig,
                          sessionCookieConfig: CookieConfig,
                          sessionHeaderConfig: HeaderConfig,
                          /**
@@ -53,6 +54,8 @@ case class SessionConfig(
 
 object SessionConfig {
 
+  case class JwtConfig(issuer: Option[String], subject: Option[String], audience: Option[String], expirationTimeout: Option[Long], notBeforeTimeout: Option[Long], includeIssuedAt: Boolean, includeRandomJwtId: Boolean)
+
   case class JwsConfig(alg: JwsAlgorithm)
 
   private implicit class PimpedConfig(config: Config) {
@@ -70,6 +73,14 @@ object SessionConfig {
       if (config.getAnyRef(path) == noneValue) None
       else
         Some(config.getDuration(path, TimeUnit.SECONDS))
+    def getStringIfExists(path: String): Option[String] = ifExists(path, config.getString)
+    def getDurationSecondsIfExists(path: String): Option[Long] = ifExists(path, config.getDuration(_, TimeUnit.SECONDS))
+    def getBooleanIfExists(path: String): Option[Boolean] = ifExists(path, config.getBoolean)
+    def getConfigIfExists(path: String): Option[Config] = ifExists(path, config.getConfig)
+
+      private def ifExists[T](key: String, getter: String => T): Option[T] =
+        if (config.hasPath(key)) Some(getter(key))
+        else None
   }
 
   def fromConfig(config: Config = ConfigFactory.load()): SessionConfig = {
@@ -77,7 +88,7 @@ object SessionConfig {
     val csrfConfig = scopedConfig.getConfig("csrf")
     val refreshTokenConfig = scopedConfig.getConfig("refresh-token")
     val tokenMigrationConfig = scopedConfig.getConfig("token-migration")
-
+    val sessionMaxAgeSeconds = scopedConfig.getOptionalDurationSeconds("max-age")
     SessionConfig(
       serverSecret = scopedConfig.getString("server-secret"),
       jws = JwsConfig {
@@ -91,6 +102,18 @@ object SessionConfig {
             throw new IllegalArgumentException(s"Unsupported JWS alg '$oth'. Supported algorithms are: HS256, RS256")
         }
       },
+      jwt = {
+        val claimsConfig = scopedConfig.getConfig("jwt")
+
+        JwtConfig(
+          issuer = claimsConfig.getStringIfExists("iss"),
+          subject = claimsConfig.getStringIfExists("sub"),
+          audience = claimsConfig.getStringIfExists("aud"),
+          expirationTimeout = claimsConfig.getDurationSecondsIfExists("exp-timeout").orElse(sessionMaxAgeSeconds),
+          notBeforeTimeout = claimsConfig.getDurationSecondsIfExists("nbf-timeout"),
+          includeIssuedAt = claimsConfig.getBooleanIfExists("include-iat").getOrElse(false),
+          includeRandomJwtId = claimsConfig.getBooleanIfExists("include-jti").getOrElse(false))
+      },
       sessionCookieConfig = CookieConfig(
         name = scopedConfig.getString("cookie.name"),
         domain = scopedConfig.getOptionalString("cookie.domain"),
@@ -102,7 +125,7 @@ object SessionConfig {
         sendToClientHeaderName = scopedConfig.getString("header.send-to-client-name"),
         getFromClientHeaderName = scopedConfig.getString("header.get-from-client-name")
       ),
-      sessionMaxAgeSeconds = scopedConfig.getOptionalDurationSeconds("max-age"),
+      sessionMaxAgeSeconds = sessionMaxAgeSeconds,
       sessionEncryptData = scopedConfig.getBoolean("encrypt-data"),
       csrfCookieConfig = CookieConfig(
         name = csrfConfig.getString("cookie.name"),
