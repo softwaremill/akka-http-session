@@ -90,7 +90,7 @@ class SessionManagerJwtEncoderTest extends FlatSpec with Matchers {
       subject = Some("testSubject"),
       audience = Some("testAudience"),
       expirationTimeout = Some(3.hours.toSeconds),
-      notBeforeTimeout = Some(1.minute.toSeconds),
+      notBeforeOffset = Some(1.minute.toSeconds),
       includeIssuedAt = true,
       includeRandomJwtId = true
     ))

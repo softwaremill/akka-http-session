@@ -83,7 +83,7 @@ class JwtSessionEncoder[T](implicit serializer: SessionSerializer[T, JValue], fo
       // see https://tools.ietf.org/html/rfc7519#page-9
       // and https://tools.ietf.org/html/rfc7519#page-6
       val exp = numericDateClaimFromTimeout("exp", expirationTimeout).toList
-      val nbf = numericDateClaimFromTimeout("nbf", notBeforeTimeout).toList
+      val nbf = numericDateClaimFromTimeout("nbf", notBeforeOffset).toList
       val iat = if (includeIssuedAt) numericDateClaimFromTimeout("iat", Some(0L)).toList else Nil
 
       // 'jti' must be unique per token,

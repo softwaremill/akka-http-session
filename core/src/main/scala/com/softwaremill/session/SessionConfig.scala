@@ -54,7 +54,7 @@ case class SessionConfig(
 
 object SessionConfig {
 
-  case class JwtConfig(issuer: Option[String], subject: Option[String], audience: Option[String], expirationTimeout: Option[Long], notBeforeTimeout: Option[Long], includeIssuedAt: Boolean, includeRandomJwtId: Boolean)
+  case class JwtConfig(issuer: Option[String], subject: Option[String], audience: Option[String], expirationTimeout: Option[Long], notBeforeOffset: Option[Long], includeIssuedAt: Boolean, includeRandomJwtId: Boolean)
 
   case class JwsConfig(alg: JwsAlgorithm)
 
@@ -110,7 +110,7 @@ object SessionConfig {
           subject = claimsConfig.getStringIfExists("sub"),
           audience = claimsConfig.getStringIfExists("aud"),
           expirationTimeout = claimsConfig.getDurationSecondsIfExists("exp-timeout").orElse(sessionMaxAgeSeconds),
-          notBeforeTimeout = claimsConfig.getDurationSecondsIfExists("nbf-timeout"),
+          notBeforeOffset = claimsConfig.getDurationSecondsIfExists("nbf-offset"),
           includeIssuedAt = claimsConfig.getBooleanIfExists("include-iat").getOrElse(false),
           includeRandomJwtId = claimsConfig.getBooleanIfExists("include-jti").getOrElse(false))
       },

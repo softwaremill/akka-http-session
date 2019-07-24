@@ -111,7 +111,7 @@ class SessionConfigTest extends FlatSpec with Matchers with OptionValues {
         |sub = "testSubject"
         |aud = "testAudience"
         |exp-timeout = 12 hours
-        |nbf-timeout = 5 minutes
+        |nbf-offset = 5 minutes
         |include-iat = true
         |include-jti = true
         |} """.stripMargin)
@@ -121,7 +121,7 @@ class SessionConfigTest extends FlatSpec with Matchers with OptionValues {
     config.jwt.subject.value should equal("testSubject")
     config.jwt.audience.value should equal("testAudience")
     config.jwt.expirationTimeout.value should equal(12.hours.toSeconds)
-    config.jwt.notBeforeTimeout.value should equal(5.minutes.toSeconds)
+    config.jwt.notBeforeOffset.value should equal(5.minutes.toSeconds)
     config.jwt.includeIssuedAt shouldBe true
     config.jwt.includeRandomJwtId shouldBe true
   }
@@ -134,7 +134,7 @@ class SessionConfigTest extends FlatSpec with Matchers with OptionValues {
     config.jwt.audience should not be defined
     // fallback to the session-max-age
     config.jwt.expirationTimeout should equal(config.sessionMaxAgeSeconds)
-    config.jwt.notBeforeTimeout should not be defined
+    config.jwt.notBeforeOffset should not be defined
     config.jwt.includeIssuedAt shouldBe false
     config.jwt.includeRandomJwtId shouldBe false
   }
@@ -151,7 +151,7 @@ class SessionConfigTest extends FlatSpec with Matchers with OptionValues {
     config.jwt.audience should not be defined
     // fallback to the session-max-age
     config.jwt.expirationTimeout should not be defined
-    config.jwt.notBeforeTimeout should not be defined
+    config.jwt.notBeforeOffset should not be defined
     config.jwt.includeIssuedAt shouldBe false
     config.jwt.includeRandomJwtId shouldBe false
   }
