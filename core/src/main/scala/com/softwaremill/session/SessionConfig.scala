@@ -78,9 +78,9 @@ object SessionConfig {
     def getBooleanIfExists(path: String): Option[Boolean] = ifExists(path, config.getBoolean)
     def getConfigIfExists(path: String): Option[Config] = ifExists(path, config.getConfig)
 
-      private def ifExists[T](key: String, getter: String => T): Option[T] =
-        if (config.hasPath(key)) Some(getter(key))
-        else None
+    private def ifExists[T](key: String, getter: String => T): Option[T] =
+      if (config.hasPath(key)) Some(getter(key))
+      else None
   }
 
   def fromConfig(config: Config = ConfigFactory.load()): SessionConfig = {
