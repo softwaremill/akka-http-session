@@ -1,6 +1,6 @@
 package com.softwaremill.session
 
-import java.util.Base64
+import java.util.{Base64, UUID}
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 import scala.util.Try
@@ -67,15 +67,34 @@ class JwtSessionEncoder[T](implicit serializer: SessionSerializer[T, JValue], fo
   protected def createHeader(config: SessionConfig): JValue = JObject("alg" -> JString(config.jws.alg.value), "typ" -> JString("JWT"))
 
   protected def createPayload(t: T, nowMillis: Long, config: SessionConfig): JValue = {
-    val exp = config.sessionMaxAgeSeconds
-    // exp must be a "NumericDate", see https://tools.ietf.org/html/draft-ietf-oauth-json-web-token-32
-      .map { maxAge =>
-        nowMillis / 1000L + maxAge
-      }
-      .map { exp =>
-        "exp" -> JInt(exp)
-      }
-      .toList
+    val registeredClaims: List[(String, JValue)] = {
+      def numericDateClaimFromTimeout(key: String, numericDate: Option[Long]): Option[(String, JInt)] =
+        numericDate.map(timeout => key -> JInt((nowMillis / 1000L) + timeout))
+
+      def stringClaim(key: String, value: Option[String]): Option[(String, JString)] =
+        value.map(key -> JString(_))
+
+      import config.jwt._
+      val iss = stringClaim("iss", issuer).toList
+      val sub = stringClaim("sub", subject).toList
+      val aud = stringClaim("aud", audience).toList
+
+      // 'exp', 'nbf' and 'iat' must be a "NumericDate",
+      // see https://tools.ietf.org/html/rfc7519#page-9
+      // and https://tools.ietf.org/html/rfc7519#page-6
+      val exp = numericDateClaimFromTimeout("exp", expirationTimeout).toList
+      val nbf = numericDateClaimFromTimeout("nbf", notBeforeOffset).toList
+      val iat = if (includeIssuedAt) numericDateClaimFromTimeout("iat", Some(0L)).toList else Nil
+
+      // 'jti' must be unique per token,
+      // collisions MUST be prevented even among values produced by different issuers,
+      // see https://tools.ietf.org/html/rfc7519#page-10
+      val jti = if (includeRandomJwtId) {
+        stringClaim("jti", Some(issuer.map(_ + "-").getOrElse("") + UUID.randomUUID().toString)).toList
+      } else Nil
+
+      iss ++ sub ++ aud ++ exp ++ nbf ++ iat ++ jti
+    }
 
     val serialized = serializer.serialize(t)
     val data = if (config.sessionEncryptData) {
@@ -83,7 +102,7 @@ class JwtSessionEncoder[T](implicit serializer: SessionSerializer[T, JValue], fo
       JString(Crypto.encrypt_AES(compact(render(serializedWrapped)), config.serverSecret))
     } else serialized
 
-    JObject(("data" -> data) :: exp)
+    JObject(("data" -> data) :: registeredClaims)
   }
 
   protected def extractPayload(p: JValue, config: SessionConfig): Try[(T, Option[Long])] = {

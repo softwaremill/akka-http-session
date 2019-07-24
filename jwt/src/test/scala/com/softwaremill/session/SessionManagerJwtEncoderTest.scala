@@ -4,15 +4,17 @@ import java.security.{KeyPairGenerator, PrivateKey}
 import java.util.Base64
 
 import com.softwaremill.session.JwsAlgorithm.HmacSHA256
-import com.softwaremill.session.SessionConfig.JwsConfig
-import org.json4s.JValue
+import com.softwaremill.session.SessionConfig.{JwsConfig, JwtConfig}
 import org.json4s.JsonAST.{JObject, JString}
+import org.json4s.{JValue, _}
 import org.json4s.jackson.JsonMethods.parse
 import org.scalatest.{FlatSpec, Matchers}
 
+import scala.concurrent.duration._
+
 class SessionManagerJwtEncoderTest extends FlatSpec with Matchers {
   val defaultConfig = SessionConfig.default("1234567890123456789012345678901234567890123456789012345678901234567890")
-  val configMaxAge = defaultConfig.copy(sessionMaxAgeSeconds = Some(3600))
+  val configMaxAge = defaultConfig.copy(jwt = defaultConfig.jwt.copy(expirationTimeout = Some(3600)))
   val configEncrypted = defaultConfig.copy(sessionEncryptData = true)
   val configEncryptedMaxAge = configMaxAge.copy(sessionEncryptData = true)
 
@@ -77,6 +79,71 @@ class SessionManagerJwtEncoderTest extends FlatSpec with Matchers {
     println(s"Test on: http://jwt.io/#debugger:\n$encoded")
 
     encoded.count(_ == '.') should be(2)
+  }
+
+  it should "encode JWT claims" in {
+    val encoder = new JwtSessionEncoder[String]
+    val nowMillis = 1447416197071L
+
+    val fullClaimsConfig = defaultConfig.copy(jwt = JwtConfig(
+      issuer = Some("testIssuer"),
+      subject = Some("testSubject"),
+      audience = Some("testAudience"),
+      expirationTimeout = Some(3.hours.toSeconds),
+      notBeforeOffset = Some(1.minute.toSeconds),
+      includeIssuedAt = true,
+      includeRandomJwtId = true
+    ))
+    val encoded = encoder.encode("testPayload", nowMillis, fullClaimsConfig)
+
+    val List(_, payload, _) = encoded.split("\\.").toList
+    val payloadJson = parse(new String(Base64.getUrlDecoder.decode(payload), "utf-8"))
+
+    payloadJson \\ "iss" should equal(JString("testIssuer"))
+    payloadJson \\ "sub" should equal(JString("testSubject"))
+    payloadJson \\ "aud" should equal(JString("testAudience"))
+    payloadJson \\ "exp" should equal(JInt(nowMillis / 1000L + 3.hours.toSeconds))
+    payloadJson \\ "nbf" should equal(JInt(nowMillis / 1000L + 1.minute.toSeconds))
+    payloadJson \\ "iat" should equal(JInt(nowMillis / 1000L))
+
+    payloadJson \\ "jti" match {
+      case JString(iat) => iat should startWith regex "testIssuer-.*"
+      case oth => fail(s"Invalid 'jti' claim format. Expected JString(...), got  $oth")
+    }
+
+    payloadJson \\ "data" should equal(JString("testPayload"))
+  }
+
+  it should "encode JWT with default exp claim" in {
+    val encoder = new JwtSessionEncoder[String]
+    val nowMillis = 1447416197071L
+    val expirationTimeoutSeconds = 3.hours.toSeconds
+    val encoded = encoder.encode("testPayload", nowMillis, defaultConfig.copy(jwt = JwtConfig(None, None, None, Some(expirationTimeoutSeconds), None, includeIssuedAt = false, includeRandomJwtId = false)))
+
+    val List(_, payload, _) = encoded.split("\\.").toList
+    val payloadJson = parse(new String(Base64.getUrlDecoder.decode(payload), "utf-8"))
+
+    payloadJson should equal {
+      JObject(
+        "exp" -> JInt(nowMillis / 1000L + expirationTimeoutSeconds),
+        "data" -> JString("testPayload")
+      )
+    }
+  }
+
+  it should "encode JWT without any registered claims" in {
+    val encoder = new JwtSessionEncoder[String]
+    val nowMillis = 1447416197071L
+    val encoded = encoder.encode("testPayload", nowMillis, defaultConfig.copy(jwt = JwtConfig(None, None, None, None, None, includeIssuedAt = false, includeRandomJwtId = false)))
+
+    val List(_, payload, _) = encoded.split("\\.").toList
+    val payloadJson = parse(new String(Base64.getUrlDecoder.decode(payload), "utf-8"))
+
+    payloadJson should equal {
+      JObject(
+        "data" -> JString("testPayload")
+      )
+    }
   }
 
   for {
