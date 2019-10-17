@@ -1,4 +1,4 @@
-# Web & mobile sessions for akka-http
+![akka-http-session](https://github.com/softwaremill/akka-http-session/raw/master/banner.png)
 
 [![Build Status](https://travis-ci.org/softwaremill/akka-http-session.svg?branch=master)](https://travis-ci.org/softwaremill/akka-http-session)
 [![Join the chat at https://gitter.im/softwaremill/akka-http-session](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/softwaremill/akka-http-session?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
@@ -321,3 +321,11 @@ to support migrating from whatever version you are using.
 
 Since token changes may be security related, migrations should be enabled for the shortest period of time
 after which the vast majority of client tokens have been migrated.
+
+## Commercial Support
+
+We offer commercial support for akka-http-session and related technologies, as well as development services. [Contact us](https://softwaremill.com) to learn more about our offer!
+
+## Copyright
+
+Copyright (C) 2016-2019 SoftwareMill [https://softwaremill.com](https://softwaremill.com).
