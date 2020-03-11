@@ -23,7 +23,7 @@ trait CsrfDirectives {
         // that the token matches.
         get.recover { _ =>
           submittedCsrfToken(checkMode).flatMap { submitted =>
-            if (submitted == cookie) {
+            if (submitted == cookie && !cookie.isEmpty) {
               pass
             } else {
               reject(checkMode.csrfManager.tokenInvalidRejection).toDirective[Unit]

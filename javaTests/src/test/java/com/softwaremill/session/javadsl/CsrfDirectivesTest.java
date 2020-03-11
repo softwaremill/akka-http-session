@@ -136,6 +136,33 @@ public class CsrfDirectivesTest extends HttpSessionAwareDirectivesTest {
     }
 
     @Test
+    public void shouldRejectRequestsIfTheCsrfCookieAndTheHeaderAreEmpty() {
+        // given
+        final Route route = createCsrfRouteWithCheckHeaderMode();
+
+        // when
+        TestRouteResult testRouteResult = testRoute(route)
+          .run(HttpRequest.GET("/site"));
+
+        // then
+        testRouteResult
+          .assertStatusCode(StatusCodes.OK);
+
+        /* second request */
+        // when
+        TestRouteResult testRouteResult2 = testRoute(route)
+          .run(HttpRequest.POST("/transfer_money")
+            .addHeader(Cookie.create(csrfCookieName, ""))
+            .addHeader(RawHeader.create(csrfSubmittedName, ""))
+          );
+
+        // then
+        testRouteResult2
+          .assertStatusCode(StatusCodes.FORBIDDEN);
+
+    }
+
+    @Test
     public void shouldAcceptRequestsIfTheCsrfCookieMatchesTheHeaderValue() {
         // given
         final Route route = createCsrfRouteWithCheckHeaderMode();
