@@ -7,9 +7,11 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.softwaremill.session.CsrfDirectives._
 import com.softwaremill.session.CsrfOptions._
-import org.scalatest.{Matchers, FlatSpec}
+import org.scalatest._
+import matchers.should._
+import org.scalatest.flatspec.AnyFlatSpec
 
-class CsrfDirectivesTest extends FlatSpec with ScalatestRouteTest with Matchers {
+class CsrfDirectivesTest extends AnyFlatSpec with ScalatestRouteTest with Matchers {
 
   import TestData._
   val cookieName = sessionConfig.csrfCookieConfig.name

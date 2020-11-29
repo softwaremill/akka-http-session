@@ -139,12 +139,12 @@ trait RefreshTokenManager[T] {
     storeFuture
   }
 
-  def createCookie(value: String) =
+  def createCookie(value: String, maxAge: Option[Long] = Some(config.refreshTokenMaxAgeSeconds)) =
     HttpCookie(
       name = config.refreshTokenCookieConfig.name,
       value = value,
       expires = None,
-      maxAge = Some(config.refreshTokenMaxAgeSeconds),
+      maxAge = maxAge,
       domain = config.refreshTokenCookieConfig.domain,
       path = config.refreshTokenCookieConfig.path,
       secure = config.refreshTokenCookieConfig.secure,
@@ -174,7 +174,7 @@ trait RefreshTokenManager[T] {
     }
   }
 
-  def removeToken(value: String)(implicit ec: ExecutionContext): Future[Unit] = {
+  def removeToken(value: String): Future[Unit] = {
     decodeSelectorAndToken(value) match {
       case Some((s, _)) => storage.remove(s)
       case None         => Future.successful(())

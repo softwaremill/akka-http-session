@@ -39,8 +39,7 @@ trait CsrfDirectives {
   def submittedCsrfToken[T](checkMode: CsrfCheckMode[T]): Directive1[String] = {
     headerValueByName(checkMode.manager.config.csrfSubmittedName).recover { rejections =>
       checkMode match {
-        case c: CheckHeaderAndForm[T] =>
-          import c.materializer
+        case _: CheckHeaderAndForm[T] =>
           formField(checkMode.manager.config.csrfSubmittedName)
         case _ => reject(rejections: _*)
       }
@@ -58,7 +57,7 @@ object CsrfDirectives extends CsrfDirectives
 
 sealed trait CsrfCheckMode[T] {
   def manager: SessionManager[T]
-  def csrfManager = manager.csrfManager
+  def csrfManager: CsrfManager[T] = manager.csrfManager
 }
 class CheckHeader[T] private[session] (implicit val manager: SessionManager[T]) extends CsrfCheckMode[T]
 class CheckHeaderAndForm[T] private[session] (implicit

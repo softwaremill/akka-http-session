@@ -6,11 +6,13 @@ import java.util.Base64
 import com.softwaremill.session.JwsAlgorithm.HmacSHA256
 import com.typesafe.config.ConfigValueFactory.fromAnyRef
 import com.typesafe.config.{Config, ConfigFactory}
-import org.scalatest.{FlatSpec, Matchers, OptionValues}
+import org.scalatest._
+import matchers.should._
+import org.scalatest.flatspec.AnyFlatSpec
 
 import scala.concurrent.duration._
 
-class SessionConfigTest extends FlatSpec with Matchers with OptionValues {
+class SessionConfigTest extends AnyFlatSpec with Matchers with OptionValues {
 
   val fakeServerSecret = s"f4k3S3rv3rS3cr37-${"x" * 64}"
 

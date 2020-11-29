@@ -1,16 +1,16 @@
 lazy val commonSettings = commonSmlBuildSettings ++ ossPublishSettings ++ Seq(
   organization := "com.softwaremill.akka-http-session",
-  scalaVersion := "2.12.8",
-  crossScalaVersions := Seq(scalaVersion.value, "2.11.12", "2.13.0")
+  scalaVersion := "2.12.12",
+  crossScalaVersions := Seq(scalaVersion.value, "2.13.4")
 )
 
-val akkaHttpVersion = "10.1.8"
-val akkaStreamsVersion = "2.5.23"
-val json4sVersion = "3.6.6"
+val akkaHttpVersion = "10.2.1"
+val akkaStreamsVersion = "2.6.10"
+val json4sVersion = "3.6.10"
 val akkaStreamsProvided = "com.typesafe.akka" %% "akka-stream" % akkaStreamsVersion % "provided"
 val akkaStreamsTestkit = "com.typesafe.akka" %% "akka-stream-testkit" % akkaStreamsVersion % "test"
 
-val scalaTest = "org.scalatest" %% "scalatest" % "3.0.8" % "test"
+val scalaTest = "org.scalatest" %% "scalatest" % "3.2.3" % "test"
 
 lazy val rootProject = (project in file("."))
   .settings(commonSettings: _*)
@@ -26,7 +26,7 @@ lazy val core: Project = (project in file("core"))
       akkaStreamsProvided,
       "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
       akkaStreamsTestkit,
-      "org.scalacheck" %% "scalacheck" % "1.14.0" % "test",
+      "org.scalacheck" %% "scalacheck" % "1.15.1" % "test",
       scalaTest
     )
   )
@@ -72,7 +72,7 @@ lazy val javaTests: Project = (project in file("javaTests"))
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
       "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
       akkaStreamsTestkit,
-      "junit" % "junit" % "4.12" % "test",
+      "junit" % "junit" % "4.13.1" % "test",
       "com.novocode" % "junit-interface" % "0.11" % "test",
       scalaTest
     )
