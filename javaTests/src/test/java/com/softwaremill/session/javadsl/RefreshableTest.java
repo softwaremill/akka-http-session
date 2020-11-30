@@ -777,7 +777,7 @@ public class RefreshableTest extends HttpSessionAwareDirectivesTest {
 
         // then
         fullResult.assertStatusCode(StatusCodes.OK);
-        fullResult.assertEntity("Corrupt(java.lang.ArrayIndexOutOfBoundsException: 1)");
+        fullResult.assertEntity("Corrupt(java.lang.ArrayIndexOutOfBoundsException: Index 1 out of bounds for length 1)");
     }
 
     @Test

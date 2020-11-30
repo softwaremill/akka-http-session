@@ -8,11 +8,13 @@ import com.softwaremill.session.SessionConfig.{JwsConfig, JwtConfig}
 import org.json4s.JsonAST.{JObject, JString}
 import org.json4s.{JValue, _}
 import org.json4s.jackson.JsonMethods.parse
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest._
+import matchers.should._
+import org.scalatest.flatspec.AnyFlatSpec
 
 import scala.concurrent.duration._
 
-class SessionManagerJwtEncoderTest extends FlatSpec with Matchers {
+class SessionManagerJwtEncoderTest extends AnyFlatSpec with Matchers {
   val defaultConfig = SessionConfig.default("1234567890123456789012345678901234567890123456789012345678901234567890")
   val configMaxAge = defaultConfig.copy(jwt = defaultConfig.jwt.copy(expirationTimeout = Some(3600)))
   val configEncrypted = defaultConfig.copy(sessionEncryptData = true)

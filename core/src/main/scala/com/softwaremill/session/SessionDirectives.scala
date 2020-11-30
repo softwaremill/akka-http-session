@@ -167,7 +167,7 @@ trait OneOffSessionDirectives {
           case Some(_) => respondWithHeader(sc.clientSessionManager.createHeaderWithValue(""))
         }
 
-      case Some(_) => deleteCookie(sc.clientSessionManager.createCookieWithValue("").copy(maxAge = None))
+      case Some(_) => deleteCookie(sc.clientSessionManager.createCookieWithValue(""))
     }
   }
 }
@@ -211,12 +211,11 @@ trait RefreshableSessionDirectives { this: OneOffSessionDirectives =>
   }
 
   private[session] def invalidateRefreshableSession[T](sc: Refreshable[T], st: GetSessionTransport): Directive0 = {
-    import sc.ec
     read(sc, st).flatMap {
       case None => pass
       case Some((v, setSt)) =>
         val deleteTokenOnClient = setSt match {
-          case CookieST => deleteCookie(sc.refreshTokenManager.createCookie("").copy(maxAge = None))
+          case CookieST => deleteCookie(sc.refreshTokenManager.createCookie("", maxAge = None))
           case HeaderST => respondWithHeader(sc.refreshTokenManager.createHeader(""))
         }
 
@@ -233,7 +232,7 @@ trait RefreshableSessionDirectives { this: OneOffSessionDirectives =>
       st match {
         // respondWithDefault* directives let us avoid header/cookie duplication when session has already been set because of refreshable sessions.
         case CookieST =>
-          val createCookie = newToken.map(sc.refreshTokenManager.createCookie)
+          val createCookie = newToken.map(sc.refreshTokenManager.createCookie(_))
           onSuccess(createCookie).flatMap(c => respondWithDefaultCookie(c))
         case HeaderST =>
           val createHeader = newToken.map(sc.refreshTokenManager.createHeader)

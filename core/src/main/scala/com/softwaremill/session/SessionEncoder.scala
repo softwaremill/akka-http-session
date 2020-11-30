@@ -39,7 +39,7 @@ class BasicSessionEncoder[T](implicit serializer: SessionSerializer[T, String]) 
 
   override def decode(s: String, config: SessionConfig) = {
     def extractExpiry(data: String): (Option[Long], String) = {
-      config.sessionMaxAgeSeconds.fold((Option.empty[Long], data)) { maxAge =>
+      config.sessionMaxAgeSeconds.fold((Option.empty[Long], data)) { _ =>
         val splitted = data.split("-", 2)
         (Some(splitted(0).toLong), splitted(1))
       }
