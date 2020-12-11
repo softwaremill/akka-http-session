@@ -41,11 +41,8 @@ lazy val jwt: Project = (project in file("jwt"))
       scalaTest
     ),
     // generating docs for 2.13 causes an error: "not found: type DefaultFormats$"
-    sources in (Compile, doc) := {
-      val original = (sources in (Compile, doc)).value
-      if (scalaVersion.value.startsWith("2.13")) Seq.empty else original
-    }
-  ) dependsOn(core)
+    sources in (Compile, doc) := Seq.empty
+  ) dependsOn (core)
 
 lazy val example: Project = (project in file("example"))
   .settings(commonSettings: _*)
