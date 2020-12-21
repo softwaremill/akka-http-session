@@ -1,7 +1,7 @@
 package com.softwaremill.session
 
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.{Directive0, Directive1}
+import akka.http.scaladsl.server.{ Directive0, Directive1 }
 import akka.stream.Materializer
 
 trait CsrfDirectives {
@@ -14,16 +14,20 @@ trait CsrfDirectives {
     * Note that this scheme can be broken when not all subdomains are protected or not using HTTPS and secure cookies,
     * and the token is placed in the request body (not in the header).
     *
+    * The risk of the previous disclaimer is mitigated by using a concatenation of a timestamp and its HMAC hash
+    * as token value. During token validation, additional to checking that the cookie value and header/requestbody
+    * values are non-empty and equal, the hash of the timestamp is verified too.
+    *
     * See the documentation for more details.
     */
-  def randomTokenCsrfProtection[T](checkMode: CsrfCheckMode[T]): Directive0 = {
+  def hmacTokenCsrfProtection[T](checkMode: CsrfCheckMode[T]): Directive0 = {
     csrfTokenFromCookie(checkMode).flatMap {
       case Some(cookie) =>
         // if a cookie is already set, we let through all get requests (without setting a new token), or validate
         // that the token matches.
         get.recover { _ =>
           submittedCsrfToken(checkMode).flatMap { submitted =>
-            if (submitted == cookie && !cookie.isEmpty) {
+            if (submitted == cookie && !cookie.isEmpty && checkMode.csrfManager.validateToken(cookie)) {
               pass
             } else {
               reject(checkMode.csrfManager.tokenInvalidRejection).toDirective[Unit]
@@ -35,6 +39,9 @@ trait CsrfDirectives {
         (get & setNewCsrfToken(checkMode)).recover(_ => reject(checkMode.csrfManager.tokenInvalidRejection))
     }
   }
+
+  // for backward compatibility
+  def randomTokenCsrfProtection[T](checkMode: CsrfCheckMode[T]): Directive0 = hmacTokenCsrfProtection(checkMode)
 
   def submittedCsrfToken[T](checkMode: CsrfCheckMode[T]): Directive1[String] = {
     headerValueByName(checkMode.manager.config.csrfSubmittedName).recover { rejections =>

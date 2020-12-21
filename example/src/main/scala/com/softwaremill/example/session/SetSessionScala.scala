@@ -32,7 +32,7 @@ object SetSessionScala extends App with StrictLogging {
   val myInvalidateSession = invalidateSession(refreshable, usingCookies)
 
   val routes =
-    randomTokenCsrfProtection(checkHeader) {
+    hmacTokenCsrfProtection(checkHeader) {
       pathPrefix("api") {
         path("do_login") {
           post {

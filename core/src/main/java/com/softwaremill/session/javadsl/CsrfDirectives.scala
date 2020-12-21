@@ -12,7 +12,7 @@ import com.softwaremill.session.CsrfCheckMode
 trait CsrfDirectives {
 
   def randomTokenCsrfProtection[T](checkMode: CsrfCheckMode[T], inner: Supplier[Route]): Route = RouteAdapter {
-    com.softwaremill.session.CsrfDirectives.randomTokenCsrfProtection(checkMode) {
+    com.softwaremill.session.CsrfDirectives.hmacTokenCsrfProtection(checkMode) {
       inner.get.asInstanceOf[RouteAdapter].delegate
     }
   }

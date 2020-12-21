@@ -84,7 +84,19 @@ trait CsrfManager[T] {
   def config: SessionConfig
 
   def tokenInvalidRejection = AuthorizationFailedRejection
-  def createToken(): String = SessionUtil.randomString(64)
+  def createToken(): String = {
+    val timestamp = System.currentTimeMillis().toString
+    val hmac = generateHmac(timestamp)
+    s"$hmac$timestamp"
+  }
+  def validateToken(token: String): Boolean = {
+    val len = System.currentTimeMillis().toString.length
+    token.nonEmpty && token.length > len && {
+      val (hmac, timestamp) = (token.dropRight(len), token.takeRight(len))
+      hmac == generateHmac(timestamp)
+    }
+  }
+  private def generateHmac(t: String): String = Crypto.sign_HmacSHA256_base64_v0_5_2(t, config.serverSecret)
 
   def createCookie() =
     HttpCookie(
