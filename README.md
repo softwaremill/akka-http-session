@@ -328,4 +328,4 @@ We offer commercial support for akka-http-session and related technologies, as w
 
 ## Copyright
 
-Copyright (C) 2016-2020 SoftwareMill [https://softwaremill.com](https://softwaremill.com).
+Copyright (C) 2016-2021 SoftwareMill [https://softwaremill.com](https://softwaremill.com).
