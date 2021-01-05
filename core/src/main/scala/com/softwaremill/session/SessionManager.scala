@@ -1,13 +1,14 @@
 package com.softwaremill.session
 
 import java.util.concurrent.TimeUnit
-
 import akka.http.scaladsl.server.AuthorizationFailedRejection
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
 
 import akka.http.scaladsl.model.headers.{RawHeader, HttpCookie}
+
+import scala.util.Try
 
 class SessionManager[T](val config: SessionConfig)(implicit sessionEncoder: SessionEncoder[T]) { manager =>
 
@@ -19,6 +20,7 @@ class SessionManager[T](val config: SessionConfig)(implicit sessionEncoder: Sess
 
   val csrfManager: CsrfManager[T] = new CsrfManager[T] {
     override def config = manager.config
+    override def nowMillis = manager.nowMillis
   }
 
   def createRefreshTokenManager(_storage: RefreshTokenStorage[T]): RefreshTokenManager[T] = new RefreshTokenManager[T] {
@@ -82,19 +84,25 @@ trait ClientSessionManager[T] {
 
 trait CsrfManager[T] {
   def config: SessionConfig
+  def nowMillis: Long
 
   def tokenInvalidRejection = AuthorizationFailedRejection
+
   def createToken(): String = {
-    val timestamp = System.currentTimeMillis().toString
-    val hmac = generateHmac(timestamp)
-    s"$hmac$timestamp"
+    val millis = nowMillis.toString
+    val hmac = generateHmac(millis)
+    encodeToken(millis, hmac)
   }
-  def validateToken(token: String): Boolean = {
-    val len = System.currentTimeMillis().toString.length
-    token.nonEmpty && token.length > len && {
-      val (hmac, timestamp) = (token.dropRight(len), token.takeRight(len))
-      hmac == generateHmac(timestamp)
-    }
+  def validateToken(token: String): Boolean =
+    token.nonEmpty &&
+      decodeToken(token).fold(
+        _ => false,
+        { case (millis, hmac) => SessionUtil.constantTimeEquals(hmac, generateHmac(millis)) }
+      )
+  private def encodeToken(millis: String, hmac: String): String = s"$millis-$hmac"
+  private def decodeToken(token: String): Try[(String, String)] = Try {
+    val splitted = token.split("-", 2)
+    (splitted(0), splitted(1))
   }
   private def generateHmac(t: String): String = Crypto.sign_HmacSHA256_base64_v0_5_2(t, config.serverSecret)
 

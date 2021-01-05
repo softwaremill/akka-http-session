@@ -11,12 +11,12 @@ trait CsrfDirectives {
     * doesn't have the token set in the header. For all other requests, the value of the token from the CSRF cookie must
     * match the value in the custom header (or request body, if `checkFormBody` is `true`).
     *
+    * The cookie value is the concatenation of a timestamp and its HMAC hash following the OWASP recommendation for
+    * CSRF prevention:
+    * @see <a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#hmac-based-token-pattern">OWASP</a>
+    *
     * Note that this scheme can be broken when not all subdomains are protected or not using HTTPS and secure cookies,
     * and the token is placed in the request body (not in the header).
-    *
-    * The risk of the previous disclaimer is mitigated by using a concatenation of a timestamp and its HMAC hash
-    * as token value. During token validation, additional to checking that the cookie value and header/requestbody
-    * values are non-empty and equal, the hash of the timestamp is verified too.
     *
     * See the documentation for more details.
     */
@@ -40,7 +40,7 @@ trait CsrfDirectives {
     }
   }
 
-  // for backward compatibility
+  @deprecated("use hmacTokenCsrfProtection", "0.6.1")
   def randomTokenCsrfProtection[T](checkMode: CsrfCheckMode[T]): Directive0 = hmacTokenCsrfProtection(checkMode)
 
   def submittedCsrfToken[T](checkMode: CsrfCheckMode[T]): Directive1[String] = {
