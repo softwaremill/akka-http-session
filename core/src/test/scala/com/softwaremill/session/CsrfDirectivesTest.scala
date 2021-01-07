@@ -18,7 +18,7 @@ class CsrfDirectivesTest extends AnyFlatSpec with ScalatestRouteTest with Matche
   implicit val csrfCheckMode = checkHeader
 
   def routes[T](implicit manager: SessionManager[T], checkMode: CsrfCheckMode[T]) =
-    randomTokenCsrfProtection(checkMode) {
+    hmacTokenCsrfProtection(checkMode) {
       get {
         path("site") {
           complete {
@@ -90,6 +90,35 @@ class CsrfDirectivesTest extends AnyFlatSpec with ScalatestRouteTest with Matche
       Post("/transfer_money") ~>
         addHeader(Cookie(cookieName, "")) ~>
         addHeader(sessionConfig.csrfSubmittedName, "") ~>
+        routes ~>
+        check {
+          rejections should be(List(AuthorizationFailedRejection))
+        }
+    }
+  }
+
+  it should "reject requests if the csrf cookie and the header contain illegal value" in {
+    Get("/site") ~> routes ~> check {
+      responseAs[String] should be("ok")
+
+      Post("/transfer_money") ~>
+        addHeader(Cookie(cookieName, "x")) ~>
+        addHeader(sessionConfig.csrfSubmittedName, "x") ~>
+        routes ~>
+        check {
+          rejections should be(List(AuthorizationFailedRejection))
+        }
+    }
+  }
+
+  it should "reject requests if the csrf cookie and the header contain structurally correct but incorrectly hashed value" in {
+    Get("/site") ~> routes ~> check {
+      responseAs[String] should be("ok")
+
+      val wrong = s"wrong${System.currentTimeMillis()}"
+      Post("/transfer_money") ~>
+        addHeader(Cookie(cookieName, wrong)) ~>
+        addHeader(sessionConfig.csrfSubmittedName, wrong) ~>
         routes ~>
         check {
           rejections should be(List(AuthorizationFailedRejection))

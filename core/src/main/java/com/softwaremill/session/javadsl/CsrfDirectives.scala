@@ -11,11 +11,17 @@ import com.softwaremill.session.CsrfCheckMode
  */
 trait CsrfDirectives {
 
-  def randomTokenCsrfProtection[T](checkMode: CsrfCheckMode[T], inner: Supplier[Route]): Route = RouteAdapter {
-    com.softwaremill.session.CsrfDirectives.randomTokenCsrfProtection(checkMode) {
+  def hmacTokenCsrfProtection[T](checkMode: CsrfCheckMode[T], inner: Supplier[Route]): Route = RouteAdapter {
+    com.softwaremill.session.CsrfDirectives.hmacTokenCsrfProtection(checkMode) {
       inner.get.asInstanceOf[RouteAdapter].delegate
     }
   }
+
+  /**
+    * @deprecated as of release 0.6.1, replaced by {@link #hmacTokensCsrfProtection()}
+    */
+  def randomTokenCsrfProtection[T](checkMode: CsrfCheckMode[T], inner: Supplier[Route]): Route =
+    hmacTokenCsrfProtection(checkMode, inner)
 
   def setNewCsrfToken[T](checkMode: CsrfCheckMode[T], inner: Supplier[Route]): Route = RouteAdapter {
     com.softwaremill.session.CsrfDirectives.setNewCsrfToken(checkMode) {

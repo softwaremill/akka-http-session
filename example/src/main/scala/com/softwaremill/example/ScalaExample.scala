@@ -37,7 +37,7 @@ object Example extends App with StrictLogging {
     path("") {
       redirect("/site/index.html", Found)
     } ~
-      randomTokenCsrfProtection(checkHeader) {
+      hmacTokenCsrfProtection(checkHeader) {
         pathPrefix("api") {
           path("do_login") {
             post {
