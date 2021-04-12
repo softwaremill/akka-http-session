@@ -2,9 +2,9 @@
 
 [![Build Status](https://travis-ci.org/softwaremill/akka-http-session.svg?branch=master)](https://travis-ci.org/softwaremill/akka-http-session)
 [![Join the chat at https://gitter.im/softwaremill/akka-http-session](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/softwaremill/akka-http-session?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.softwaremill.akka-http-session/core_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.softwaremill.akka-http-session/core_2.11)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.softwaremill.akka-http-session/core_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.softwaremill.akka-http-session/core_2.12)
 
-[`akka-http`](http://doc.akka.io/docs/akka/2.4.2/scala/http/index.html) is an Akka 
+[`akka-http`](https://doc.akka.io/docs/akka-http/current/index.html) is an Akka 
 module, originating from [spray.io](http://spray.io), for building *reactive* REST services with an elegant DSL.
 
 `akka-http` is a great toolkit for building backends for single-page or mobile applications. In almost all apps there 
