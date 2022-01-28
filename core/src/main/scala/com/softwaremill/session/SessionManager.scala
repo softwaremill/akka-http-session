@@ -50,8 +50,8 @@ trait ClientSessionManager[T] {
       domain = config.sessionCookieConfig.domain,
       path = config.sessionCookieConfig.path,
       secure = config.sessionCookieConfig.secure,
-      httpOnly = config.sessionCookieConfig.httpOnly
-    )
+      httpOnly = config.sessionCookieConfig.httpOnly,
+    ).withSameSite(config.sessionCookieConfig.sameSite)
 
   def createHeader(data: T) = createHeaderWithValue(encode(data))
 
@@ -114,8 +114,8 @@ trait CsrfManager[T] {
       domain = config.csrfCookieConfig.domain,
       path = config.csrfCookieConfig.path,
       secure = config.csrfCookieConfig.secure,
-      httpOnly = config.csrfCookieConfig.httpOnly
-    )
+      httpOnly = config.csrfCookieConfig.httpOnly,
+    ).withSameSite(config.csrfCookieConfig.sameSite)
 }
 
 trait RefreshTokenManager[T] {
@@ -168,8 +168,8 @@ trait RefreshTokenManager[T] {
       domain = config.refreshTokenCookieConfig.domain,
       path = config.refreshTokenCookieConfig.path,
       secure = config.refreshTokenCookieConfig.secure,
-      httpOnly = config.refreshTokenCookieConfig.httpOnly
-    )
+      httpOnly = config.refreshTokenCookieConfig.httpOnly,
+    ).withSameSite(config.refreshTokenCookieConfig.sameSite)
 
   def createHeader(value: String) =
     RawHeader(name = config.refreshTokenHeaderConfig.sendToClientHeaderName, value = value)
