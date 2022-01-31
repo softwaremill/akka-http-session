@@ -207,11 +207,11 @@ sealed trait SessionResult[+T] {
 }
 
 object SessionResult {
-  trait SessionValue[T] extends SessionResult[T] {
+  sealed trait SessionValue[T] extends SessionResult[T] {
     def session: T
     def toOption: Option[T] = Some(session)
   }
-  trait NoSessionValue[T] extends SessionResult[T] {
+  sealed trait NoSessionValue[T] extends SessionResult[T] {
     def toOption: Option[T] = None
   }
 
