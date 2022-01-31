@@ -1,7 +1,11 @@
+import com.softwaremill.SbtSoftwareMillCommon.commonSmlBuildSettings
+import com.softwaremill.Publish.ossPublishSettings
+
 lazy val commonSettings = commonSmlBuildSettings ++ ossPublishSettings ++ Seq(
   organization := "com.softwaremill.akka-http-session",
   scalaVersion := "2.13.8",
-  crossScalaVersions := Seq(scalaVersion.value, "2.12.15")
+  crossScalaVersions := Seq(scalaVersion.value, "2.12.15"),
+  versionScheme := Some("early-semver")
 )
 
 val akkaHttpVersion = "10.2.7"
@@ -63,7 +67,7 @@ lazy val javaTests: Project = (project in file("javaTests"))
   .settings(commonSettings: _*)
   .settings(
     name := "javaTests",
-    Test / testOptions  := Seq(Tests.Argument(TestFrameworks.JUnit, "-a")), // required for javadsl JUnit tests
+    Test / testOptions := Seq(Tests.Argument(TestFrameworks.JUnit, "-a")), // required for javadsl JUnit tests
     crossPaths := false, // https://github.com/sbt/junit-interface/issues/35
     publishArtifact := false,
     libraryDependencies ++= Seq(
@@ -71,8 +75,8 @@ lazy val javaTests: Project = (project in file("javaTests"))
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
       "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
       akkaStreamsTestkit,
-      "junit"           % "junit"           %  "4.13.2" % "test",
-      "com.github.sbt"  % "junit-interface" %  "0.13.3" % "test",
+      "junit" % "junit" % "4.13.2" % "test",
+      "com.github.sbt" % "junit-interface" % "0.13.3" % "test",
       scalaTest
     )
   )
