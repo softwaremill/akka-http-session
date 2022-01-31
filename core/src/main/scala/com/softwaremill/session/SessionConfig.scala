@@ -5,8 +5,9 @@ import java.util.concurrent.TimeUnit
 import com.softwaremill.session.JwsAlgorithm.{HmacSHA256, Rsa}
 import com.softwaremill.session.SessionConfig.{JwsConfig, JwtConfig}
 import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
+import akka.http.scaladsl.model.headers.SameSite
 
-case class CookieConfig(name: String, domain: Option[String], path: Option[String], secure: Boolean, httpOnly: Boolean)
+case class CookieConfig(name: String, domain: Option[String], path: Option[String], secure: Boolean, httpOnly: Boolean, sameSite: Option[SameSite])
 
 case class HeaderConfig(sendToClientHeaderName: String, getFromClientHeaderName: String)
 
@@ -119,7 +120,8 @@ object SessionConfig {
         domain = scopedConfig.getOptionalString("cookie.domain"),
         path = scopedConfig.getOptionalString("cookie.path"),
         secure = scopedConfig.getBoolean("cookie.secure"),
-        httpOnly = scopedConfig.getBoolean("cookie.http-only")
+        httpOnly = scopedConfig.getBoolean("cookie.http-only"),
+        sameSite = scopedConfig.getOptionalString("cookie.same-site").flatMap { SameSite(_) },
       ),
       sessionHeaderConfig = HeaderConfig(
         sendToClientHeaderName = scopedConfig.getString("header.send-to-client-name"),
@@ -132,7 +134,8 @@ object SessionConfig {
         domain = csrfConfig.getOptionalString("cookie.domain"),
         path = csrfConfig.getOptionalString("cookie.path"),
         secure = csrfConfig.getBoolean("cookie.secure"),
-        httpOnly = csrfConfig.getBoolean("cookie.http-only")
+        httpOnly = csrfConfig.getBoolean("cookie.http-only"),
+        sameSite = scopedConfig.getOptionalString("cookie.same-site").flatMap { SameSite(_) },
       ),
       csrfSubmittedName = csrfConfig.getString("submitted-name"),
       refreshTokenCookieConfig = CookieConfig(
@@ -140,7 +143,8 @@ object SessionConfig {
         domain = refreshTokenConfig.getOptionalString("cookie.domain"),
         path = refreshTokenConfig.getOptionalString("cookie.path"),
         secure = refreshTokenConfig.getBoolean("cookie.secure"),
-        httpOnly = refreshTokenConfig.getBoolean("cookie.http-only")
+        httpOnly = refreshTokenConfig.getBoolean("cookie.http-only"),
+        sameSite = scopedConfig.getOptionalString("cookie.same-site").flatMap { SameSite(_) },
       ),
       refreshTokenHeaderConfig = HeaderConfig(
         sendToClientHeaderName = refreshTokenConfig.getString("header.send-to-client-name"),
