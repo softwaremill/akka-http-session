@@ -1,10 +1,12 @@
 import com.softwaremill.SbtSoftwareMillCommon.commonSmlBuildSettings
 import com.softwaremill.Publish.ossPublishSettings
 
+val scala2_12 = "2.12.15"
+val scala2_13 = "2.13.8"
+val scala2 = List(scala2_12, scala2_13)
+
 lazy val commonSettings = commonSmlBuildSettings ++ ossPublishSettings ++ Seq(
   organization := "com.softwaremill.akka-http-session",
-  scalaVersion := "2.13.8",
-  crossScalaVersions := Seq(scalaVersion.value, "2.12.15"),
   versionScheme := Some("early-semver")
 )
 
@@ -18,10 +20,10 @@ val scalaTest = "org.scalatest" %% "scalatest" % "3.2.11" % "test"
 
 lazy val rootProject = (project in file("."))
   .settings(commonSettings: _*)
-  .settings(publishArtifact := false, name := "akka-http-session")
-  .aggregate(core, jwt, example, javaTests)
+  .settings(publish / skip := true, name := "akka-http-session", scalaVersion := scala2_13)
+  .aggregate(core.projectRefs ++ jwt.projectRefs ++ example.projectRefs ++ javaTests.projectRefs: _*)
 
-lazy val core: Project = (project in file("core"))
+lazy val core = (projectMatrix in file("core"))
   .settings(commonSettings: _*)
   .settings(
     name := "core",
@@ -34,8 +36,9 @@ lazy val core: Project = (project in file("core"))
       scalaTest
     )
   )
+  .jvmPlatform(scalaVersions = scala2)
 
-lazy val jwt: Project = (project in file("jwt"))
+lazy val jwt = (projectMatrix in file("jwt"))
   .settings(commonSettings: _*)
   .settings(
     name := "jwt",
@@ -48,9 +51,11 @@ lazy val jwt: Project = (project in file("jwt"))
     ),
     // generating docs for 2.13 causes an error: "not found: type DefaultFormats$"
     Compile / doc / sources := Seq.empty
-  ) dependsOn (core)
+  )
+  .jvmPlatform(scalaVersions = scala2)
+  .dependsOn(core)
 
-lazy val example: Project = (project in file("example"))
+lazy val example = (projectMatrix in file("example"))
   .settings(commonSettings: _*)
   .settings(
     publishArtifact := false,
@@ -61,9 +66,10 @@ lazy val example: Project = (project in file("example"))
       "org.json4s" %% "json4s-ext" % json4sVersion
     )
   )
+  .jvmPlatform(scalaVersions = scala2)
   .dependsOn(core, jwt)
 
-lazy val javaTests: Project = (project in file("javaTests"))
+lazy val javaTests = (projectMatrix in file("javaTests"))
   .settings(commonSettings: _*)
   .settings(
     name := "javaTests",
@@ -80,4 +86,5 @@ lazy val javaTests: Project = (project in file("javaTests"))
       scalaTest
     )
   )
+  .jvmPlatform(scalaVersions = scala2)
   .dependsOn(core, jwt)
