@@ -1,8 +1,8 @@
 package com.softwaremill.session
 
-import akka.http.scaladsl.model.headers.{HttpCookie, `Set-Cookie`}
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.{Directive0, Directive1}
+import org.apache.pekko.http.scaladsl.model.headers.{HttpCookie, `Set-Cookie`}
+import org.apache.pekko.http.scaladsl.server.Directives._
+import org.apache.pekko.http.scaladsl.server.{Directive0, Directive1}
 import com.softwaremill.session.SessionDirectives.respondWithDefaultCookie
 
 import scala.concurrent.ExecutionContext

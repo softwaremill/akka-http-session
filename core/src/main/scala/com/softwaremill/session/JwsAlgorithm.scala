@@ -47,7 +47,7 @@ object JwsAlgorithm {
           .map(_.replaceAll("\\s", "").replaceAll("-----[^-]+-----", ""))
           .map(Success(_))
           .getOrElse(Failure(new IllegalArgumentException(
-            "akka.http.session.jws.rsa-private-key must be defined in order to use alg = RS256")))
+            "pekko.http.session.jws.rsa-private-key must be defined in order to use alg = RS256")))
       }
 
       readKeyFromConf()

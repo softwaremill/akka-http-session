@@ -1,14 +1,14 @@
 package com.softwaremill.session.javadsl;
 
-import akka.http.javadsl.model.HttpHeader;
-import akka.http.javadsl.model.HttpRequest;
-import akka.http.javadsl.model.StatusCodes;
-import akka.http.javadsl.model.headers.Cookie;
-import akka.http.javadsl.model.headers.HttpCookie;
-import akka.http.javadsl.model.headers.RawHeader;
-import akka.http.javadsl.server.Route;
-import akka.http.javadsl.testkit.TestRouteResult;
-import akka.http.scaladsl.model.HttpResponse;
+import org.apache.pekko.http.javadsl.model.HttpHeader;
+import org.apache.pekko.http.javadsl.model.HttpRequest;
+import org.apache.pekko.http.javadsl.model.StatusCodes;
+import org.apache.pekko.http.javadsl.model.headers.Cookie;
+import org.apache.pekko.http.javadsl.model.headers.HttpCookie;
+import org.apache.pekko.http.javadsl.model.headers.RawHeader;
+import org.apache.pekko.http.javadsl.server.Route;
+import org.apache.pekko.http.javadsl.testkit.TestRouteResult;
+import org.apache.pekko.http.scaladsl.model.HttpResponse;
 import com.softwaremill.session.CsrfCheckMode;
 import com.softwaremill.session.SessionContinuity;
 import com.softwaremill.session.SetSessionTransport;
@@ -745,7 +745,7 @@ public class RefreshableTest extends HttpSessionAwareDirectivesTest {
         TestRouteResult setRouteResult = testRoute(route)
             .run(HttpRequest.GET("/set"));
         HttpCookie refreshToken = getRefreshTokenCookieValues(setRouteResult.response());
-        
+
         /* 2nd request */
         // when
         TestRouteResult fullResult = testRoute(route)
@@ -767,7 +767,7 @@ public class RefreshableTest extends HttpSessionAwareDirectivesTest {
         TestRouteResult setRouteResult = testRoute(route)
             .run(HttpRequest.GET("/set"));
         HttpCookie refreshToken = getRefreshTokenCookieValues(setRouteResult.response());
-        
+
         /* 2nd request */
         // whenCreatedFromToken(my session object)
         TestRouteResult fullResult = testRoute(route)

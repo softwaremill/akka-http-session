@@ -1,26 +1,28 @@
 import com.softwaremill.SbtSoftwareMillCommon.commonSmlBuildSettings
 import com.softwaremill.Publish.ossPublishSettings
 
-val scala2_12 = "2.12.15"
-val scala2_13 = "2.13.8"
+val scala2_12 = "2.12.17"
+val scala2_13 = "2.13.10"
 val scala2 = List(scala2_12, scala2_13)
 
 lazy val commonSettings = commonSmlBuildSettings ++ ossPublishSettings ++ Seq(
-  organization := "com.softwaremill.akka-http-session",
-  versionScheme := Some("early-semver")
+  organization := "com.softwaremill.pekko-http-session",
+  versionScheme := Some("early-semver"),
+  resolvers += "Apache Snapshots" at "https://repository.apache.org/content/groups/snapshots"
 )
 
-val akkaHttpVersion = "10.2.7"
-val akkaStreamsVersion = "2.6.18"
-val json4sVersion = "4.0.4"
-val akkaStreamsProvided = "com.typesafe.akka" %% "akka-stream" % akkaStreamsVersion % "provided"
-val akkaStreamsTestkit = "com.typesafe.akka" %% "akka-stream-testkit" % akkaStreamsVersion % "test"
+val akkaHttpVersion = "0.0.0+4269-0eb7860f-SNAPSHOT"
+val akkaStreamsVersion = "0.0.0+26544-4c021960-SNAPSHOT"
 
-val scalaTest = "org.scalatest" %% "scalatest" % "3.2.11" % "test"
+val json4sVersion = "4.0.6"
+val akkaStreamsProvided = "org.apache.pekko" %% "pekko-stream" % akkaStreamsVersion % "provided"
+val akkaStreamsTestkit = "org.apache.pekko" %% "pekko-stream-testkit" % akkaStreamsVersion % "test"
+
+val scalaTest = "org.scalatest" %% "scalatest" % "3.2.15" % "test"
 
 lazy val rootProject = (project in file("."))
   .settings(commonSettings: _*)
-  .settings(publish / skip := true, name := "akka-http-session", scalaVersion := scala2_13)
+  .settings(publish / skip := true, name := "pekko-http-session", scalaVersion := scala2_13)
   .aggregate(core.projectRefs ++ jwt.projectRefs ++ example.projectRefs ++ javaTests.projectRefs: _*)
 
 lazy val core = (projectMatrix in file("core"))
@@ -28,11 +30,11 @@ lazy val core = (projectMatrix in file("core"))
   .settings(
     name := "core",
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
+      "org.apache.pekko" %% "pekko-http" % akkaHttpVersion,
       akkaStreamsProvided,
-      "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
+      "org.apache.pekko" %% "pekko-http-testkit" % akkaHttpVersion % "test",
       akkaStreamsTestkit,
-      "org.scalacheck" %% "scalacheck" % "1.15.4" % "test",
+      "org.scalacheck" %% "scalacheck" % "1.17.0" % "test",
       scalaTest
     )
   )
@@ -61,8 +63,8 @@ lazy val example = (projectMatrix in file("example"))
     publishArtifact := false,
     libraryDependencies ++= Seq(
       akkaStreamsProvided,
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
-      "ch.qos.logback" % "logback-classic" % "1.2.10",
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
+      "ch.qos.logback" % "logback-classic" % "1.4.5",
       "org.json4s" %% "json4s-ext" % json4sVersion
     )
   )
@@ -78,8 +80,8 @@ lazy val javaTests = (projectMatrix in file("javaTests"))
     publishArtifact := false,
     libraryDependencies ++= Seq(
       akkaStreamsProvided,
-      "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
-      "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
+      "org.apache.pekko" %% "pekko-http" % akkaHttpVersion,
+      "org.apache.pekko" %% "pekko-http-testkit" % akkaHttpVersion % "test",
       akkaStreamsTestkit,
       "junit" % "junit" % "4.13.2" % "test",
       "com.github.sbt" % "junit-interface" % "0.13.3" % "test",

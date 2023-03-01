@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit
 import com.softwaremill.session.JwsAlgorithm.{HmacSHA256, Rsa}
 import com.softwaremill.session.SessionConfig.{JwsConfig, JwtConfig}
 import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
-import akka.http.scaladsl.model.headers.SameSite
+import org.apache.pekko.http.scaladsl.model.headers.SameSite
 
 case class CookieConfig(name: String, domain: Option[String], path: Option[String], secure: Boolean, httpOnly: Boolean, sameSite: Option[SameSite])
 
@@ -85,7 +85,7 @@ object SessionConfig {
   }
 
   def fromConfig(config: Config = ConfigFactory.load()): SessionConfig = {
-    val scopedConfig = config.getConfig("akka.http.session")
+    val scopedConfig = config.getConfig("pekko.http.session")
     val csrfConfig = scopedConfig.getConfig("csrf")
     val refreshTokenConfig = scopedConfig.getConfig("refresh-token")
     val tokenMigrationConfig = scopedConfig.getConfig("token-migration")
@@ -164,7 +164,7 @@ object SessionConfig {
     fromConfig(
       ConfigFactory
         .load()
-        .withValue("akka.http.session.server-secret", ConfigValueFactory.fromAnyRef(serverSecret)))
+        .withValue("pekko.http.session.server-secret", ConfigValueFactory.fromAnyRef(serverSecret)))
 
   def defaultConfig(serverSecret: String): SessionConfig =
     default(serverSecret) // required for javadsl directives, because default is a keyword

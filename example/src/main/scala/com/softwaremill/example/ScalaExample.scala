@@ -1,10 +1,10 @@
 package com.softwaremill.example
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.StatusCodes._
-import akka.http.scaladsl.server.Directives._
-import akka.stream.ActorMaterializer
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.http.scaladsl.Http
+import org.apache.pekko.http.scaladsl.model.StatusCodes._
+import org.apache.pekko.http.scaladsl.server.Directives._
+import org.apache.pekko.stream.ActorMaterializer
 import com.softwaremill.example.session.MyScalaSession
 import com.softwaremill.session.CsrfDirectives._
 import com.softwaremill.session.CsrfOptions._

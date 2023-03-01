@@ -3,8 +3,8 @@ package com.softwaremill.session.javadsl
 import java.util.Optional
 import java.util.function.Supplier
 
-import akka.http.javadsl.server.Route
-import akka.http.javadsl.server.directives.RouteAdapter
+import org.apache.pekko.http.javadsl.server.Route
+import org.apache.pekko.http.javadsl.server.directives.RouteAdapter
 import com.softwaremill.session._
 
 import scala.compat.java8.OptionConverters._

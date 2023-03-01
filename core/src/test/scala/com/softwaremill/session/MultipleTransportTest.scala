@@ -1,8 +1,8 @@
 package com.softwaremill.session
 
-import akka.http.scaladsl.model.{DateTime, HttpHeader}
-import akka.http.scaladsl.model.headers.{RawHeader, HttpCookie, Cookie, `Set-Cookie`}
-import akka.http.scaladsl.testkit.ScalatestRouteTest
+import org.apache.pekko.http.scaladsl.model.{DateTime, HttpHeader}
+import org.apache.pekko.http.scaladsl.model.headers.{RawHeader, HttpCookie, Cookie, `Set-Cookie`}
+import org.apache.pekko.http.scaladsl.testkit.ScalatestRouteTest
 import com.softwaremill.session.SessionOptions._
 import com.softwaremill.session.TestData._
 
