@@ -5,7 +5,7 @@ import sttp.tapir.server.PartialServerEndpointWithSecurityOutput
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait TapirSessionEndpoints {
+trait SessionEndpoints {
 
   /** Set the session cookie with the session content. The content is signed, optionally encrypted
     * and with an optional expiry date.
@@ -196,4 +196,4 @@ class RefreshableTapir[T](implicit
     with RefreshableTapirSession[T]
     with OneOffTapirSession[T]
 
-object TapirSessionEndpoints extends TapirSessionEndpoints
+object SessionEndpoints extends SessionEndpoints
