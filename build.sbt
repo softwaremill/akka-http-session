@@ -15,6 +15,7 @@ val akkaStreamsVersion = "2.6.18"
 val json4sVersion = "4.0.4"
 val akkaStreamsProvided = "com.typesafe.akka" %% "akka-stream" % akkaStreamsVersion % "provided"
 val akkaStreamsTestkit = "com.typesafe.akka" %% "akka-stream-testkit" % akkaStreamsVersion % "test"
+val tapirVersion = "1.3.0"
 
 val scalaTest = "org.scalatest" %% "scalatest" % "3.2.11" % "test"
 
@@ -32,6 +33,9 @@ lazy val core = (projectMatrix in file("core"))
       akkaStreamsProvided,
       "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
       akkaStreamsTestkit,
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
+      "com.softwaremill.sttp.tapir" %% "tapir-core" % tapirVersion,
+      "com.softwaremill.sttp.tapir" %% "tapir-akka-http-server" % tapirVersion excludeAll ExclusionRule(organization = "com.typesafe.akka"),
       "org.scalacheck" %% "scalacheck" % "1.15.4" % "test",
       scalaTest
     )

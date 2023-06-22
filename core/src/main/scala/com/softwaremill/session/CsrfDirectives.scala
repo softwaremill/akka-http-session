@@ -27,7 +27,7 @@ trait CsrfDirectives {
         // that the token matches.
         get.recover { _ =>
           submittedCsrfToken(checkMode).flatMap { submitted =>
-            if (submitted == cookie && !cookie.isEmpty && checkMode.csrfManager.validateToken(cookie)) {
+            if (submitted == cookie && cookie.nonEmpty && checkMode.csrfManager.validateToken(cookie)) {
               pass
             } else {
               reject(checkMode.csrfManager.tokenInvalidRejection).toDirective[Unit]
