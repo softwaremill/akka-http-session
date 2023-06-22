@@ -5,7 +5,7 @@ import akka.http.scaladsl.model.headers.`Set-Cookie`
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import com.softwaremill.session.TapirSessionEndpoints._
+import com.softwaremill.session.SessionEndpoints._
 import com.softwaremill.session.TapirSessionOptions._
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should._
