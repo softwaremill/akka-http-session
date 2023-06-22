@@ -34,6 +34,7 @@ object TapirImplicits {
       valueWithMeta = CookieValueWithMeta.unsafeApply(
         value = cookie.value(),
         expires = cookie.expires.map(expires => Instant.ofEpochMilli(expires.clicks)),
+        maxAge = cookie.maxAge,
         domain = cookie.domain,
         path = cookie.path,
         secure = cookie.secure,

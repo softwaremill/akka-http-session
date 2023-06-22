@@ -60,7 +60,8 @@ private[session] trait RefreshableTapirSession[T] extends Completion {
       existing: Option[String]
   ): Option[String] = {
     refreshable.refreshTokenManager
-      .rotateToken(v, existing).complete() match {
+      .rotateToken(v, existing)
+      .complete() match {
       case Success(value) => Some(value)
       case Failure(_)     => None
     }
@@ -156,7 +157,8 @@ private[session] trait RefreshableTapirSession[T] extends Completion {
         maybeValue match {
           case Some(value) =>
             refreshable.refreshTokenManager
-              .sessionFromValue(value).complete() match {
+              .sessionFromValue(value)
+              .complete() match {
               case Success(value) => value.toOption
               case Failure(_)     => None
             }
@@ -192,7 +194,8 @@ private[session] trait RefreshableTapirSession[T] extends Completion {
     refreshToken match {
       case Some(value) =>
         refreshable.refreshTokenManager
-          .sessionFromValue(value).complete() match {
+          .sessionFromValue(value)
+          .complete() match {
           case Success(value) =>
             value match {
               case s @ SessionResult.CreatedFromToken(session) =>
@@ -218,7 +221,8 @@ private[session] trait RefreshableTapirSession[T] extends Completion {
       maybeCookie: Option[String],
       maybeHeader: Option[String],
       st: GetSessionTransport,
-      required: Option[Boolean]
+      required: Option[Boolean],
+      touch: Boolean = false
   ): Either[Unit, (Seq[Option[String]], SessionResult[T])] = {
     val refreshToken = maybeCookie.fold(maybeHeader)(Some(_))
     def refresh(): Either[Unit, (Seq[Option[String]], SessionResult[T])] =
@@ -228,20 +232,17 @@ private[session] trait RefreshableTapirSession[T] extends Completion {
           r._2.toOption match {
             case Some(value) =>
               val oneOffValue = Some(manager.clientSessionManager.encode(value))
+              val seq =
+                for (oneOffInput <- oneOffInputs) yield {
+                  oneOffInput.flatMap(_ => oneOffValue)
+                }
               st match {
                 case CookieST | HeaderST =>
-                  Right((Seq(oneOffInputs.head.flatMap(_ => oneOffValue), r._1), r._2))
+                  Right((seq :+ r._1, r._2))
                 case CookieOrHeaderST =>
-                  val oneOffCookie = oneOffInputs.head
-                  val oneOffHeader = oneOffInputs.last
                   Right(
                     (
-                      Seq(
-                        oneOffCookie.flatMap(_ => oneOffValue),
-                        oneOffHeader.flatMap(_ => oneOffValue),
-                        maybeCookie.flatMap(_ => r._1),
-                        maybeHeader.flatMap(_ => r._1)
-                      ),
+                      seq :+ maybeCookie.flatMap(_ => r._1) :+ maybeHeader.flatMap(_ => r._1),
                       r._2
                     )
                   )
@@ -267,13 +268,23 @@ private[session] trait RefreshableTapirSession[T] extends Completion {
         result match {
           case SessionResult.NoSession | SessionResult.Expired => refresh()
           case s =>
+            val seq: Seq[Option[String]] = {
+              if (touch) {
+                val oneOffValue = s.toOption.map(manager.clientSessionManager.encode(_))
+                for (oneOffInput <- oneOffInputs) yield {
+                  oneOffInput.flatMap(_ => oneOffValue)
+                }
+              } else {
+                oneOffInputs
+              }
+            }
             st match {
               case CookieST | HeaderST =>
-                Right((oneOffInputs :+ refreshToken, s))
+                Right((seq :+ refreshToken, s))
               case CookieOrHeaderST =>
                 Right(
                   (
-                    oneOffInputs :+
+                    seq :+
                       maybeCookie.flatMap(_ => refreshToken) :+
                       maybeHeader.flatMap(_ => refreshToken),
                     s
@@ -533,7 +544,8 @@ private[session] trait RefreshableTapirSession[T] extends Completion {
                   inputs.last,
                   None,
                   CookieST,
-                  Some(false)
+                  Some(false),
+                  touch = true
                 )
               case HeaderST =>
                 refreshableSessionLogic(
@@ -542,7 +554,8 @@ private[session] trait RefreshableTapirSession[T] extends Completion {
                   None,
                   inputs.last,
                   HeaderST,
-                  Some(false)
+                  Some(false),
+                  touch = true
                 )
               case CookieOrHeaderST =>
                 val oneOffInputs: Seq[Option[String]] = inputs.take(2)
@@ -554,7 +567,8 @@ private[session] trait RefreshableTapirSession[T] extends Completion {
                   maybeCookie,
                   maybeHeader,
                   CookieOrHeaderST,
-                  Some(false)
+                  Some(false),
+                  touch = true
                 )
             }
         }

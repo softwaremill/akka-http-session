@@ -144,13 +144,6 @@ private[session] trait OneOffTapirSession[T] {
       case CookieOrHeaderST => oneOffCookieOrHeaderSession(required)
     }
 
-  private[this] def oneOffCookieSessionLogic(
-      cookie: Option[String],
-      required: Option[Boolean]
-  ): Either[Unit, (Option[CookieValueWithMeta], SessionResult[T])] = {
-    oneOffCookieOrHeaderSessionLogic(cookie, None, required).map(e => (e._1._1, e._2))
-  }
-
   def oneOffCookieSession(
       required: Option[Boolean] = None
   ): PartialServerEndpointWithSecurityOutput[Seq[Option[String]],
@@ -171,22 +164,16 @@ private[session] trait OneOffTapirSession[T] {
         oo.head.map(manager.clientSessionManager.createCookieWithValue(_).valueWithMeta))
       .errorOut(statusCode(StatusCode.Unauthorized))
       .serverSecurityLogicWithOutput { inputs =>
-        Future.successful(oneOffCookieSessionLogic(inputs.head, required) match {
-          case Left(l)  => Left(l)
-          case Right(r) => Right((Seq(r._1.map(_.value)), r._2))
-        })
+        Future.successful(
+          oneOffCookieOrHeaderSessionLogic(inputs.head, None, required).map(e => (e._1._1, e._2)) match {
+            case Left(l)  => Left(l)
+            case Right(r) => Right((Seq(r._1.map(_.value)), r._2))
+          })
       }
   }
 
   def extractOneOffSession(maybeValue: Option[String]): Option[T] =
     maybeValue.flatMap(manager.clientSessionManager.decode(_).toOption)
-
-  private[this] def oneOffHeaderSessionLogic(
-      header: Option[String],
-      required: Option[Boolean]
-  ): Either[Unit, (Option[String], SessionResult[T])] = {
-    oneOffCookieOrHeaderSessionLogic(None, header, required).map(e => (e._1._2, e._2))
-  }
 
   def oneOffHeaderSession(
       required: Option[Boolean] = None
@@ -209,10 +196,11 @@ private[session] trait OneOffTapirSession[T] {
       .mapOut(Seq(_))(_.head)
       .errorOut(statusCode(StatusCode.Unauthorized))
       .serverSecurityLogicWithOutput { inputs =>
-        Future.successful(oneOffHeaderSessionLogic(inputs.head, required) match {
-          case Left(l)  => Left(l)
-          case Right(r) => Right((Seq(r._1), r._2))
-        })
+        Future.successful(
+          oneOffCookieOrHeaderSessionLogic(None, inputs.head, required).map(e => (e._1._2, e._2)) match {
+            case Left(l)  => Left(l)
+            case Right(r) => Right((Seq(r._1), r._2))
+          })
       }
 
   def oneOffCookieOrHeaderSessionLogic(
@@ -229,10 +217,10 @@ private[session] trait OneOffTapirSession[T] {
           case s =>
             Right(
               ((
-                Some(manager.clientSessionManager.createCookieWithValue(cookie).valueWithMeta),
-                maybeHeader
-              ),
-              s)
+                 Some(manager.clientSessionManager.createCookieWithValue(cookie).valueWithMeta),
+                 maybeHeader
+               ),
+               s)
             )
         }
       case _ =>
@@ -300,18 +288,18 @@ private[session] trait OneOffTapirSession[T] {
           case Some(_) =>
             Right(
               (Seq(
-                Some("deleted"),
-                Some("")
-              ),
-              principal)
+                 Some("deleted"),
+                 Some("")
+               ),
+               principal)
             )
           case _ =>
             Right(
               (Seq(
-                Some("deleted"),
-                None
-              ),
-              principal)
+                 Some("deleted"),
+                 None
+               ),
+               principal)
             )
         }
       case _ =>
@@ -393,12 +381,12 @@ private[session] trait OneOffTapirSession[T] {
             val session = r._2
             st match {
               case CookieST | HeaderST =>
-                setOneOffSessionLogic(session.toOption, inputs.head)
+                setOneOffSessionLogic(session.toOption, None)
                   .map(result => (Seq(result), session))
               case CookieOrHeaderST =>
                 val maybeCookie = inputs.head
                 val maybeHeader = inputs.last
-                setOneOffSessionLogic(session.toOption, inputs.head)
+                setOneOffSessionLogic(session.toOption, None)
                   .map(
                     result =>
                       (

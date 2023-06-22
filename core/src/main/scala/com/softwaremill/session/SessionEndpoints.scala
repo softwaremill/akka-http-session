@@ -14,8 +14,8 @@ trait TapirSessionEndpoints {
     * cookie.
     */
   def setSession[T, INPUT](
-                            sc: TapirSessionContinuity[T],
-                            st: SetSessionTransport
+      sc: TapirSessionContinuity[T],
+      st: SetSessionTransport
   )(endpoint: => Endpoint[INPUT, Unit, Unit, Unit, Any])(
       implicit
       f: INPUT => Option[T]): PartialServerEndpointWithSecurityOutput[(INPUT, Seq[Option[String]]),
@@ -36,9 +36,9 @@ trait TapirSessionEndpoints {
     * If refreshable, tries to create a new session based on the refresh token cookie.
     */
   def session[T](
-                  sc: TapirSessionContinuity[T],
-                  st: GetSessionTransport,
-                  required: Option[Boolean]
+      sc: TapirSessionContinuity[T],
+      st: GetSessionTransport,
+      required: Option[Boolean]
   ): PartialServerEndpointWithSecurityOutput[Seq[Option[String]],
                                              SessionResult[T],
                                              Unit,
@@ -87,8 +87,8 @@ trait TapirSessionEndpoints {
   /** Read an optional session from the session cookie.
     */
   def optionalSession[T](
-                          sc: TapirSessionContinuity[T],
-                          st: GetSessionTransport
+      sc: TapirSessionContinuity[T],
+      st: GetSessionTransport
   ): PartialServerEndpointWithSecurityOutput[Seq[Option[String]],
                                              Option[T],
                                              Unit,
@@ -104,8 +104,8 @@ trait TapirSessionEndpoints {
   /** Read a required session from the session cookie.
     */
   def requiredSession[T](
-                          sc: TapirSessionContinuity[T],
-                          st: GetSessionTransport
+      sc: TapirSessionContinuity[T],
+      st: GetSessionTransport
   ): PartialServerEndpointWithSecurityOutput[Seq[Option[String]],
                                              T,
                                              Unit,
@@ -119,9 +119,9 @@ trait TapirSessionEndpoints {
     sc.requiredSession(st)
 
   def touchSession[T](
-                       sc: TapirSessionContinuity[T],
-                       st: GetSessionTransport,
-                       required: Option[Boolean]
+      sc: TapirSessionContinuity[T],
+      st: GetSessionTransport,
+      required: Option[Boolean]
   ): PartialServerEndpointWithSecurityOutput[Seq[Option[String]],
                                              SessionResult[T],
                                              Unit,
@@ -138,8 +138,8 @@ trait TapirSessionEndpoints {
     * [[SessionConfig.sessionMaxAgeSeconds]] option, as it sets the expiry date anew.
     */
   def touchOptionalSession[T](
-                               sc: TapirSessionContinuity[T],
-                               st: GetSessionTransport
+      sc: TapirSessionContinuity[T],
+      st: GetSessionTransport
   ): PartialServerEndpointWithSecurityOutput[Seq[Option[String]],
                                              Option[T],
                                              Unit,
@@ -157,8 +157,8 @@ trait TapirSessionEndpoints {
     * [[SessionConfig.sessionMaxAgeSeconds]] option, as it sets the expiry date anew.
     */
   def touchRequiredSession[T](
-                               sc: TapirSessionContinuity[T],
-                               st: GetSessionTransport
+      sc: TapirSessionContinuity[T],
+      st: GetSessionTransport
   ): PartialServerEndpointWithSecurityOutput[Seq[Option[String]],
                                              T,
                                              Unit,

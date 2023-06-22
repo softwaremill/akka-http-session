@@ -9,7 +9,7 @@ import sttp.tapir.server.PartialServerEndpointWithSecurityOutput
 
 import scala.concurrent.{ExecutionContext, Future}
 
-private[session] trait TapirCsrf[T] {_: CsrfCheck =>
+private[session] trait TapirCsrf[T] { _: CsrfCheck =>
 
   import com.softwaremill.session.TapirImplicits._
 
@@ -28,10 +28,12 @@ private[session] trait TapirCsrf[T] {_: CsrfCheck =>
       manager.config.csrfSubmittedName
     ).description("read csrf token as header")
 
-  def setNewCsrfToken(): PartialServerEndpointWithSecurityOutput[Unit, Unit, Unit, Unit, Option[CookieValueWithMeta], Unit, Any, Future] =
+  def setNewCsrfToken()
+    : PartialServerEndpointWithSecurityOutput[Unit, Unit, Unit, Unit, Option[CookieValueWithMeta], Unit, Any, Future] =
     endpoint
       .out(csrfCookie)
-      .serverSecurityLogicSuccessWithOutput[Unit, Future](_ =>Future.successful((Some(manager.csrfManager.createCookie().valueWithMeta), ())))
+      .serverSecurityLogicSuccessWithOutput[Unit, Future](_ =>
+        Future.successful((Some(manager.csrfManager.createCookie().valueWithMeta), ())))
 
   /**
     * Protects against CSRF attacks using a double-submit cookie. The cookie will be set on any `GET` request which
@@ -56,10 +58,9 @@ private[session] trait TapirCsrf[T] {_: CsrfCheck =>
       case Some(cookie) =>
         // if a cookie is already set, we let through all get requests (without setting a new token), or validate
         // that the token matches.
-        if(method.is(GET)){
+        if (method.is(GET)) {
           Right((None, ()))
-        }
-        else {
+        } else {
           val token = cookie
           submittedCsrfToken match {
             case Some(submitted) =>

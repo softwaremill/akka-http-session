@@ -6,7 +6,7 @@ import sttp.tapir.server.PartialServerEndpointWithSecurityOutput
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait TapirCsrfEndpoints {
+trait CsrfEndpoints {
 
   def hmacTokenCsrfProtection[T, SECURITY_INPUT, PRINCIPAL, SECURITY_OUTPUT](
       checkMode: TapirCsrfCheckMode[T]
@@ -41,7 +41,7 @@ trait TapirCsrfEndpoints {
     checkMode.setNewCsrfToken()
 }
 
-object TapirCsrfEndpoints extends TapirCsrfEndpoints
+object CsrfEndpoints extends CsrfEndpoints
 
 object TapirCsrfOptions {
   def checkHeader[T](implicit manager: SessionManager[T], ec: ExecutionContext) =
@@ -50,7 +50,7 @@ object TapirCsrfOptions {
     new TapirCsrfCheckHeaderAndForm[T]()
 }
 
-sealed trait TapirCsrfCheckMode[T] extends TapirCsrf[T] {_: CsrfCheck =>
+sealed trait TapirCsrfCheckMode[T] extends TapirCsrf[T] { _: CsrfCheck =>
   def manager: SessionManager[T]
   def ec: ExecutionContext
   def csrfManager: CsrfManager[T] = manager.csrfManager

@@ -6,7 +6,7 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import com.softwaremill.session.TapirCsrfEndpoints._
+import com.softwaremill.session.CsrfEndpoints._
 import com.softwaremill.session.TapirCsrfOptions._
 import sttp.model.headers.CookieValueWithMeta
 import sttp.tapir._
@@ -15,7 +15,7 @@ import sttp.tapir.server.akkahttp.AkkaHttpServerInterpreter
 
 import scala.concurrent.Future
 
-class TapirCsrfEndpointsTest extends AnyFlatSpec with ScalatestRouteTest with Matchers {
+class CsrfEndpointsTest extends AnyFlatSpec with ScalatestRouteTest with Matchers {
 
   import TestData._
   val cookieName: String = sessionConfig.csrfCookieConfig.name
@@ -89,7 +89,6 @@ class TapirCsrfEndpointsTest extends AnyFlatSpec with ScalatestRouteTest with Ma
         routes ~>
         check {
           assert(response.status == StatusCodes.Unauthorized)
-//          rejections should be(List(AuthorizationFailedRejection))
         }
     }
   }
@@ -102,7 +101,6 @@ class TapirCsrfEndpointsTest extends AnyFlatSpec with ScalatestRouteTest with Ma
         routes ~>
         check {
           assert(response.status == StatusCodes.Unauthorized)
-//          rejections should be(List(AuthorizationFailedRejection))
         }
     }
   }
@@ -117,7 +115,6 @@ class TapirCsrfEndpointsTest extends AnyFlatSpec with ScalatestRouteTest with Ma
         routes ~>
         check {
           assert(response.status == StatusCodes.Unauthorized)
-//          rejections should be(List(AuthorizationFailedRejection))
         }
     }
   }
@@ -132,7 +129,6 @@ class TapirCsrfEndpointsTest extends AnyFlatSpec with ScalatestRouteTest with Ma
         routes ~>
         check {
           assert(response.status == StatusCodes.Unauthorized)
-//          rejections should be(List(AuthorizationFailedRejection))
         }
     }
   }
@@ -148,7 +144,6 @@ class TapirCsrfEndpointsTest extends AnyFlatSpec with ScalatestRouteTest with Ma
         routes ~>
         check {
           assert(response.status == StatusCodes.Unauthorized)
-//          rejections should be(List(AuthorizationFailedRejection))
         }
     }
   }
