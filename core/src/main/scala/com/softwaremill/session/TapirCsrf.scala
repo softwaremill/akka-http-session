@@ -28,12 +28,34 @@ private[session] trait TapirCsrf[T] { _: CsrfCheck =>
       manager.config.csrfSubmittedName
     ).description("read csrf token as header")
 
-  def setNewCsrfToken()
-    : PartialServerEndpointWithSecurityOutput[Unit, Unit, Unit, Unit, Option[CookieValueWithMeta], Unit, Any, Future] =
-    endpoint
+  def setNewCsrfToken[SECURITY_INPUT, PRINCIPAL, SECURITY_OUTPUT](
+      body: => PartialServerEndpointWithSecurityOutput[
+        SECURITY_INPUT,
+        PRINCIPAL,
+        Unit,
+        Unit,
+        SECURITY_OUTPUT,
+        Unit,
+        Any,
+        Future
+      ]): PartialServerEndpointWithSecurityOutput[SECURITY_INPUT,
+                                                  PRINCIPAL,
+                                                  Unit,
+                                                  Unit,
+                                                  (SECURITY_OUTPUT, Option[CookieValueWithMeta]),
+                                                  Unit,
+                                                  Any,
+                                                  Future] =
+    body.endpoint
+      .out(body.securityOutput)
       .out(csrfCookie)
-      .serverSecurityLogicSuccessWithOutput[Unit, Future](_ =>
-        Future.successful((Some(manager.csrfManager.createCookie().valueWithMeta), ())))
+      .serverSecurityLogicWithOutput { inputs =>
+        body.securityLogic(new FutureMonad())(inputs).map {
+          case Left(l) => Left(l)
+          case Right(r) =>
+            Right(((r._1, Some(manager.csrfManager.createCookie().valueWithMeta)), r._2))
+        }
+      }
 
   /**
     * Protects against CSRF attacks using a double-submit cookie. The cookie will be set on any `GET` request which

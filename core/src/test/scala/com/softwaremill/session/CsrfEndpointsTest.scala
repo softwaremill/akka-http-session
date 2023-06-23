@@ -9,7 +9,7 @@ import org.scalatest.matchers.should.Matchers
 import com.softwaremill.session.CsrfEndpoints._
 import com.softwaremill.session.TapirCsrfOptions._
 import sttp.tapir._
-import sttp.tapir.server.ServerEndpoint
+import sttp.tapir.server.{PartialServerEndpointWithSecurityOutput, ServerEndpoint}
 import sttp.tapir.server.akkahttp.AkkaHttpServerInterpreter
 
 import scala.concurrent.Future
@@ -20,10 +20,14 @@ class CsrfEndpointsTest extends AnyFlatSpec with ScalatestRouteTest with Matcher
   val cookieName: String = sessionConfig.csrfCookieConfig.name
   implicit val csrfCheckMode: TapirCsrfCheckMode[Map[String, String]] = checkHeader
 
+  val emptySecurityEndpoint
+    : PartialServerEndpointWithSecurityOutput[Unit, Unit, Unit, Unit, Unit, Unit, Any, Future] =
+    endpoint.serverSecurityLogicSuccessWithOutput(_ => Future.successful(((), ())))
+
   def siteEndpoint[T](implicit manager: SessionManager[T],
                       checkMode: TapirCsrfCheckMode[T]): ServerEndpoint[Any, Future] = {
     hmacTokenCsrfProtection(checkMode) {
-      endpoint.serverSecurityLogicSuccessWithOutput(_ => Future.successful(((), ())))
+      emptySecurityEndpoint
     }.in("site")
       .out(stringBody)
       .get
@@ -33,7 +37,9 @@ class CsrfEndpointsTest extends AnyFlatSpec with ScalatestRouteTest with Matcher
   def loginEndpoint[T](implicit manager: SessionManager[T],
                        checkMode: TapirCsrfCheckMode[T]): ServerEndpoint[Any, Future] = {
     hmacTokenCsrfProtection(checkMode) {
-      setNewCsrfToken(checkMode)
+      setNewCsrfToken(checkMode) {
+        emptySecurityEndpoint
+      }
     }.in("login")
       .out(stringBody)
       .post

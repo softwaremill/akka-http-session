@@ -35,10 +35,30 @@ trait CsrfEndpoints {
       body
     }
 
-  def setNewCsrfToken[T](
+  def setNewCsrfToken[T, SECURITY_INPUT, PRINCIPAL, SECURITY_OUTPUT](
       checkMode: TapirCsrfCheckMode[T]
-  ): PartialServerEndpointWithSecurityOutput[Unit, Unit, Unit, Unit, Option[CookieValueWithMeta], Unit, Any, Future] =
-    checkMode.setNewCsrfToken()
+  )(
+      body: => PartialServerEndpointWithSecurityOutput[
+        SECURITY_INPUT,
+        PRINCIPAL,
+        Unit,
+        Unit,
+        SECURITY_OUTPUT,
+        Unit,
+        Any,
+        Future
+      ]
+  ): PartialServerEndpointWithSecurityOutput[SECURITY_INPUT,
+                                             PRINCIPAL,
+                                             Unit,
+                                             Unit,
+                                             (SECURITY_OUTPUT, Option[CookieValueWithMeta]),
+                                             Unit,
+                                             Any,
+                                             Future] =
+    checkMode.setNewCsrfToken {
+      body
+    }
 }
 
 object CsrfEndpoints extends CsrfEndpoints
