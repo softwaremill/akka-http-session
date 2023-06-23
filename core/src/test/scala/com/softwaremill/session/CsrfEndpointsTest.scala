@@ -8,7 +8,6 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import com.softwaremill.session.CsrfEndpoints._
 import com.softwaremill.session.TapirCsrfOptions._
-import sttp.model.headers.CookieValueWithMeta
 import sttp.tapir._
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.server.akkahttp.AkkaHttpServerInterpreter
@@ -23,7 +22,7 @@ class CsrfEndpointsTest extends AnyFlatSpec with ScalatestRouteTest with Matcher
 
   def siteEndpoint[T](implicit manager: SessionManager[T],
                       checkMode: TapirCsrfCheckMode[T]): ServerEndpoint[Any, Future] = {
-    hmacTokenCsrfProtection[T, Unit, Unit, Unit](checkMode) {
+    hmacTokenCsrfProtection(checkMode) {
       endpoint.serverSecurityLogicSuccessWithOutput(_ => Future.successful(((), ())))
     }.in("site")
       .out(stringBody)
@@ -33,7 +32,7 @@ class CsrfEndpointsTest extends AnyFlatSpec with ScalatestRouteTest with Matcher
 
   def loginEndpoint[T](implicit manager: SessionManager[T],
                        checkMode: TapirCsrfCheckMode[T]): ServerEndpoint[Any, Future] = {
-    hmacTokenCsrfProtection[T, Unit, Unit, Option[CookieValueWithMeta]](checkMode) {
+    hmacTokenCsrfProtection(checkMode) {
       setNewCsrfToken(checkMode)
     }.in("login")
       .out(stringBody)
@@ -43,7 +42,7 @@ class CsrfEndpointsTest extends AnyFlatSpec with ScalatestRouteTest with Matcher
 
   def transferMoneyEndpoint[T](implicit manager: SessionManager[T],
                                checkMode: TapirCsrfCheckMode[T]): ServerEndpoint[Any, Future] = {
-    hmacTokenCsrfProtection[T, Unit, Unit, Unit](checkMode) {
+    hmacTokenCsrfProtection(checkMode) {
       endpoint.serverSecurityLogicSuccessWithOutput(_ => Future.successful(((), ())))
     }.in("transfer_money")
       .out(stringBody)
