@@ -452,7 +452,7 @@ private[session] trait RefreshableTapirSession[T] extends Completion {
   def invalidateRefreshableSession[
       SECURITY_INPUT,
       PRINCIPAL
-  ](
+  ](st: GetSessionTransport)(
       partial: PartialServerEndpointWithSecurityOutput[
         SECURITY_INPUT,
         PRINCIPAL,
@@ -473,7 +473,7 @@ private[session] trait RefreshableTapirSession[T] extends Completion {
     Any,
     Future
   ] = {
-    val partialOneOffSession = invalidateOneOffSession(partial)
+    val partialOneOffSession = invalidateOneOffSession(st)(partial)
     partialOneOffSession.endpoint
       .securityIn(getRefreshTokenFromClientAsCookie)
       .securityIn(getRefreshTokenFromClientAsHeader)

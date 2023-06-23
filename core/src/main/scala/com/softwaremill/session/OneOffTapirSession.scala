@@ -309,7 +309,7 @@ private[session] trait OneOffTapirSession[T] {
   def invalidateOneOffSession[
       SECURITY_INPUT,
       PRINCIPAL
-  ](
+  ](st: GetSessionTransport)(
       body: => PartialServerEndpointWithSecurityOutput[
         SECURITY_INPUT,
         PRINCIPAL,

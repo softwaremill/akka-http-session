@@ -48,7 +48,7 @@ class OneOffTapirTest extends AnyFlatSpec with ScalatestRouteTest with Matchers 
 
   def invalidateEndpoint(using: TestUsingTransport)(
       implicit manager: SessionManager[Map[String, String]]): ServerEndpoint[Any, Future] =
-    invalidateSession(oneOff /*FIXME, using.getSessionTransport*/ ) {
+    invalidateSession(oneOff, using.getSessionTransport) {
       endpoint.serverSecurityLogicSuccessWithOutput(_ => Future.successful(((), ())))
     }.in("invalidate")
       .out(stringBody)

@@ -93,8 +93,8 @@ sealed trait TapirSessionContinuity[T] {
   def invalidateSession[
       SECURITY_INPUT,
       PRINCIPAL
-  ](
-      body: PartialServerEndpointWithSecurityOutput[
+  ](st: GetSessionTransport)(
+      body: => PartialServerEndpointWithSecurityOutput[
         SECURITY_INPUT,
         PRINCIPAL,
         Unit,
@@ -215,8 +215,8 @@ trait OneOffTapirSessionContinuity[T] extends TapirSessionContinuity[T] {
                                              Future] =
     oneOffSession(st, required)
 
-  override def invalidateSession[SECURITY_INPUT, PRINCIPAL](
-      body: PartialServerEndpointWithSecurityOutput[
+  override def invalidateSession[SECURITY_INPUT, PRINCIPAL](st: GetSessionTransport)(
+      body: => PartialServerEndpointWithSecurityOutput[
         SECURITY_INPUT,
         PRINCIPAL,
         Unit,
@@ -236,7 +236,7 @@ trait OneOffTapirSessionContinuity[T] extends TapirSessionContinuity[T] {
     Any,
     Future
   ] =
-    invalidateOneOffSession(body)
+    invalidateOneOffSession(st)(body)
 
   override def touchSession(
       st: GetSessionTransport,
@@ -293,8 +293,8 @@ trait RefreshableTapirSessionContinuity[T] extends TapirSessionContinuity[T] wit
                                              Any,
                                              Future] = refreshableSession(st, required)
 
-  override def invalidateSession[SECURITY_INPUT, PRINCIPAL](
-      body: PartialServerEndpointWithSecurityOutput[
+  override def invalidateSession[SECURITY_INPUT, PRINCIPAL](st: GetSessionTransport)(
+      body: => PartialServerEndpointWithSecurityOutput[
         SECURITY_INPUT,
         PRINCIPAL,
         Unit,
@@ -314,7 +314,7 @@ trait RefreshableTapirSessionContinuity[T] extends TapirSessionContinuity[T] wit
     Any,
     Future
   ] =
-    invalidateRefreshableSession(body)
+    invalidateRefreshableSession(st)(body)
 
   override def touchSession(
       st: GetSessionTransport,

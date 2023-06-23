@@ -51,7 +51,7 @@ class OneOffSetRefreshableGetTapirTest
 
   def invalidateEndpoint(using: TestUsingTransport)(
       implicit manager: SessionManager[Map[String, String]]): ServerEndpoint[Any, Future] =
-    invalidateSession(refreshable /*FIXME, using.getSessionTransport*/ ) {
+    invalidateSession(refreshable, using.getSessionTransport) {
       endpoint.serverSecurityLogicSuccessWithOutput(_ => Future.successful(((), ())))
     }.in("invalidate")
       .out(stringBody)

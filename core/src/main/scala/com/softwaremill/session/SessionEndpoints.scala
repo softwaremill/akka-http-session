@@ -59,9 +59,7 @@ trait SessionEndpoints {
     * Note that you should use `refreshable` if you use refreshable systems even only for some
     * users.
     */
-  def invalidateSession[T, SECURITY_INPUT, PRINCIPAL](
-      sc: TapirSessionContinuity[T]
-  )(
+  def invalidateSession[T, SECURITY_INPUT, PRINCIPAL](sc: TapirSessionContinuity[T], st: GetSessionTransport)(
       body: => PartialServerEndpointWithSecurityOutput[
         SECURITY_INPUT,
         PRINCIPAL,
@@ -82,7 +80,7 @@ trait SessionEndpoints {
     Any,
     Future
   ] =
-    sc.invalidateSession(body)
+    sc.invalidateSession(st)(body)
 
   /** Read an optional session from the session cookie.
     */
