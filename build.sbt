@@ -22,7 +22,7 @@ val scalaTest = "org.scalatest" %% "scalatest" % "3.2.11" % "test"
 lazy val rootProject = (project in file("."))
   .settings(commonSettings: _*)
   .settings(publish / skip := true, name := "akka-http-session", scalaVersion := scala2_13)
-  .aggregate(core.projectRefs ++ jwt.projectRefs ++ example.projectRefs ++ javaTests.projectRefs: _*)
+  .aggregate(core.projectRefs ++ jwt.projectRefs ++ example.projectRefs ++ javaTests.projectRefs ++ tapir.projectRefs: _*)
 
 lazy val core = (projectMatrix in file("core"))
   .settings(commonSettings: _*)
@@ -34,8 +34,6 @@ lazy val core = (projectMatrix in file("core"))
       "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
       akkaStreamsTestkit,
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
-      "com.softwaremill.sttp.tapir" %% "tapir-core" % tapirVersion,
-      "com.softwaremill.sttp.tapir" %% "tapir-akka-http-server" % tapirVersion excludeAll ExclusionRule(organization = "com.typesafe.akka"),
       "org.scalacheck" %% "scalacheck" % "1.15.4" % "test",
       scalaTest
     )
@@ -92,3 +90,16 @@ lazy val javaTests = (projectMatrix in file("javaTests"))
   )
   .jvmPlatform(scalaVersions = scala2)
   .dependsOn(core, jwt)
+
+lazy val tapir = (projectMatrix in file("tapir"))
+  .settings(commonSettings: _*)
+  .settings(
+    name := "tapir",
+    libraryDependencies ++= Seq(
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
+      "com.softwaremill.sttp.tapir" %% "tapir-core" % tapirVersion,
+      "com.softwaremill.sttp.tapir" %% "tapir-akka-http-server" % tapirVersion excludeAll ExclusionRule(organization = "com.typesafe.akka"),
+    )
+  )
+  .jvmPlatform(scalaVersions = scala2)
+  .dependsOn(core % "compile->compile;test->test")
