@@ -30,6 +30,21 @@ trait SessionEndpoints {
                                                                       Future] =
     sc.setSession(st)(endpoint)
 
+  def setSessionWithAuth[T, A](sc: TapirSessionContinuity[T], st: SetSessionTransport)(
+      auth: EndpointInput.Auth[A, EndpointInput.AuthType.Http])(
+      implicit f: A => Option[T]
+  ): PartialServerEndpointWithSecurityOutput[(A, Seq[Option[String]]),
+                                             Option[T],
+                                             Unit,
+                                             Unit,
+                                             Seq[Option[String]],
+                                             Unit,
+                                             Any,
+                                             Future] =
+    setSession(sc, st) {
+      endpoint.securityIn(auth)
+    }
+
   /** Read a session from the session cookie, wrapped in [[SessionResult]] describing the possible
     * success/failure outcomes.
     *

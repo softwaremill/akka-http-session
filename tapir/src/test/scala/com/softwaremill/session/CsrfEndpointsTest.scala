@@ -49,7 +49,7 @@ class CsrfEndpointsTest extends AnyFlatSpec with ScalatestRouteTest with Matcher
   def transferMoneyEndpoint[T](implicit manager: SessionManager[T],
                                checkMode: TapirCsrfCheckMode[T]): ServerEndpoint[Any, Future] = {
     hmacTokenCsrfProtection(checkMode) {
-      endpoint.serverSecurityLogicSuccessWithOutput(_ => Future.successful(((), ())))
+      emptySecurityEndpoint
     }.in("transfer_money")
       .out(stringBody)
       .post

@@ -19,10 +19,12 @@ class OneOffTapirTest extends AnyFlatSpec with ScalatestRouteTest with Matchers 
 
   import TestData._
 
+  implicit def f: Unit => Option[Map[String, String]] = _ => Some(Map("k1" -> "v1"))
+
   def setEndpoint(using: TestUsingTransport)(implicit manager: SMan): ServerEndpoint[Any, Future] =
     setSession(oneOff, using.setSessionTransport) {
       endpoint
-    }(_ => Some(Map("k1" -> "v1")))
+    }
       .in("set")
       .out(stringBody)
       .serverLogicSuccess(_ => _ => Future.successful("ok"))
