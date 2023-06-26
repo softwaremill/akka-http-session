@@ -7,7 +7,6 @@ import sttp.model.headers.Cookie.SameSite
 import sttp.model.headers.{CookieValueWithMeta, CookieWithMeta}
 
 import java.time.Instant
-import scala.language.implicitConversions
 
 object TapirImplicits {
 

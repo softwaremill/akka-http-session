@@ -4,8 +4,6 @@ import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
 import scala.util.{Failure, Success, Try}
 
-import scala.language.implicitConversions
-
 trait Completion {
 
   /** maximum wait time, which may be negative (no waiting is done),
