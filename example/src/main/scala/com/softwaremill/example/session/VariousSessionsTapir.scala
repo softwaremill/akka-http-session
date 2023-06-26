@@ -2,24 +2,20 @@ package com.softwaremill.example.session
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import com.softwaremill.session.CsrfEndpoints._
-import com.softwaremill.session.TapirCsrfOptions._
 import com.softwaremill.session.SessionEndpoints._
 import com.softwaremill.session.TapirSessionOptions._
+import com.softwaremill.session.SessionResult._
 import com.softwaremill.session._
 import com.typesafe.scalalogging.StrictLogging
-import sttp.model.headers.WWWAuthenticateChallenge
-import sttp.tapir.EndpointInput.AuthType
-import sttp.tapir.{EndpointInput, auth, endpoint, stringBody}
-import sttp.tapir.model.UsernamePassword
-import sttp.tapir.server.{PartialServerEndpointWithSecurityOutput, ServerEndpoint}
+import sttp.tapir._
+import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.server.akkahttp.AkkaHttpServerInterpreter
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
 
 import scala.concurrent.Future
 import scala.io.StdIn
 
-object SetSessionTapir extends App with StrictLogging {
+object VariousSessionsTapir extends App with StrictLogging {
   implicit val system: ActorSystem = ActorSystem("example")
 
   import system.dispatcher
@@ -32,21 +28,42 @@ object SetSessionTapir extends App with StrictLogging {
       def log(msg: String): Unit = logger.info(msg)
     }
 
-  def myAuth: EndpointInput.Auth[UsernamePassword, AuthType.Http] =
-    auth.basic[UsernamePassword](WWWAuthenticateChallenge.basic("example"))
-
-  val login: ServerEndpoint[Any, Future] =
-    setNewCsrfToken(checkHeader) {
-      setSession(refreshable, usingCookies) {
-        endpoint.securityIn(myAuth)
-      }(up => Some(MyScalaSession(up.username)))
-    }.post
-      .in("api")
-      .in("do_login")
+  val secret: ServerEndpoint[Any, Future] =
+    requiredSession(oneOff, usingCookies).get
+      .in("secret")
       .out(stringBody)
-      .serverLogicSuccess(maybeSession => _ => Future.successful("Hello " + maybeSession.map(_.username).getOrElse("")))
+      .serverLogicSuccess(_ => _ => Future.successful("treasure"))
 
-  val endpoints: List[ServerEndpoint[Any, Future]] = List(login)
+  val open: ServerEndpoint[Any, Future] =
+    optionalSession(oneOff, usingCookies).get
+      .in("open")
+      .out(stringBody)
+      .serverLogicSuccess(session => _ => Future.successful("small treasure"))
+
+  val detail: ServerEndpoint[Any, Future] =
+    session(oneOff, usingCookies, None).get
+      .in("detail")
+      .out(stringBody)
+      .serverLogicSuccess(sessionResult =>
+        _ =>
+          Future.successful({
+            sessionResult match {
+              case Decoded(_)          => "decoded"
+              case DecodedLegacy(_)    => "decoded legacy"
+              case CreatedFromToken(_) => "created from token"
+              case NoSession           => "no session"
+              case TokenNotFound       => "token not found"
+              case Expired             => "expired"
+              case Corrupt(_)          => "corrupt"
+            }
+          }))
+
+  val endpoints: List[ServerEndpoint[Any, Future]] =
+    List(
+      secret,
+      open,
+      detail
+    )
 
   val swaggerEndpoints: List[ServerEndpoint[Any, Future]] =
     SwaggerInterpreter().fromEndpoints(endpoints.map(_.endpoint), "example", "v1.0")

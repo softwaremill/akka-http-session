@@ -11,10 +11,10 @@ lazy val commonSettings = commonSmlBuildSettings ++ ossPublishSettings ++ Seq(
 )
 
 val akkaHttpVersion = "10.2.7"
-val akkaStreamsVersion = "2.6.18"
+val akkaVersion = "2.6.18"
 val json4sVersion = "4.0.4"
-val akkaStreamsProvided = "com.typesafe.akka" %% "akka-stream" % akkaStreamsVersion % "provided"
-val akkaStreamsTestkit = "com.typesafe.akka" %% "akka-stream-testkit" % akkaStreamsVersion % "test"
+val akkaStreams = "com.typesafe.akka" %% "akka-stream" % akkaVersion
+val akkaStreamsTestkit = "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % "test"
 val tapirVersion = "1.3.0"
 
 val scalaTest = "org.scalatest" %% "scalatest" % "3.2.11" % "test"
@@ -30,7 +30,7 @@ lazy val core = (projectMatrix in file("core"))
     name := "core",
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
-      akkaStreamsProvided,
+      akkaStreams % "provided",
       "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
       akkaStreamsTestkit,
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
@@ -48,7 +48,7 @@ lazy val jwt = (projectMatrix in file("jwt"))
       "org.json4s" %% "json4s-jackson" % json4sVersion,
       "org.json4s" %% "json4s-ast" % json4sVersion,
       "org.json4s" %% "json4s-core" % json4sVersion,
-      akkaStreamsProvided,
+      akkaStreams % "provided",
       scalaTest
     ),
     // generating docs for 2.13 causes an error: "not found: type DefaultFormats$"
@@ -62,14 +62,16 @@ lazy val example = (projectMatrix in file("example"))
   .settings(
     publishArtifact := false,
     libraryDependencies ++= Seq(
-      akkaStreamsProvided,
+      "com.typesafe.akka" %% "akka-actor" % akkaVersion,
+      akkaStreams,
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
       "ch.qos.logback" % "logback-classic" % "1.2.10",
-      "org.json4s" %% "json4s-ext" % json4sVersion
+      "org.json4s" %% "json4s-ext" % json4sVersion,
+      "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion
     )
   )
   .jvmPlatform(scalaVersions = scala2)
-  .dependsOn(core, jwt)
+  .dependsOn(tapir, jwt)
 
 lazy val javaTests = (projectMatrix in file("javaTests"))
   .settings(commonSettings: _*)
@@ -79,7 +81,7 @@ lazy val javaTests = (projectMatrix in file("javaTests"))
     crossPaths := false, // https://github.com/sbt/junit-interface/issues/35
     publishArtifact := false,
     libraryDependencies ++= Seq(
-      akkaStreamsProvided,
+      akkaStreams % "provided",
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
       "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
       akkaStreamsTestkit,
@@ -98,7 +100,7 @@ lazy val tapir = (projectMatrix in file("tapir"))
     libraryDependencies ++= Seq(
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
       "com.softwaremill.sttp.tapir" %% "tapir-core" % tapirVersion,
-      "com.softwaremill.sttp.tapir" %% "tapir-akka-http-server" % tapirVersion excludeAll ExclusionRule(organization = "com.typesafe.akka"),
+      "com.softwaremill.sttp.tapir" %% "tapir-akka-http-server" % tapirVersion excludeAll ExclusionRule(organization = "com.typesafe.akka")
     )
   )
   .jvmPlatform(scalaVersions = scala2)

@@ -2,24 +2,19 @@ package com.softwaremill.example.session
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import com.softwaremill.session.CsrfEndpoints._
-import com.softwaremill.session.TapirCsrfOptions._
 import com.softwaremill.session.SessionEndpoints._
 import com.softwaremill.session.TapirSessionOptions._
 import com.softwaremill.session._
 import com.typesafe.scalalogging.StrictLogging
-import sttp.model.headers.WWWAuthenticateChallenge
-import sttp.tapir.EndpointInput.AuthType
-import sttp.tapir.{EndpointInput, auth, endpoint, stringBody}
-import sttp.tapir.model.UsernamePassword
-import sttp.tapir.server.{PartialServerEndpointWithSecurityOutput, ServerEndpoint}
+import sttp.tapir._
+import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.server.akkahttp.AkkaHttpServerInterpreter
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
 
 import scala.concurrent.Future
 import scala.io.StdIn
 
-object SetSessionTapir extends App with StrictLogging {
+object SessionInvalidationTapir extends App with StrictLogging {
   implicit val system: ActorSystem = ActorSystem("example")
 
   import system.dispatcher
@@ -32,21 +27,22 @@ object SetSessionTapir extends App with StrictLogging {
       def log(msg: String): Unit = logger.info(msg)
     }
 
-  def myAuth: EndpointInput.Auth[UsernamePassword, AuthType.Http] =
-    auth.basic[UsernamePassword](WWWAuthenticateChallenge.basic("example"))
-
-  val login: ServerEndpoint[Any, Future] =
-    setNewCsrfToken(checkHeader) {
-      setSession(refreshable, usingCookies) {
-        endpoint.securityIn(myAuth)
-      }(up => Some(MyScalaSession(up.username)))
+  val logout: ServerEndpoint[Any, Future] =
+    invalidateSession(refreshable, usingCookies) {
+      requiredSession(refreshable, usingCookies)
     }.post
-      .in("api")
-      .in("do_login")
+      .in("logout")
       .out(stringBody)
-      .serverLogicSuccess(maybeSession => _ => Future.successful("Hello " + maybeSession.map(_.username).getOrElse("")))
+      .serverLogicSuccess(session =>
+        _ => {
+          logger.info(s"Logging out $session")
+          Future.successful("ok")
+      })
 
-  val endpoints: List[ServerEndpoint[Any, Future]] = List(login)
+  val endpoints: List[ServerEndpoint[Any, Future]] =
+    List(
+      logout
+    )
 
   val swaggerEndpoints: List[ServerEndpoint[Any, Future]] =
     SwaggerInterpreter().fromEndpoints(endpoints.map(_.endpoint), "example", "v1.0")

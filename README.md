@@ -66,7 +66,7 @@ recommended that all sites use `https` and all cookies have this attribute set.
 
 ## Client-side sessions
 
-All session-related directives take at least two parameters:
+All session-related directives / endpoints take at least two parameters:
  
 * session continuity: `oneOff` vs `refreshable`; specifies what should happen when the session expires. If `refreshable`
 and a refresh token is present, the session will be re-created. See below for details.
@@ -107,9 +107,9 @@ Note that when using cookies, their size is limited to 4KB, so you shouldn't put
 takes about 50 characters). 
 
 You can require a session to be present, optionally require a session or get a full description of possible session decode outcomes. 
-Check [java](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/java/com/softwaremill/example/session/VariousSessionsJava.java) and [scala](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/session/VariousSessionsScala.scala) examples for details.
+Check [java](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/java/com/softwaremill/example/session/VariousSessionsJava.java), [scala](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/session/VariousSessionsScala.scala) and [tapir](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/session/VariousSessionsTapir.scala) examples for details.
 
-If a required session is not present, by default a `403` HTTP status code is returned. Finally, a session can be invalidated. See how it's done in examples for [java](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/java/com/softwaremill/example/session/SessionInvalidationJava.java) and [scala](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/session/SessionInvalidationScala.scala).
+If a required session is not present, by default a `403` HTTP status code is returned. Finally, a session can be invalidated. See how it's done in examples for [java](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/java/com/softwaremill/example/session/SessionInvalidationJava.java), [scala](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/session/SessionInvalidationScala.scala) and [tapir](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/session/SessionInvalidationTapir.scala).
 
 ### Encrypting the session
 
