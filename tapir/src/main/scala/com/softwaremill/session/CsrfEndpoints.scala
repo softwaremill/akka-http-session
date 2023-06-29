@@ -2,6 +2,7 @@ package com.softwaremill.session
 
 import sttp.model.Method
 import sttp.model.headers.CookieValueWithMeta
+import sttp.tapir.{EndpointIO, RawPart}
 import sttp.tapir.server.PartialServerEndpointWithSecurityOutput
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -22,7 +23,7 @@ trait CsrfEndpoints {
         Future
       ]
   ): PartialServerEndpointWithSecurityOutput[
-    (SECURITY_INPUT, Option[String], Method, Option[String], Map[String, String]),
+    (SECURITY_INPUT, Option[String], Method, Option[String]),
     PRINCIPAL,
     Unit,
     Unit,
@@ -32,6 +33,34 @@ trait CsrfEndpoints {
     Future
   ] =
     checkMode.hmacTokenCsrfProtection {
+      body
+    }
+
+  def hmacTokenCsrfProtectionWithFormOrMultipart[T, SECURITY_INPUT, PRINCIPAL, SECURITY_OUTPUT, F](
+      checkMode: TapirCsrfCheckMode[T],
+      form: Either[EndpointIO.Body[String, F], EndpointIO.Body[Seq[RawPart], F]]
+  )(
+      body: => PartialServerEndpointWithSecurityOutput[
+        SECURITY_INPUT,
+        PRINCIPAL,
+        Unit,
+        Unit,
+        SECURITY_OUTPUT,
+        Unit,
+        Any,
+        Future
+      ]
+  )(implicit f: F => Option[String]): PartialServerEndpointWithSecurityOutput[
+    (SECURITY_INPUT, Option[String], Method, Option[String], F),
+    PRINCIPAL,
+    Unit,
+    Unit,
+    (SECURITY_OUTPUT, Option[CookieValueWithMeta]),
+    Unit,
+    Any,
+    Future
+  ] =
+    checkMode.hmacTokenCsrfProtectionWithFormOrMultipart(form) {
       body
     }
 

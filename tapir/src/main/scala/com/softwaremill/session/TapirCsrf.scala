@@ -110,18 +110,101 @@ private[session] trait TapirCsrf[T] { _: CsrfCheck =>
       PRINCIPAL,
       SECURITY_OUTPUT
   ](
-      body: => PartialServerEndpointWithSecurityOutput[
-        SECURITY_INPUT,
-        PRINCIPAL,
-        Unit,
-        Unit,
-        SECURITY_OUTPUT,
-        Unit,
-        Any,
-        Future
-      ]
-  ): PartialServerEndpointWithSecurityOutput[
-    (SECURITY_INPUT, Option[String], Method, Option[String], Map[String, String]),
+     body: => PartialServerEndpointWithSecurityOutput[
+       SECURITY_INPUT,
+       PRINCIPAL,
+       Unit,
+       Unit,
+       SECURITY_OUTPUT,
+       Unit,
+       Any,
+       Future
+     ]
+   ): PartialServerEndpointWithSecurityOutput[
+    (SECURITY_INPUT, Option[String], Method, Option[String]),
+    PRINCIPAL,
+    Unit,
+    Unit,
+    (SECURITY_OUTPUT, Option[CookieValueWithMeta]),
+    Unit,
+    Any,
+    Future
+  ] = {
+    val partial =
+    // extract csrf token from cookie
+      csrfTokenFromCookie()
+        // extract request method
+        .securityIn(extractFromRequest(req => req.method))
+        // extract submitted csrf token from header
+        .securityIn(submittedCsrfHeader)
+        .out(csrfCookie)
+        .errorOut(statusCode(StatusCode.Unauthorized))
+        .serverSecurityLogicWithOutput {
+          case (
+            csrfTokenFromCookie,
+            method,
+            submittedCsrfTokenFromHeader
+            ) =>
+            Future.successful(
+              hmacTokenCsrfProtectionLogic(
+                method,
+                csrfTokenFromCookie,
+                submittedCsrfTokenFromHeader
+              )
+            )
+        }
+    partial.endpoint
+      .prependSecurityIn(body.securityInput)
+      .out(body.securityOutput)
+      .out(partial.securityOutput)
+      .serverSecurityLogicWithOutput {
+        case (
+          securityInput,
+          csrfTokenFromCookie,
+          method,
+          submittedCsrfTokenFromHeader
+          ) =>
+          partial
+            .securityLogic(new FutureMonad())(
+              (
+                csrfTokenFromCookie,
+                method,
+                submittedCsrfTokenFromHeader
+              )
+            )
+            .flatMap {
+              case Left(l) => Future.successful(Left(l))
+              case Right(r) =>
+                body.securityLogic(new FutureMonad())(securityInput).map {
+                  case Left(l2) => Left(l2)
+                  case Right(r2) =>
+                    Right(((r2._1, r._1), r2._2))
+                }
+            }
+      }
+  }
+
+  implicit def form2Csrf: Map[String, String] => Option[String] = m =>
+    m.get(manager.config.csrfSubmittedName)
+
+  def hmacTokenCsrfProtectionWithFormOrMultipart[
+    SECURITY_INPUT,
+    PRINCIPAL,
+    SECURITY_OUTPUT,
+    F
+  ](form: Either[EndpointIO.Body[String, F], EndpointIO.Body[Seq[RawPart], F]])(
+    body: => PartialServerEndpointWithSecurityOutput[
+      SECURITY_INPUT,
+      PRINCIPAL,
+      Unit,
+      Unit,
+      SECURITY_OUTPUT,
+      Unit,
+      Any,
+      Future
+    ]
+  )(implicit f: F => Option[String]): PartialServerEndpointWithSecurityOutput[
+    (SECURITY_INPUT, Option[String], Method, Option[String], F),
     PRINCIPAL,
     Unit,
     Unit,
@@ -138,7 +221,7 @@ private[session] trait TapirCsrf[T] { _: CsrfCheck =>
         // extract submitted csrf token from header
         .securityIn(submittedCsrfHeader)
         // extract submitted csrf token from form
-        .securityIn(formBody[Map[String, String]])
+        .securityIn(form.merge) // could not be consumed within the server logic
         .out(csrfCookie)
         .errorOut(statusCode(StatusCode.Unauthorized))
         .serverSecurityLogicWithOutput {
@@ -154,7 +237,7 @@ private[session] trait TapirCsrf[T] { _: CsrfCheck =>
                 csrfTokenFromCookie,
                 if (checkHeaderAndForm)
                   submittedCsrfTokenFromHeader.fold(
-                    submittedCsrfTokenFromForm.get(manager.config.csrfSubmittedName)
+                    f(submittedCsrfTokenFromForm)
                   )(Option(_))
                 else
                   submittedCsrfTokenFromHeader

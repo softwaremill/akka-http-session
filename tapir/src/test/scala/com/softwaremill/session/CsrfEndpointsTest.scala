@@ -20,8 +20,7 @@ class CsrfEndpointsTest extends AnyFlatSpec with ScalatestRouteTest with Matcher
   val cookieName: String = sessionConfig.csrfCookieConfig.name
   implicit val csrfCheckMode: TapirCsrfCheckMode[Map[String, String]] = checkHeader
 
-  val emptySecurityEndpoint
-    : PartialServerEndpointWithSecurityOutput[Unit, Unit, Unit, Unit, Unit, Unit, Any, Future] =
+  val emptySecurityEndpoint: PartialServerEndpointWithSecurityOutput[Unit, Unit, Unit, Unit, Unit, Unit, Any, Future] =
     endpoint.serverSecurityLogicSuccessWithOutput(_ => Future.successful(((), ())))
 
   def siteEndpoint[T](implicit manager: SessionManager[T],
@@ -31,7 +30,7 @@ class CsrfEndpointsTest extends AnyFlatSpec with ScalatestRouteTest with Matcher
     }.in("site")
       .out(stringBody)
       .get
-      .serverLogicSuccess(_ => _ => Future.successful(("ok")))
+      .serverLogicSuccess(_ => _ => Future.successful("ok"))
   }
 
   def loginEndpoint[T](implicit manager: SessionManager[T],
@@ -43,17 +42,18 @@ class CsrfEndpointsTest extends AnyFlatSpec with ScalatestRouteTest with Matcher
     }.in("login")
       .out(stringBody)
       .post
-      .serverLogicSuccess(_ => _ => Future.successful(("ok")))
+      .serverLogicSuccess(_ => _ => Future.successful("ok"))
   }
 
   def transferMoneyEndpoint[T](implicit manager: SessionManager[T],
                                checkMode: TapirCsrfCheckMode[T]): ServerEndpoint[Any, Future] = {
-    hmacTokenCsrfProtection(checkMode) {
+    hmacTokenCsrfProtectionWithFormOrMultipart(checkMode, Left(formBody[Map[String, String]])) {
       emptySecurityEndpoint
-    }.in("transfer_money")
+    }(checkMode.form2Csrf)
+      .in("transfer_money")
       .out(stringBody)
       .post
-      .serverLogicSuccess(_ => _ => Future.successful(("ok")))
+      .serverLogicSuccess(_ => _ => Future.successful("ok"))
   }
 
   def routes[T](implicit manager: SessionManager[T], checkMode: TapirCsrfCheckMode[T]): Route =

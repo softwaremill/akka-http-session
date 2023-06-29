@@ -14,7 +14,7 @@ trait TapirEndpoints extends SessionEndpoints with CsrfEndpoints {
       st: GetSessionTransport,
       checkMode: TapirCsrfCheckMode[T]
   ): PartialServerEndpointWithSecurityOutput[
-    (Seq[Option[String]], Option[String], Method, Option[String], Map[String, String]),
+    (Seq[Option[String]], Option[String], Method, Option[String]),
     T,
     Unit,
     Unit,
@@ -32,7 +32,7 @@ trait TapirEndpoints extends SessionEndpoints with CsrfEndpoints {
       st: GetSessionTransport,
       checkMode: TapirCsrfCheckMode[T]
   ): PartialServerEndpointWithSecurityOutput[
-    (Seq[Option[String]], Option[String], Method, Option[String], Map[String, String]),
+    (Seq[Option[String]], Option[String], Method, Option[String]),
     Option[T],
     Unit,
     Unit,
