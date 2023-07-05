@@ -40,7 +40,9 @@ object SetSessionTapir extends App with StrictLogging {
   val login: ServerEndpoint[Any, Future] =
     setNewCsrfToken(checkHeader) {
       setSession(refreshable, usingCookies) {
-        endpointToPartialServerEndpointWithSecurityOutput(endpoint.securityIn(myAuth))
+        setSessionEndpoint {
+          endpoint.securityIn(myAuth)
+        }
       }
     }.post
       .in("api")

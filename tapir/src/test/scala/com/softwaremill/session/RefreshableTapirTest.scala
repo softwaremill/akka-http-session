@@ -28,9 +28,10 @@ class RefreshableTapirTest extends AnyFlatSpec with ScalatestRouteTest with Matc
   def setEndpoint(using: TestUsingTransport)(
       implicit manager: SessionManager[Map[String, String]]): ServerEndpoint[Any, Future] =
     setSession(refreshable, using.setSessionTransport) {
-      endpointToPartialServerEndpointWithSecurityOutput(endpoint)
-    }
-      .in("set")
+      setSessionEndpoint {
+        endpoint
+      }
+    }.in("set")
       .out(stringBody)
       .serverLogicSuccess(_ => _ => Future.successful("ok"))
 
@@ -110,7 +111,7 @@ class RefreshableTapirTest extends AnyFlatSpec with ScalatestRouteTest with Matc
           routes ~>
           check {
             val Some(token2) = using.getRefreshToken
-            token1 should not be (token2)
+            token1 should not be token2
           }
       }
     }
@@ -161,7 +162,7 @@ class RefreshableTapirTest extends AnyFlatSpec with ScalatestRouteTest with Matc
             using.countRefreshTokenHeaders should be(1)
             val session2 = using.getSession
             session2 should be('defined)
-            session2 should not be (session1)
+            session2 should not be session1
           }
       }
     }
@@ -200,7 +201,7 @@ class RefreshableTapirTest extends AnyFlatSpec with ScalatestRouteTest with Matc
             using.countSessionHeaders should be(1)
             using.countRefreshTokenHeaders should be(1)
             val Some(token2) = using.getRefreshToken
-            token1 should not be (token2)
+            token1 should not be token2
           }
       }
     }
@@ -274,7 +275,7 @@ class RefreshableTapirTest extends AnyFlatSpec with ScalatestRouteTest with Matc
             val token2Opt = using.getRefreshToken
 
             // The session should be modified with a new expiry date
-            session1 should not be (session2)
+            session1 should not be session2
 
             // But the refresh token token should remain the same; no new token should be set
             token2Opt should be(None)
@@ -305,7 +306,7 @@ class RefreshableTapirTest extends AnyFlatSpec with ScalatestRouteTest with Matc
                 val token3Opt = using.getRefreshToken
 
                 // new token should be generated
-                session1 should not be (session3)
+                session1 should not be session3
                 token3Opt should be('defined)
               }
           }

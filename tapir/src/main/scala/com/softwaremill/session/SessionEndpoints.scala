@@ -7,8 +7,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait SessionEndpoints {
 
-  implicit def endpointToPartialServerEndpointWithSecurityOutput[T, SECURITY_INPUT](
-      endpoint: Endpoint[SECURITY_INPUT, Unit, Unit, Unit, Any]
+  def setSessionEndpoint[T, SECURITY_INPUT](
+      endpoint: => Endpoint[SECURITY_INPUT, Unit, Unit, Unit, Any]
   )(implicit
     f: SECURITY_INPUT => Option[T]): PartialServerEndpointWithSecurityOutput[SECURITY_INPUT,
                                                                              Option[
@@ -73,7 +73,9 @@ trait SessionEndpoints {
     Future
   ] =
     setSession[T, A, Unit](sc, st) {
-      endpointToPartialServerEndpointWithSecurityOutput(endpoint.securityIn(auth))
+      setSessionEndpoint {
+        endpoint.securityIn(auth)
+      }
     }
 
   /** Read a session from the session cookie, wrapped in [[SessionResult]] describing the possible

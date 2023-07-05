@@ -31,11 +31,12 @@ class OneOffSetRefreshableGetTapirTest
   def setEndpoint(using: TestUsingTransport)(
       implicit manager: SessionManager[Map[String, String]]): ServerEndpoint[Any, Future] =
     setSession(oneOff, using.setSessionTransport) {
-      endpointToPartialServerEndpointWithSecurityOutput(endpoint)
-    }
-      .in("set")
+      setSessionEndpoint {
+        endpoint
+      }
+    }.in("set")
       .out(stringBody)
-      .serverLogicSuccess(_ => _ => Future.successful(("ok")))
+      .serverLogicSuccess(_ => _ => Future.successful("ok"))
 
   def getOptEndpoint(using: TestUsingTransport)(
       implicit manager: SessionManager[Map[String, String]]): ServerEndpoint[Any, Future] =
@@ -116,7 +117,7 @@ class OneOffSetRefreshableGetTapirTest
             val token2Opt = using.getRefreshToken
 
             // The session should be modified with a new expiry date
-            session1 should not be (session2)
+            session1 should not be session2
 
             // No refresh token should be set
             token2Opt should be(None)
