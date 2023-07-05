@@ -35,11 +35,13 @@ object SetSessionTapir extends App with StrictLogging {
   def myAuth: EndpointInput.Auth[UsernamePassword, AuthType.Http] =
     auth.basic[UsernamePassword](WWWAuthenticateChallenge.basic("example"))
 
+  implicit def f: UsernamePassword => Option[MyScalaSession] = up => Some(MyScalaSession(up.username))
+
   val login: ServerEndpoint[Any, Future] =
     setNewCsrfToken(checkHeader) {
       setSession(refreshable, usingCookies) {
-        endpoint.securityIn(myAuth)
-      }(up => Some(MyScalaSession(up.username)))
+        endpointToPartialServerEndpointWithSecurityOutput(endpoint.securityIn(myAuth))
+      }
     }.post
       .in("api")
       .in("do_login")

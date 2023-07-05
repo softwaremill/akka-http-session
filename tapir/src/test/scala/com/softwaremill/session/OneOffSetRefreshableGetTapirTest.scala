@@ -26,11 +26,13 @@ class OneOffSetRefreshableGetTapirTest
       override def log(msg: String): Unit = println(msg)
     }
 
+  implicit def f: Unit => Option[Map[String, String]] = _ => Some(Map("k1" -> "v1"))
+
   def setEndpoint(using: TestUsingTransport)(
       implicit manager: SessionManager[Map[String, String]]): ServerEndpoint[Any, Future] =
     setSession(oneOff, using.setSessionTransport) {
-      endpoint
-    }(_ => Some(Map("k1" -> "v1")))
+      endpointToPartialServerEndpointWithSecurityOutput(endpoint)
+    }
       .in("set")
       .out(stringBody)
       .serverLogicSuccess(_ => _ => Future.successful(("ok")))

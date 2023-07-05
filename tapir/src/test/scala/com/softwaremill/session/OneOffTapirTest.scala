@@ -23,7 +23,7 @@ class OneOffTapirTest extends AnyFlatSpec with ScalatestRouteTest with Matchers 
 
   def setEndpoint(using: TestUsingTransport)(implicit manager: SMan): ServerEndpoint[Any, Future] =
     setSession(oneOff, using.setSessionTransport) {
-      endpoint
+      endpointToPartialServerEndpointWithSecurityOutput(endpoint)
     }
       .in("set")
       .out(stringBody)

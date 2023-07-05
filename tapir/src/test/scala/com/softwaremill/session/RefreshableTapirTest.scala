@@ -28,7 +28,7 @@ class RefreshableTapirTest extends AnyFlatSpec with ScalatestRouteTest with Matc
   def setEndpoint(using: TestUsingTransport)(
       implicit manager: SessionManager[Map[String, String]]): ServerEndpoint[Any, Future] =
     setSession(refreshable, using.setSessionTransport) {
-      endpoint
+      endpointToPartialServerEndpointWithSecurityOutput(endpoint)
     }
       .in("set")
       .out(stringBody)

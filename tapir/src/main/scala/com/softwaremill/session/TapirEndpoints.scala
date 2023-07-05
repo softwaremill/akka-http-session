@@ -2,7 +2,7 @@ package com.softwaremill.session
 
 import sttp.model.Method
 import sttp.model.headers.CookieValueWithMeta
-import sttp.tapir.{Endpoint, EndpointInput}
+import sttp.tapir.EndpointInput
 import sttp.tapir.server.PartialServerEndpointWithSecurityOutput
 
 import scala.concurrent.Future
@@ -45,25 +45,34 @@ trait TapirEndpoints extends SessionEndpoints with CsrfEndpoints {
       optionalSession(sc, st)
     }
 
-  def setNewCsrfTokenWithSession[T, INPUT](
+  def setNewCsrfTokenWithSession[T, SECURITY_INPUT, SECURITY_OUTPUT](
       sc: TapirSessionContinuity[T],
       st: SetSessionTransport,
       checkMode: TapirCsrfCheckMode[T]
-  )(endpoint: => Endpoint[INPUT, Unit, Unit, Unit, Any])(implicit
-                                                         f: INPUT => Option[T])
-    : PartialServerEndpointWithSecurityOutput[(INPUT, Seq[Option[String]]),
-                                              Option[
-                                                T
-                                              ],
-                                              Unit,
-                                              Unit,
-                                              (Seq[Option[String]], Option[CookieValueWithMeta]),
-                                              Unit,
-                                              Any,
-                                              Future] =
+  )(
+      body: => PartialServerEndpointWithSecurityOutput[SECURITY_INPUT,
+                                                       Option[
+                                                         T
+                                                       ],
+                                                       Unit,
+                                                       Unit,
+                                                       SECURITY_OUTPUT,
+                                                       Unit,
+                                                       Any,
+                                                       Future]
+  ): PartialServerEndpointWithSecurityOutput[(SECURITY_INPUT, Seq[Option[String]]),
+                                             Option[
+                                               T
+                                             ],
+                                             Unit,
+                                             Unit,
+                                             ((SECURITY_OUTPUT, Seq[Option[String]]), Option[CookieValueWithMeta]),
+                                             Unit,
+                                             Any,
+                                             Future] =
     setNewCsrfToken(checkMode) {
       setSession(sc, st) {
-        endpoint
+        body
       }
     }
 
@@ -71,16 +80,18 @@ trait TapirEndpoints extends SessionEndpoints with CsrfEndpoints {
       sc: TapirSessionContinuity[T],
       st: SetSessionTransport,
       checkMode: TapirCsrfCheckMode[T]
-  )(auth: EndpointInput.Auth[A, EndpointInput.AuthType.Http])(
-      implicit f: A => Option[T]
-  ): PartialServerEndpointWithSecurityOutput[(A, Seq[Option[String]]),
-                                             Option[T],
-                                             Unit,
-                                             Unit,
-                                             (Seq[Option[String]], Option[CookieValueWithMeta]),
-                                             Unit,
-                                             Any,
-                                             Future] =
+  )(auth: EndpointInput.Auth[A, EndpointInput.AuthType.Http])(implicit
+                                                              f: A => Option[T])
+    : PartialServerEndpointWithSecurityOutput[(A, Seq[Option[String]]),
+                                              Option[
+                                                T
+                                              ],
+                                              Unit,
+                                              Unit,
+                                              ((Unit, Seq[Option[String]]), Option[CookieValueWithMeta]),
+                                              Unit,
+                                              Any,
+                                              Future] =
     setNewCsrfToken(checkMode) {
       setSessionWithAuth(sc, st)(auth)
     }
