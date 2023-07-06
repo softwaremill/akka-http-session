@@ -100,13 +100,14 @@ sealed trait TapirSessionContinuity[T] {
 
   def invalidateSession[
       SECURITY_INPUT,
-      PRINCIPAL
+      PRINCIPAL,
+      ERROR_OUTPUT
   ](st: GetSessionTransport)(
       body: => PartialServerEndpointWithSecurityOutput[
         SECURITY_INPUT,
         PRINCIPAL,
         Unit,
-        Unit,
+        ERROR_OUTPUT,
         _,
         Unit,
         Any,
@@ -116,7 +117,7 @@ sealed trait TapirSessionContinuity[T] {
     (SECURITY_INPUT, Seq[Option[String]]),
     PRINCIPAL,
     Unit,
-    Unit,
+    ERROR_OUTPUT,
     Seq[Option[String]],
     Unit,
     Any,
@@ -230,12 +231,12 @@ trait OneOffTapirSessionContinuity[T] extends TapirSessionContinuity[T] {
                                              Future] =
     oneOffSession(st, required)
 
-  override def invalidateSession[SECURITY_INPUT, PRINCIPAL](st: GetSessionTransport)(
+  override def invalidateSession[SECURITY_INPUT, PRINCIPAL, ERROR_OUTPUT](st: GetSessionTransport)(
       body: => PartialServerEndpointWithSecurityOutput[
         SECURITY_INPUT,
         PRINCIPAL,
         Unit,
-        Unit,
+        ERROR_OUTPUT,
         _,
         Unit,
         Any,
@@ -245,7 +246,7 @@ trait OneOffTapirSessionContinuity[T] extends TapirSessionContinuity[T] {
     (SECURITY_INPUT, Seq[Option[String]]),
     PRINCIPAL,
     Unit,
-    Unit,
+    ERROR_OUTPUT,
     Seq[Option[String]],
     Unit,
     Any,
@@ -315,12 +316,12 @@ trait RefreshableTapirSessionContinuity[T] extends TapirSessionContinuity[T] wit
                                              Any,
                                              Future] = refreshableSession(st, required)
 
-  override def invalidateSession[SECURITY_INPUT, PRINCIPAL](st: GetSessionTransport)(
+  override def invalidateSession[SECURITY_INPUT, PRINCIPAL, ERROR_OUTPUT](st: GetSessionTransport)(
       body: => PartialServerEndpointWithSecurityOutput[
         SECURITY_INPUT,
         PRINCIPAL,
         Unit,
-        Unit,
+        ERROR_OUTPUT,
         _,
         Unit,
         Any,
@@ -330,7 +331,7 @@ trait RefreshableTapirSessionContinuity[T] extends TapirSessionContinuity[T] wit
     (SECURITY_INPUT, Seq[Option[String]]),
     PRINCIPAL,
     Unit,
-    Unit,
+    ERROR_OUTPUT,
     Seq[Option[String]],
     Unit,
     Any,

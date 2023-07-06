@@ -108,7 +108,7 @@ trait SessionEndpoints {
     * Note that you should use `refreshable` if you use refreshable systems even only for some
     * users.
     */
-  def invalidateSession[T, SECURITY_INPUT, PRINCIPAL](
+  def invalidateSession[T, SECURITY_INPUT, PRINCIPAL, ERROR_OUTPUT](
       sc: TapirSessionContinuity[T],
       st: GetSessionTransport
   )(
@@ -116,7 +116,7 @@ trait SessionEndpoints {
         SECURITY_INPUT,
         PRINCIPAL,
         Unit,
-        Unit,
+        ERROR_OUTPUT,
         _,
         Unit,
         Any,
@@ -126,7 +126,7 @@ trait SessionEndpoints {
     (SECURITY_INPUT, Seq[Option[String]]),
     PRINCIPAL,
     Unit,
-    Unit,
+    ERROR_OUTPUT,
     Seq[Option[String]],
     Unit,
     Any,

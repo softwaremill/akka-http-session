@@ -463,12 +463,12 @@ private[session] trait RefreshableTapirSession[T] extends Completion {
       }
   }
 
-  private[this] def invalidateRefreshableSessionLogic[PRINCIPAL](
+  private[this] def invalidateRefreshableSessionLogic[PRINCIPAL, ERROR_OUTPUT](
       result: (Seq[Option[String]], PRINCIPAL),
       cookie: Option[String],
       header: Option[String]
   ): Either[
-    Nothing,
+    ERROR_OUTPUT,
     (
         Seq[Option[String]],
         PRINCIPAL
@@ -497,13 +497,14 @@ private[session] trait RefreshableTapirSession[T] extends Completion {
 
   def invalidateRefreshableSession[
       SECURITY_INPUT,
-      PRINCIPAL
+      PRINCIPAL,
+      ERROR_OUTPUT
   ](st: GetSessionTransport)(
       body: => PartialServerEndpointWithSecurityOutput[
         SECURITY_INPUT,
         PRINCIPAL,
         Unit,
-        Unit,
+        ERROR_OUTPUT,
         _,
         Unit,
         Any,
@@ -513,7 +514,7 @@ private[session] trait RefreshableTapirSession[T] extends Completion {
     (SECURITY_INPUT, Seq[Option[String]]),
     PRINCIPAL,
     Unit,
-    Unit,
+    ERROR_OUTPUT,
     Seq[Option[String]],
     Unit,
     Any,

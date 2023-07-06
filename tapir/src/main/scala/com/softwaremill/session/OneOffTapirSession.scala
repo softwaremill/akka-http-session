@@ -308,11 +308,11 @@ private[session] trait OneOffTapirSession[T] {
         )
       }
 
-  private[this] def invalidateOneOffSessionLogic[SECURITY_OUTPUT, PRINCIPAL](
+  private[this] def invalidateOneOffSessionLogic[SECURITY_OUTPUT, PRINCIPAL, ERROR_OUTPUT](
       result: (SECURITY_OUTPUT, PRINCIPAL),
       maybeCookie: Option[String],
       maybeHeader: Option[String]
-  ): Either[Unit, (Seq[Option[String]], PRINCIPAL)] = {
+  ): Either[ERROR_OUTPUT, (Seq[Option[String]], PRINCIPAL)] = {
     val principal = result._2
     maybeCookie match {
       case Some(_) =>
@@ -348,13 +348,14 @@ private[session] trait OneOffTapirSession[T] {
 
   def invalidateOneOffSession[
       SECURITY_INPUT,
-      PRINCIPAL
+      PRINCIPAL,
+      ERROR_OUTPUT
   ](st: GetSessionTransport)(
       body: => PartialServerEndpointWithSecurityOutput[
         SECURITY_INPUT,
         PRINCIPAL,
         Unit,
-        Unit,
+        ERROR_OUTPUT,
         _,
         Unit,
         Any,
@@ -364,7 +365,7 @@ private[session] trait OneOffTapirSession[T] {
     (SECURITY_INPUT, Seq[Option[String]]),
     PRINCIPAL,
     Unit,
-    Unit,
+    ERROR_OUTPUT,
     Seq[Option[String]],
     Unit,
     Any,
