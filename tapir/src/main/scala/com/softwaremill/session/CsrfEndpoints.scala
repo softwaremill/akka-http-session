@@ -64,27 +64,29 @@ trait CsrfEndpoints {
       body
     }
 
-  def setNewCsrfToken[T, SECURITY_INPUT, PRINCIPAL, SECURITY_OUTPUT](
+  def setNewCsrfToken[T, SECURITY_INPUT, PRINCIPAL, ERROR_OUTPUT, SECURITY_OUTPUT](
       checkMode: TapirCsrfCheckMode[T]
   )(
       body: => PartialServerEndpointWithSecurityOutput[
         SECURITY_INPUT,
         PRINCIPAL,
         Unit,
-        Unit,
+        ERROR_OUTPUT,
         SECURITY_OUTPUT,
         Unit,
         Any,
         Future
       ]
-  ): PartialServerEndpointWithSecurityOutput[SECURITY_INPUT,
-                                             PRINCIPAL,
-                                             Unit,
-                                             Unit,
-                                             (SECURITY_OUTPUT, Option[CookieValueWithMeta]),
-                                             Unit,
-                                             Any,
-                                             Future] =
+  ): PartialServerEndpointWithSecurityOutput[
+    SECURITY_INPUT,
+    PRINCIPAL,
+    Unit,
+    ERROR_OUTPUT,
+    (SECURITY_OUTPUT, Option[CookieValueWithMeta]),
+    Unit,
+    Any,
+    Future
+  ] =
     checkMode.setNewCsrfToken {
       body
     }

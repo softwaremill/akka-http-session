@@ -16,12 +16,12 @@ sealed trait TapirSessionContinuity[T] {
 
   def extractSession(maybeValue: Option[String]): Option[T]
 
-  def setSession[SECURITY_INPUT, SECURITY_OUTPUT](st: SetSessionTransport)(
+  def setSession[SECURITY_INPUT, ERROR_OUTPUT, SECURITY_OUTPUT](st: SetSessionTransport)(
       body: => PartialServerEndpointWithSecurityOutput[
         SECURITY_INPUT,
         Option[T],
         Unit,
-        Unit,
+        ERROR_OUTPUT,
         SECURITY_OUTPUT,
         Unit,
         Any,
@@ -32,7 +32,7 @@ sealed trait TapirSessionContinuity[T] {
                                                T
                                              ],
                                              Unit,
-                                             Unit,
+                                             ERROR_OUTPUT,
                                              (SECURITY_OUTPUT, Seq[Option[String]]),
                                              Unit,
                                              Any,
@@ -192,13 +192,13 @@ trait OneOffTapirSessionContinuity[T] extends TapirSessionContinuity[T] {
     maybeValue
   )
 
-  override def setSession[SECURITY_INPUT, SECURITY_OUTPUT](st: SetSessionTransport)(
+  override def setSession[SECURITY_INPUT, ERROR_OUTPUT, SECURITY_OUTPUT](st: SetSessionTransport)(
       body: => PartialServerEndpointWithSecurityOutput[SECURITY_INPUT,
                                                        Option[
                                                          T
                                                        ],
                                                        Unit,
-                                                       Unit,
+                                                       ERROR_OUTPUT,
                                                        SECURITY_OUTPUT,
                                                        Unit,
                                                        Any,
@@ -208,7 +208,7 @@ trait OneOffTapirSessionContinuity[T] extends TapirSessionContinuity[T] {
                                                T
                                              ],
                                              Unit,
-                                             Unit,
+                                             ERROR_OUTPUT,
                                              (SECURITY_OUTPUT, Seq[Option[String]]),
                                              Unit,
                                              Any,
@@ -278,13 +278,13 @@ trait RefreshableTapirSessionContinuity[T] extends TapirSessionContinuity[T] wit
   def removeToken(value: String): Try[Unit] =
     refreshable.refreshTokenManager.removeToken(value).complete()
 
-  override def setSession[SECURITY_INPUT, SECURITY_OUTPUT](st: SetSessionTransport)(
+  override def setSession[SECURITY_INPUT, ERROR_OUTPUT, SECURITY_OUTPUT](st: SetSessionTransport)(
       body: => PartialServerEndpointWithSecurityOutput[SECURITY_INPUT,
                                                        Option[
                                                          T
                                                        ],
                                                        Unit,
-                                                       Unit,
+                                                       ERROR_OUTPUT,
                                                        SECURITY_OUTPUT,
                                                        Unit,
                                                        Any,
@@ -294,7 +294,7 @@ trait RefreshableTapirSessionContinuity[T] extends TapirSessionContinuity[T] wit
                                                T
                                              ],
                                              Unit,
-                                             Unit,
+                                             ERROR_OUTPUT,
                                              (SECURITY_OUTPUT, Seq[Option[String]]),
                                              Unit,
                                              Any,

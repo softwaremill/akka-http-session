@@ -45,7 +45,7 @@ trait TapirEndpoints extends SessionEndpoints with CsrfEndpoints {
       optionalSession(sc, st)
     }
 
-  def setNewCsrfTokenWithSession[T, SECURITY_INPUT, SECURITY_OUTPUT](
+  def setNewCsrfTokenWithSession[T, SECURITY_INPUT, ERROR_OUTPUT, SECURITY_OUTPUT](
       sc: TapirSessionContinuity[T],
       st: SetSessionTransport,
       checkMode: TapirCsrfCheckMode[T]
@@ -55,7 +55,7 @@ trait TapirEndpoints extends SessionEndpoints with CsrfEndpoints {
                                                          T
                                                        ],
                                                        Unit,
-                                                       Unit,
+                                                       ERROR_OUTPUT,
                                                        SECURITY_OUTPUT,
                                                        Unit,
                                                        Any,
@@ -65,7 +65,7 @@ trait TapirEndpoints extends SessionEndpoints with CsrfEndpoints {
                                                T
                                              ],
                                              Unit,
-                                             Unit,
+                                             ERROR_OUTPUT,
                                              ((SECURITY_OUTPUT, Seq[Option[String]]), Option[CookieValueWithMeta]),
                                              Unit,
                                              Any,

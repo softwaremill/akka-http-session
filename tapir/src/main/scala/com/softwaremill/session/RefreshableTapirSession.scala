@@ -36,12 +36,12 @@ private[session] trait RefreshableTapirSession[T] extends Completion {
     header[Option[String]](manager.config.refreshTokenHeaderConfig.sendToClientHeaderName)
   }
 
-  def setRefreshableSession[SECURITY_INPUT, SECURITY_OUTPUT](st: SetSessionTransport)(
+  def setRefreshableSession[SECURITY_INPUT, ERROR_OUTPUT, SECURITY_OUTPUT](st: SetSessionTransport)(
       body: => PartialServerEndpointWithSecurityOutput[
         SECURITY_INPUT,
         Option[T],
         Unit,
-        Unit,
+        ERROR_OUTPUT,
         SECURITY_OUTPUT,
         Unit,
         Any,
@@ -52,7 +52,7 @@ private[session] trait RefreshableTapirSession[T] extends Completion {
                                                T
                                              ],
                                              Unit,
-                                             Unit,
+                                             ERROR_OUTPUT,
                                              (SECURITY_OUTPUT, Seq[Option[String]]),
                                              Unit,
                                              Any,
@@ -74,21 +74,21 @@ private[session] trait RefreshableTapirSession[T] extends Completion {
     }
   }
 
-  def setRefreshableSessionLogic(
+  def setRefreshableSessionLogic[ERROR_OUTPUT](
       option: Option[T],
       existing: Option[String]
-  ): Either[Unit, Option[String]] =
+  ): Either[ERROR_OUTPUT, Option[String]] =
     option match {
       case Some(v) => Right(rotateToken(v, existing))
-      case _       => Left(())
+      case _       => Right(None)
     }
 
-  def setRefreshableCookieSession[SECURITY_INPUT, SECURITY_OUTPUT](
+  def setRefreshableCookieSession[SECURITY_INPUT, ERROR_OUTPUT, SECURITY_OUTPUT](
       body: => PartialServerEndpointWithSecurityOutput[
         SECURITY_INPUT,
         Option[T],
         Unit,
-        Unit,
+        ERROR_OUTPUT,
         SECURITY_OUTPUT,
         Unit,
         Any,
@@ -99,7 +99,7 @@ private[session] trait RefreshableTapirSession[T] extends Completion {
                                                T
                                              ],
                                              Unit,
-                                             Unit,
+                                             ERROR_OUTPUT,
                                              (SECURITY_OUTPUT, Seq[Option[String]]),
                                              Unit,
                                              Any,
@@ -139,12 +139,12 @@ private[session] trait RefreshableTapirSession[T] extends Completion {
       }
   }
 
-  def setRefreshableHeaderSession[SECURITY_INPUT, SECURITY_OUTPUT](
+  def setRefreshableHeaderSession[SECURITY_INPUT, ERROR_OUTPUT, SECURITY_OUTPUT](
       body: => PartialServerEndpointWithSecurityOutput[
         SECURITY_INPUT,
         Option[T],
         Unit,
-        Unit,
+        ERROR_OUTPUT,
         SECURITY_OUTPUT,
         Unit,
         Any,
@@ -155,7 +155,7 @@ private[session] trait RefreshableTapirSession[T] extends Completion {
                                                T
                                              ],
                                              Unit,
-                                             Unit,
+                                             ERROR_OUTPUT,
                                              (SECURITY_OUTPUT, Seq[Option[String]]),
                                              Unit,
                                              Any,

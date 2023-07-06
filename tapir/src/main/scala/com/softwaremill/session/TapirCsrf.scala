@@ -28,24 +28,27 @@ private[session] trait TapirCsrf[T] { _: CsrfCheck =>
       manager.config.csrfSubmittedName
     ).description("read csrf token as header")
 
-  def setNewCsrfToken[SECURITY_INPUT, PRINCIPAL, SECURITY_OUTPUT](
+  def setNewCsrfToken[SECURITY_INPUT, PRINCIPAL, ERROR_OUTPUT, SECURITY_OUTPUT](
       body: => PartialServerEndpointWithSecurityOutput[
         SECURITY_INPUT,
         PRINCIPAL,
         Unit,
-        Unit,
+        ERROR_OUTPUT,
         SECURITY_OUTPUT,
         Unit,
         Any,
         Future
-      ]): PartialServerEndpointWithSecurityOutput[SECURITY_INPUT,
-                                                  PRINCIPAL,
-                                                  Unit,
-                                                  Unit,
-                                                  (SECURITY_OUTPUT, Option[CookieValueWithMeta]),
-                                                  Unit,
-                                                  Any,
-                                                  Future] =
+      ]
+  ): PartialServerEndpointWithSecurityOutput[
+    SECURITY_INPUT,
+    PRINCIPAL,
+    Unit,
+    ERROR_OUTPUT,
+    (SECURITY_OUTPUT, Option[CookieValueWithMeta]),
+    Unit,
+    Any,
+    Future
+  ] =
     body.endpoint
       .out(body.securityOutput)
       .out(csrfCookie)
@@ -57,17 +60,19 @@ private[session] trait TapirCsrf[T] { _: CsrfCheck =>
         }
       }
 
-  /**
-    * Protects against CSRF attacks using a double-submit cookie. The cookie will be set on any `GET` request which
-    * doesn't have the token set in the header. For all other requests, the value of the token from the CSRF cookie must
-    * match the value in the custom header (or request body, if `checkFormBody` is `true`).
+  /** Protects against CSRF attacks using a double-submit cookie. The cookie will be set on any
+    * `GET` request which doesn't have the token set in the header. For all other requests, the
+    * value of the token from the CSRF cookie must match the value in the custom header (or request
+    * body, if `checkFormBody` is `true`).
     *
-    * The cookie value is the concatenation of a timestamp and its HMAC hash following the OWASP recommendation for
-    * CSRF prevention:
-    * @see <a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#hmac-based-token-pattern">OWASP</a>
+    * The cookie value is the concatenation of a timestamp and its HMAC hash following the OWASP
+    * recommendation for CSRF prevention:
+    * @see
+    *   <a
+    *   href="https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#hmac-based-token-pattern">OWASP</a>
     *
-    * Note that this scheme can be broken when not all subdomains are protected or not using HTTPS and secure cookies,
-    * and the token is placed in the request body (not in the header).
+    * Note that this scheme can be broken when not all subdomains are protected or not using HTTPS
+    * and secure cookies, and the token is placed in the request body (not in the header).
     *
     * See the documentation for more details.
     */
@@ -110,17 +115,17 @@ private[session] trait TapirCsrf[T] { _: CsrfCheck =>
       PRINCIPAL,
       SECURITY_OUTPUT
   ](
-     body: => PartialServerEndpointWithSecurityOutput[
-       SECURITY_INPUT,
-       PRINCIPAL,
-       Unit,
-       Unit,
-       SECURITY_OUTPUT,
-       Unit,
-       Any,
-       Future
-     ]
-   ): PartialServerEndpointWithSecurityOutput[
+      body: => PartialServerEndpointWithSecurityOutput[
+        SECURITY_INPUT,
+        PRINCIPAL,
+        Unit,
+        Unit,
+        SECURITY_OUTPUT,
+        Unit,
+        Any,
+        Future
+      ]
+  ): PartialServerEndpointWithSecurityOutput[
     (SECURITY_INPUT, Option[String], Method, Option[String]),
     PRINCIPAL,
     Unit,
@@ -131,9 +136,9 @@ private[session] trait TapirCsrf[T] { _: CsrfCheck =>
     Future
   ] = {
     val partial =
-    // extract csrf token from cookie
+      // extract csrf token from cookie
       csrfTokenFromCookie()
-        // extract request method
+      // extract request method
         .securityIn(extractFromRequest(req => req.method))
         // extract submitted csrf token from header
         .securityIn(submittedCsrfHeader)
@@ -141,10 +146,10 @@ private[session] trait TapirCsrf[T] { _: CsrfCheck =>
         .errorOut(statusCode(StatusCode.Unauthorized))
         .serverSecurityLogicWithOutput {
           case (
-            csrfTokenFromCookie,
-            method,
-            submittedCsrfTokenFromHeader
-            ) =>
+              csrfTokenFromCookie,
+              method,
+              submittedCsrfTokenFromHeader
+              ) =>
             Future.successful(
               hmacTokenCsrfProtectionLogic(
                 method,
@@ -159,11 +164,11 @@ private[session] trait TapirCsrf[T] { _: CsrfCheck =>
       .out(partial.securityOutput)
       .serverSecurityLogicWithOutput {
         case (
-          securityInput,
-          csrfTokenFromCookie,
-          method,
-          submittedCsrfTokenFromHeader
-          ) =>
+            securityInput,
+            csrfTokenFromCookie,
+            method,
+            submittedCsrfTokenFromHeader
+            ) =>
           partial
             .securityLogic(new FutureMonad())(
               (
@@ -184,25 +189,24 @@ private[session] trait TapirCsrf[T] { _: CsrfCheck =>
       }
   }
 
-  implicit def form2Csrf: Map[String, String] => Option[String] = m =>
-    m.get(manager.config.csrfSubmittedName)
+  implicit def form2Csrf: Map[String, String] => Option[String] = m => m.get(manager.config.csrfSubmittedName)
 
   def hmacTokenCsrfProtectionWithFormOrMultipart[
-    SECURITY_INPUT,
-    PRINCIPAL,
-    SECURITY_OUTPUT,
-    F
-  ](form: Either[EndpointIO.Body[String, F], EndpointIO.Body[Seq[RawPart], F]])(
-    body: => PartialServerEndpointWithSecurityOutput[
       SECURITY_INPUT,
       PRINCIPAL,
-      Unit,
-      Unit,
       SECURITY_OUTPUT,
-      Unit,
-      Any,
-      Future
-    ]
+      F
+  ](form: Either[EndpointIO.Body[String, F], EndpointIO.Body[Seq[RawPart], F]])(
+      body: => PartialServerEndpointWithSecurityOutput[
+        SECURITY_INPUT,
+        PRINCIPAL,
+        Unit,
+        Unit,
+        SECURITY_OUTPUT,
+        Unit,
+        Any,
+        Future
+      ]
   )(implicit f: F => Option[String]): PartialServerEndpointWithSecurityOutput[
     (SECURITY_INPUT, Option[String], Method, Option[String], F),
     PRINCIPAL,
