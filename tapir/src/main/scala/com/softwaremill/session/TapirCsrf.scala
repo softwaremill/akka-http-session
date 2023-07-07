@@ -130,7 +130,7 @@ private[session] trait TapirCsrf[T] { _: CsrfCheck =>
     (SECURITY_INPUT, Option[String], Method, Option[String]),
     PRINCIPAL,
     Unit,
-    _,
+    Unit,
     (SECURITY_OUTPUT, Option[CookieValueWithMeta]),
     Unit,
     Any,
@@ -161,8 +161,8 @@ private[session] trait TapirCsrf[T] { _: CsrfCheck =>
         }
     partial.endpoint
       .prependSecurityIn(body.securityInput)
-      .out(body.securityOutput)
-      .out(partial.securityOutput)
+//FIXME      .errorOut(body.errorOutput)
+      .out(body.securityOutput.and(partial.securityOutput))
       .serverSecurityLogicWithOutput {
         case (
             securityInput,
@@ -195,6 +195,7 @@ private[session] trait TapirCsrf[T] { _: CsrfCheck =>
   def hmacTokenCsrfProtectionWithFormOrMultipart[
       SECURITY_INPUT,
       PRINCIPAL,
+      ERROR_OUTPUT,
       SECURITY_OUTPUT,
       F
   ](form: Either[EndpointIO.Body[String, F], EndpointIO.Body[Seq[RawPart], F]])(
@@ -202,7 +203,7 @@ private[session] trait TapirCsrf[T] { _: CsrfCheck =>
         SECURITY_INPUT,
         PRINCIPAL,
         Unit,
-        Unit,
+        ERROR_OUTPUT,
         SECURITY_OUTPUT,
         Unit,
         Any,
@@ -251,8 +252,7 @@ private[session] trait TapirCsrf[T] { _: CsrfCheck =>
         }
     partial.endpoint
       .prependSecurityIn(body.securityInput)
-      .out(body.securityOutput)
-      .out(partial.securityOutput)
+      .out(body.securityOutput.and(partial.securityOutput))
       .serverSecurityLogicWithOutput {
         case (
             securityInput,
