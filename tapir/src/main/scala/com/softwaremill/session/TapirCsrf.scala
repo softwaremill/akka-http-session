@@ -113,13 +113,14 @@ private[session] trait TapirCsrf[T] { _: CsrfCheck =>
   def hmacTokenCsrfProtection[
       SECURITY_INPUT,
       PRINCIPAL,
+      ERROR_OUTPUT,
       SECURITY_OUTPUT
   ](
       body: => PartialServerEndpointWithSecurityOutput[
         SECURITY_INPUT,
         PRINCIPAL,
         Unit,
-        Unit,
+        ERROR_OUTPUT,
         SECURITY_OUTPUT,
         Unit,
         Any,
@@ -129,7 +130,7 @@ private[session] trait TapirCsrf[T] { _: CsrfCheck =>
     (SECURITY_INPUT, Option[String], Method, Option[String]),
     PRINCIPAL,
     Unit,
-    Unit,
+    _,
     (SECURITY_OUTPUT, Option[CookieValueWithMeta]),
     Unit,
     Any,

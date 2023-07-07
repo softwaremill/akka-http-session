@@ -10,9 +10,9 @@ import com.softwaremill.session._
 import com.typesafe.scalalogging.StrictLogging
 import sttp.model.headers.WWWAuthenticateChallenge
 import sttp.tapir.EndpointInput.AuthType
-import sttp.tapir.{EndpointInput, auth, endpoint, stringBody}
+import sttp.tapir.{EndpointInput, auth, stringBody}
 import sttp.tapir.model.UsernamePassword
-import sttp.tapir.server.{PartialServerEndpointWithSecurityOutput, ServerEndpoint}
+import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.server.akkahttp.AkkaHttpServerInterpreter
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
 
