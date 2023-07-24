@@ -62,13 +62,9 @@ private[session] trait OneOffTapirSession[T] {
       option: Option[T],
       existing: Option[String]
   ): Either[ERROR_OUTPUT, Option[String]] =
-    existing match {
-      case None =>
-        option match {
-          case Some(v) => Right(Some(manager.clientSessionManager.encode(v)))
-          case _       => Right(None)
-        }
-      case some => Right(some)
+    option match {
+      case Some(v) => Right(Some(manager.clientSessionManager.encode(v)))
+      case _       => Right(existing)
     }
 
   def setOneOffCookieSession[SECURITY_INPUT, ERROR_OUTPUT, SECURITY_OUTPUT](
