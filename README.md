@@ -1,19 +1,15 @@
-![akka-http-session](https://github.com/softwaremill/akka-http-session/raw/master/banner.png)
+[`pekko-http`](https://pekko.apache.org/docs/pekko-http/current/index.html) is an Apache Pekko module for building *reactive* REST services with an elegant DSL.
 
-[![Build Status](https://travis-ci.org/softwaremill/akka-http-session.svg?branch=master)](https://travis-ci.org/softwaremill/akka-http-session)
-[![Join the chat at https://gitter.im/softwaremill/akka-http-session](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/softwaremill/akka-http-session?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.softwaremill.akka-http-session/core_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.softwaremill.akka-http-session/core_2.12)
-
-[`akka-http`](https://doc.akka.io/docs/akka-http/current/index.html) is an Akka 
-module, originating from [spray.io](http://spray.io), for building *reactive* REST services with an elegant DSL.
-
-`akka-http` is a great toolkit for building backends for single-page or mobile applications. In almost all apps there 
+`pekko-http` is a great toolkit for building backends for single-page or mobile applications. In almost all apps there 
 is a need to maintain user sessions, make sure session data is secure and cannot be tampered with.
 
-`akka-http-session` provides directives for client-side session management in web and mobile applications, using cookies
+`pekko-http-session` provides directives for client-side session management in web and mobile applications, using cookies
 or custom headers + local storage, with optional [Json Web Tokens](http://jwt.io/) format support. 
 
-A [comprehensive FAQ](https://github.com/softwaremill/akka-http-session-faq) is available, along with code examples (in Java, but easy to translate to Scala) which answers many common questions on how sessions work, how to secure them and implement using akka-http.
+This is a fork of [akka-http-session](https://github.com/softwaremill/akka-http-session).
+The [akka-http-session FAQ](https://github.com/softwaremill/akka-http-session-faq) is useful resource.
+It includes code examples (in Java, but easy to translate to Scala) which answers many common questions on how sessions work, how to secure them and implement using akka-http.
+These examples can be easily changed to work with pekko-http.
 
 ## What is a session?
 
@@ -29,7 +25,7 @@ A session is a string token which is sent to the client and should be sent back 
 To prevent forging, serialized session data is **signed** using a server secret. The signature is appended to the
 session data that is sent to the client, and verified when the session token is received back.
 
-## `akka-http-session` features
+## `pekko-http-session` features
 
 * type-safe client-side sessions
 * sessions can be encrypted
@@ -42,7 +38,7 @@ session data that is sent to the client, and verified when the session token is 
 
 ## Example
 
-You can try out a simple example by running [`com.softwaremill.example.ScalaExample`](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/ScalaExample.scala) or [`com.softwaremill.example.JavaExample`](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/java/com/softwaremill/example/JavaExample.java) and opening [http://localhost:8080](http://localhost:8080).
+You can try out a simple example by running [`com.softwaremill.example.ScalaExample`](https://github.com/pjfanning/pekko-http-session/blob/master/example/src/main/scala/com/softwaremill/example/ScalaExample.scala) or [`com.softwaremill.example.JavaExample`](https://github.com/pjfanning/pekko-http-session/blob/master/example/src/main/java/com/softwaremill/example/JavaExample.java) and opening [http://localhost:8080](http://localhost:8080).
 
 ## `SessionManager` & configuration
 
@@ -52,11 +48,11 @@ running in. You can generate one with `SessionUtil.randomServerSecret()`. Note t
 all sessions will become invalid.
 
 A `SessionConfig` instance can be created using [Typesafe config](https://github.com/typesafehub/config).
-The only value that you need to provide is `akka.http.session.server-secret`,
+The only value that you need to provide is `pekko.http.session.server-secret`,
 preferably via `application.conf` (then you can safely call `SessionConfig.fromConfig`) or by using 
 `SessionConfig.default()`.
 
-You can customize any of the [default config options](https://github.com/softwaremill/akka-http-session/blob/master/core/src/main/resources/reference.conf) 
+You can customize any of the [default config options](https://github.com/pjfanning/pekko-http-session/blob/master/core/src/main/resources/reference.conf) 
 either by modifying them through `application.conf` or by modifying the `SessionConfig` case class. If a value has
 type `Option[]`, you can set it to `None` by using a `none` value in the config file (for both java and scala).
 
@@ -95,31 +91,31 @@ Basic types like `String`, `Int`, `Long`, `Float`, `Double` and `Map[String, Str
 Support for other types can be added by providing a (an implicit for scala) `SessionSerializer[T, String]` (`SessionSerializer<T, String>`). For case classes, it's most 
 convenient to use a `MultiValueSessionSerializer[T]` or (`MultiValueSessionSerializer<T>`) which should convert the instance into a `String -> String` map 
 (nested types are not supported on purpose, as session data should be small & simple). Examples of `SessionSerializer` and `MultiValueSessionSerializer` 
-usage can be found [here](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/serializers) for scala and [here](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/java/com/softwaremill/example/serializers) for java. 
+usage can be found [here](https://github.com/pjfanning/pekko-http-session/blob/master/example/src/main/scala/com/softwaremill/example/serializers) for scala and [here](https://github.com/pjfanning/pekko-http-session/blob/master/example/src/main/java/com/softwaremill/example/serializers) for java. 
 
-Here are code samples in [scala](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/session/manager/MyScalaSessionManager.scala) and [java](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/java/com/softwaremill/example/session/manager/MyJavaSessionManager.java) illustrating how to create a session manager where the session content will be a single `Long` number.
+Here are code samples in [scala](https://github.com/pjfanning/pekko-http-session/blob/master/example/src/main/scala/com/softwaremill/example/session/manager/MyScalaSessionManager.scala) and [java](https://github.com/pjfanning/pekko-http-session/blob/master/example/src/main/java/com/softwaremill/example/session/manager/MyJavaSessionManager.java) illustrating how to create a session manager where the session content will be a single `Long` number.
 
 The basic directives enable you to set, read and invalidate the session. To create a new client-side session (create
-and set a new session cookie), you need to use the `setSession` directive. See how it's done in [java](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/java/com/softwaremill/example/session/SetSessionJava.java) and [scala](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/session/SetSessionScala.scala).
+and set a new session cookie), you need to use the `setSession` directive. See how it's done in [java](https://github.com/pjfanning/pekko-http-session/blob/master/example/src/main/java/com/softwaremill/example/session/SetSessionJava.java) and [scala](https://github.com/pjfanning/pekko-http-session/blob/master/example/src/main/scala/com/softwaremill/example/session/SetSessionScala.scala).
 
 Note that when using cookies, their size is limited to 4KB, so you shouldn't put too much data in there (the signature 
 takes about 50 characters). 
 
 You can require a session to be present, optionally require a session or get a full description of possible session decode outcomes. 
-Check [java](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/java/com/softwaremill/example/session/VariousSessionsJava.java) and [scala](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/session/VariousSessionsScala.scala) examples for details.
+Check [java](https://github.com/pjfanning/pekko-http-session/blob/master/example/src/main/java/com/softwaremill/example/session/VariousSessionsJava.java) and [scala](https://github.com/pjfanning/pekko-http-session/blob/master/example/src/main/scala/com/softwaremill/example/session/VariousSessionsScala.scala) examples for details.
 
-If a required session is not present, by default a `403` HTTP status code is returned. Finally, a session can be invalidated. See how it's done in examples for [java](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/java/com/softwaremill/example/session/SessionInvalidationJava.java) and [scala](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/session/SessionInvalidationScala.scala).
+If a required session is not present, by default a `403` HTTP status code is returned. Finally, a session can be invalidated. See how it's done in examples for [java](https://github.com/pjfanning/pekko-http-session/blob/master/example/src/main/java/com/softwaremill/example/session/SessionInvalidationJava.java) and [scala](https://github.com/pjfanning/pekko-http-session/blob/master/example/src/main/scala/com/softwaremill/example/session/SessionInvalidationScala.scala).
 
 ### Encrypting the session
 
-It is possible to encrypt the session data by modifying the `akka.http.session.encrypt-data` config option. When 
+It is possible to encrypt the session data by modifying the `pekko.http.session.encrypt-data` config option. When 
 sessions are encrypted, it's not possible to read their content on the client side.
 
 The key used for encrypting will be calculated basing on the server secret.
 
 ### Session expiry/timeout
 
-By default, sessions expire after a week. This can be disabled or changed with the `akka.http.session.max-age` config
+By default, sessions expire after a week. This can be disabled or changed with the `pekko.http.session.max-age` config
 option.
 
 Note that when using cookies, even though the cookie sent will be a session cookie, it is possible that the client 
@@ -137,7 +133,7 @@ A number of serializers for the basic types are present in `JValueSessionSeriali
 
 You may also find it helpful to include the json4s-ext library which provides serializers for common Java types such as  `java.util.UUID`, `org.joda.time._` and Java enumerations.
 
-Grab some [java](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/java/com/softwaremill/example/jwt/JavaJwtExample.java) and [scala](https://github.com/softwaremill/akka-http-session/blob/master/example/src/main/scala/com/softwaremill/example/serializers/JWTSerializersScala.scala) examples.
+Grab some [java](https://github.com/pjfanning/pekko-http-session/blob/master/example/src/main/java/com/softwaremill/example/jwt/JavaJwtExample.java) and [scala](https://github.com/pjfanning/pekko-http-session/blob/master/example/src/main/scala/com/softwaremill/example/serializers/JWTSerializersScala.scala) examples.
 
 There are many tools available to read JWT session data using various platforms, e.g. 
 [for Angular](https://github.com/auth0/angular-jwt).
@@ -149,25 +145,25 @@ It is also possible to customize the session data content generated by overridin
 
 This library supports all registered claims mentioned in [RFC 7519, Section 4.1](https://tools.ietf.org/html/rfc7519#page-9).
 
-Static claims such as `iss` (*Issuer*), `sub` (*Subject*) and `aud` (*Audience*) can be configured by setting `akka.http.session.jwt.iss`, `akka.http.session.jwt.sub` and `akka.http.session.jwt.aud` string properties, respectively.
+Static claims such as `iss` (*Issuer*), `sub` (*Subject*) and `aud` (*Audience*) can be configured by setting `pekko.http.session.jwt.iss`, `pekko.http.session.jwt.sub` and `pekko.http.session.jwt.aud` string properties, respectively.
 
 Because claims such as `exp` (*Expiration Time*) and `nbf` (*Not Before*) depend on the time at which the JWT was issued, configuration expects durations instead of fixed timestamps.
 Effective claim values are then calculated by adding these offsets to the current timestamp (the JWT's issue time).
-The offset values are configured via keys defined under `akka.http.session.jwt.exp-timeout` and `akka.http.session.jwt.nbf-offset`.
+The offset values are configured via keys defined under `pekko.http.session.jwt.exp-timeout` and `pekko.http.session.jwt.nbf-offset`.
 
-If `exp-timeout` is not defined, value of `akka.http.session.max-age` would be used instead.
+If `exp-timeout` is not defined, value of `pekko.http.session.max-age` would be used instead.
 
-`iat` (*Issued At*) claim represents issue time and cannot be customized. Although you can decide to include this claim in your tokens or not by setting `akka.http.session.jwt.include-iat` to `true` or `false`. By default, this claim is not included.
+`iat` (*Issued At*) claim represents issue time and cannot be customized. Although you can decide to include this claim in your tokens or not by setting `pekko.http.session.jwt.include-iat` to `true` or `false`. By default, this claim is not included.
 
 `jti` (*JWT ID*) claim is a case-sensitive string containing a unique identifier for the JWT. It must be unique per token and collisions must be prevented even among values produced by different issuers.
-Akka-http-session will compute and include `jti` claim if `akka.http.session.jwt.include-jti` is set to `true` (it's disabled by default).
+pekko-http-session will compute and include `jti` claim if `pekko.http.session.jwt.include-jti` is set to `true` (it's disabled by default).
 Token ids are generated using the below scheme:
 
 `<iss claim value>-<random UUID>` or just `<random UUID>`, depending on the `iss` claim presence.
 
 You can find a sample claims configuration below:
 ````hocon
-akka.http.session {
+pekko.http.session {
   jwt {
     iss = "Issuer"
     sub = "Subject"
@@ -191,9 +187,9 @@ All non-JWT sessions use HMAC with SHA-256 and this cannot be configured.
 
 ### Configuring JWS (for JSON Web Tokens only)
 
-In order to start using RSA algorithm you have to configure `akka.http.session.jws.alg` and `akka.http.session.jws.rsa-private-key` properties:
+In order to start using RSA algorithm you have to configure `pekko.http.session.jws.alg` and `pekko.http.session.jws.rsa-private-key` properties:
 ````hocon
-akka.http.session {
+pekko.http.session {
   jws {
     alg = "RS256"
     rsa-private-key = "<your private PKCS#8 key goes here>"
@@ -204,7 +200,7 @@ akka.http.session {
 Because `HS256` is used by default you may skip the `jws` configuration and rely on a reference configuration delivered with the library. 
 Alternatively, if you prefer to be more explicit, you might follow this configuration template:
 ````hocon
-akka.http.session {
+pekko.http.session {
   server-secret = "<at least 64-digits length secret goes here>"
   jws {
     alg = "HS256"
@@ -244,7 +240,7 @@ These can be customized in the config.
 
 If you'd like to implement persistent, "remember-me" sessions, you should use `refreshable` instead of `oneOff`
 sessions. This is especially useful in mobile applications, where you log in once, and the session is remembered for
-a long time. Make sure to adjust the `akka.http.session.refresh-token.max-age` config option appropriately 
+a long time. Make sure to adjust the `pekko.http.session.refresh-token.max-age` config option appropriately 
 (defaults to 1 month)!
 
 You can dynamically decide, basing on the request properties (e.g. a query parameter), if a session should be
@@ -280,51 +276,14 @@ which expire fast, and weaker-authenticated re-creatable sessions (as described 
 When touching an existing session, the refresh token will not be re-generated and extended, only the session
 cookie.
 
-## Links
-
-* [Bootzooka](https://github.com/softwaremill/bootzooka), a web application template project using `akka-http` and `akka-http-session`
-* [Spray session](https://github.com/gnieh/spray-session), similar project for spray.io
-* [Spray SPA](https://github.com/enetsee/Spray-SPA), a single-page-application demo built using spray.io, also
-containing an implementation of client-side sessions
-* [Play framework](https://playframework.com), a full web framework, from which parts of the session encoding/decoding
-code was taken
-* [Rails security guide](http://guides.rubyonrails.org/security.html#session-storage), a description of how sessions are
-stored in Rails
-* [Akka-Http issue 114](https://github.com/akka/akka-http/issues/114) for implementing similar functionality straight in Akka-Http
-* [Implementing remember me](https://paragonie.com/blog/2015/04/secure-authentication-php-with-long-term-persistence#title.2)
-* [The definitive guide to form-based website authorization](http://stackoverflow.com/questions/549/the-definitive-guide-to-form-based-website-authentication)
-* [The Anatomy of a JSON Web Token](https://scotch.io/tutorials/the-anatomy-of-a-json-web-token)
-* [Cookies vs tokens](https://auth0.com/blog/2014/01/07/angularjs-authentication-with-cookies-vs-token/)
-
 ## Using from SBT
 
-For `akka-http` version `10+`:
+For `pekko-http` version `10+`:
 
 ````scala
-libraryDependencies += "com.softwaremill.akka-http-session" %% "core" % "0.7.0"
-libraryDependencies += "com.softwaremill.akka-http-session" %% "jwt"  % "0.7.0" // optional
+libraryDependencies += "com.github.pjfanning" %% "pekko-http-session-core" % "0.8.0"
+libraryDependencies += "com.github.pjfanning" %% "pekko-http-session-jwt"  % "0.8.0" // optional
 ````
-
-## Updating
-
-Certain releases changed the client token encoding/serialization. In those cases, it's important to enable the appropriate
-token migrations, otherwise existing client sessions will be invalid (and your users will be logged out).
-
-When updating from a version before 0.5.3, set `akka.http.session.token-migration.v0-5-3.enabled = true`.
-
-When updating from a version before 0.5.2, set `akka.http.session.token-migration.v0-5-2.enabled = true`.
-
-Note that when updating through multiple releases, be sure to enable all the appropriate migrations.
-
-For versions prior to 0.5.0, no migration path is provided. However, you can implement your own encoders/serializers
-to support migrating from whatever version you are using.
-
-Since token changes may be security related, migrations should be enabled for the shortest period of time
-after which the vast majority of client tokens have been migrated.
-
-## Commercial Support
-
-We offer commercial support for akka-http-session and related technologies, as well as development services. [Contact us](https://softwaremill.com) to learn more about our offer!
 
 ## Copyright
 

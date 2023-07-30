@@ -1,9 +1,9 @@
 package com.softwaremill.session
 
-import akka.http.scaladsl.model.headers.`Set-Cookie`
-import akka.http.scaladsl.server.AuthorizationFailedRejection
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.testkit.ScalatestRouteTest
+import org.apache.pekko.http.scaladsl.model.headers.`Set-Cookie`
+import org.apache.pekko.http.scaladsl.server.AuthorizationFailedRejection
+import org.apache.pekko.http.scaladsl.server.Directives._
+import org.apache.pekko.http.scaladsl.testkit.ScalatestRouteTest
 import com.softwaremill.session.SessionDirectives._
 import com.softwaremill.session.SessionOptions._
 import org.scalatest._

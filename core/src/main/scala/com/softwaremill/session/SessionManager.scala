@@ -1,12 +1,12 @@
 package com.softwaremill.session
 
 import java.util.concurrent.TimeUnit
-import akka.http.scaladsl.server.AuthorizationFailedRejection
+import org.apache.pekko.http.scaladsl.server.AuthorizationFailedRejection
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
 
-import akka.http.scaladsl.model.headers.{RawHeader, HttpCookie}
+import org.apache.pekko.http.scaladsl.model.headers.{RawHeader, HttpCookie}
 
 import scala.util.Try
 

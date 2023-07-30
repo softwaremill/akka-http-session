@@ -1,37 +1,38 @@
 import com.softwaremill.SbtSoftwareMillCommon.commonSmlBuildSettings
 import com.softwaremill.Publish.ossPublishSettings
 
-val scala2_12 = "2.12.15"
-val scala2_13 = "2.13.8"
+val scala2_12 = "2.12.17"
+val scala2_13 = "2.13.10"
 val scala2 = List(scala2_12, scala2_13)
 
 lazy val commonSettings = commonSmlBuildSettings ++ ossPublishSettings ++ Seq(
-  organization := "com.softwaremill.akka-http-session",
-  versionScheme := Some("early-semver")
+  organization := "com.github.pjfanning",
+  versionScheme := Some("early-semver"),
+  resolvers += "Apache Pekko Staging" at "https://repository.apache.org/content/groups/staging"
 )
 
-val akkaHttpVersion = "10.2.7"
-val akkaStreamsVersion = "2.6.18"
+val pekkoHttpVersion = "1.0.0-RC2"
+val pekkoStreamsVersion = "1.0.1"
 val json4sVersion = "4.0.4"
-val akkaStreamsProvided = "com.typesafe.akka" %% "akka-stream" % akkaStreamsVersion % "provided"
-val akkaStreamsTestkit = "com.typesafe.akka" %% "akka-stream-testkit" % akkaStreamsVersion % "test"
+val pekkoStreamsProvided = "org.apache.pekko" %% "pekko-stream" % pekkoStreamsVersion % "provided"
+val pekkoStreamsTestkit = "org.apache.pekko" %% "pekko-stream-testkit" % pekkoStreamsVersion % "test"
 
-val scalaTest = "org.scalatest" %% "scalatest" % "3.2.11" % "test"
+val scalaTest = "org.scalatest" %% "scalatest" % "3.2.16" % "test"
 
 lazy val rootProject = (project in file("."))
   .settings(commonSettings: _*)
-  .settings(publish / skip := true, name := "akka-http-session", scalaVersion := scala2_13)
+  .settings(publish / skip := true, name := "pekko-http-session-root", scalaVersion := scala2_13)
   .aggregate(core.projectRefs ++ jwt.projectRefs ++ example.projectRefs ++ javaTests.projectRefs: _*)
 
 lazy val core = (projectMatrix in file("core"))
   .settings(commonSettings: _*)
   .settings(
-    name := "core",
+    name := "pekko-http-session-core",
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
-      akkaStreamsProvided,
-      "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
-      akkaStreamsTestkit,
+      "org.apache.pekko" %% "pekko-http" % pekkoHttpVersion,
+      pekkoStreamsProvided,
+      "org.apache.pekko" %% "pekko-http-testkit" % pekkoHttpVersion % "test",
+      pekkoStreamsTestkit,
       "org.scalacheck" %% "scalacheck" % "1.15.4" % "test",
       scalaTest
     )
@@ -41,12 +42,12 @@ lazy val core = (projectMatrix in file("core"))
 lazy val jwt = (projectMatrix in file("jwt"))
   .settings(commonSettings: _*)
   .settings(
-    name := "jwt",
+    name := "pekko-http-session-jwt",
     libraryDependencies ++= Seq(
       "org.json4s" %% "json4s-jackson" % json4sVersion,
       "org.json4s" %% "json4s-ast" % json4sVersion,
       "org.json4s" %% "json4s-core" % json4sVersion,
-      akkaStreamsProvided,
+      pekkoStreamsProvided,
       scalaTest
     ),
     // generating docs for 2.13 causes an error: "not found: type DefaultFormats$"
@@ -60,9 +61,9 @@ lazy val example = (projectMatrix in file("example"))
   .settings(
     publishArtifact := false,
     libraryDependencies ++= Seq(
-      akkaStreamsProvided,
+      pekkoStreamsProvided,
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
-      "ch.qos.logback" % "logback-classic" % "1.2.10",
+      "ch.qos.logback" % "logback-classic" % "1.2.12",
       "org.json4s" %% "json4s-ext" % json4sVersion
     )
   )
@@ -77,10 +78,10 @@ lazy val javaTests = (projectMatrix in file("javaTests"))
     crossPaths := false, // https://github.com/sbt/junit-interface/issues/35
     publishArtifact := false,
     libraryDependencies ++= Seq(
-      akkaStreamsProvided,
-      "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
-      "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
-      akkaStreamsTestkit,
+      pekkoStreamsProvided,
+      "org.apache.pekko" %% "pekko-http" % pekkoHttpVersion,
+      "org.apache.pekko" %% "pekko-http-testkit" % pekkoHttpVersion % "test",
+      pekkoStreamsTestkit,
       "junit" % "junit" % "4.13.2" % "test",
       "com.github.sbt" % "junit-interface" % "0.13.3" % "test",
       scalaTest

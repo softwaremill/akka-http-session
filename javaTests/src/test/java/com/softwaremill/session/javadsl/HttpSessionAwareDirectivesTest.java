@@ -1,14 +1,14 @@
 package com.softwaremill.session.javadsl;
 
-import akka.actor.ActorSystem;
-import akka.http.javadsl.model.HttpHeader;
-import akka.http.javadsl.model.HttpResponse;
-import akka.http.javadsl.model.headers.HttpCookie;
-import akka.http.javadsl.model.headers.SetCookie;
-import akka.http.javadsl.server.Route;
-import akka.http.javadsl.testkit.JUnitRouteTest;
-import akka.stream.ActorMaterializer;
-import akka.stream.Materializer;
+import org.apache.pekko.actor.ActorSystem;
+import org.apache.pekko.http.javadsl.model.HttpHeader;
+import org.apache.pekko.http.javadsl.model.HttpResponse;
+import org.apache.pekko.http.javadsl.model.headers.HttpCookie;
+import org.apache.pekko.http.javadsl.model.headers.SetCookie;
+import org.apache.pekko.http.javadsl.server.Route;
+import org.apache.pekko.http.javadsl.testkit.JUnitRouteTest;
+import org.apache.pekko.stream.ActorMaterializer;
+import org.apache.pekko.stream.Materializer;
 import com.softwaremill.session.BasicSessionEncoder;
 import com.softwaremill.session.CheckHeader;
 import com.softwaremill.session.CheckHeaderAndForm;
@@ -208,8 +208,8 @@ public abstract class HttpSessionAwareDirectivesTest extends JUnitRouteTest {
 
     private SessionManager<String> getExpiringSessionManagerWithFixedTime(long delay) {
         return new SessionManager<String>(SessionConfig.fromConfig(ConfigFactory.load()
-            .withValue("akka.http.session.max-age", ConfigValueFactory.fromAnyRef(MAX_SESSION_AGE))
-            .withValue("akka.http.session.server-secret", ConfigValueFactory.fromAnyRef(SECRET))), ENCODER) {
+            .withValue("pekko.http.session.max-age", ConfigValueFactory.fromAnyRef(MAX_SESSION_AGE))
+            .withValue("pekko.http.session.server-secret", ConfigValueFactory.fromAnyRef(SECRET))), ENCODER) {
             @Override
             public long nowMillis() {
                 return (3028L + delay) * 1000L;

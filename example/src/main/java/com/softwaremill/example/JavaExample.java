@@ -1,19 +1,19 @@
 package com.softwaremill.example;
 
-import akka.NotUsed;
-import akka.actor.ActorSystem;
-import akka.dispatch.MessageDispatcher;
-import akka.http.javadsl.ConnectHttp;
-import akka.http.javadsl.Http;
-import akka.http.javadsl.ServerBinding;
-import akka.http.javadsl.model.HttpRequest;
-import akka.http.javadsl.model.HttpResponse;
-import akka.http.javadsl.model.StatusCodes;
-import akka.http.javadsl.model.Uri;
-import akka.http.javadsl.server.Route;
-import akka.http.javadsl.unmarshalling.Unmarshaller;
-import akka.stream.ActorMaterializer;
-import akka.stream.javadsl.Flow;
+import org.apache.pekko.NotUsed;
+import org.apache.pekko.actor.ActorSystem;
+import org.apache.pekko.dispatch.MessageDispatcher;
+import org.apache.pekko.http.javadsl.ConnectHttp;
+import org.apache.pekko.http.javadsl.Http;
+import org.apache.pekko.http.javadsl.ServerBinding;
+import org.apache.pekko.http.javadsl.model.HttpRequest;
+import org.apache.pekko.http.javadsl.model.HttpResponse;
+import org.apache.pekko.http.javadsl.model.StatusCodes;
+import org.apache.pekko.http.javadsl.model.Uri;
+import org.apache.pekko.http.javadsl.server.Route;
+import org.apache.pekko.http.javadsl.unmarshalling.Unmarshaller;
+import org.apache.pekko.stream.ActorMaterializer;
+import org.apache.pekko.stream.javadsl.Flow;
 import com.softwaremill.example.session.MyJavaSession;
 import com.softwaremill.session.BasicSessionEncoder;
 import com.softwaremill.session.CheckHeader;
@@ -68,16 +68,16 @@ public class JavaExample extends HttpSessionAwareDirectives<MyJavaSession> {
 
     public static void main(String[] args) throws IOException {
 
-        // ** akka-http boiler plate **
+        // ** pekko-http boiler plate **
         ActorSystem system = ActorSystem.create("example");
         final ActorMaterializer materializer = ActorMaterializer.create(system);
         final Http http = Http.get(system);
 
-        // ** akka-http-session setup **
+        // ** pekko-http-session setup **
         MessageDispatcher dispatcher = system.dispatchers().lookup("akka.actor.default-dispatcher");
         final JavaExample app = new JavaExample(dispatcher);
 
-        // ** akka-http boiler plate continued **
+        // ** pekko-http boiler plate continued **
         final Flow<HttpRequest, HttpResponse, NotUsed> routes = app.createRoutes().flow(system, materializer);
         final CompletionStage<ServerBinding> binding = http.bindAndHandle(routes, ConnectHttp.toHost("localhost", 8080), materializer);
 

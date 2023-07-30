@@ -19,7 +19,7 @@ class SessionConfigTest extends AnyFlatSpec with Matchers with OptionValues {
   def referenceConfWithSecret(serverSecret: String): Config =
     ConfigFactory
       .load("reference")
-      .withValue("akka.http.session.server-secret", fromAnyRef(serverSecret))
+      .withValue("pekko.http.session.server-secret", fromAnyRef(serverSecret))
 
   def configWith(stringValue: String): Config =
     ConfigFactory
@@ -28,7 +28,7 @@ class SessionConfigTest extends AnyFlatSpec with Matchers with OptionValues {
 
   it should "load and parse default (HS256) JWS config" in {
     val fakeConfig = referenceConfWithSecret(fakeServerSecret)
-    fakeConfig.getString("akka.http.session.jws.alg") should equal("HS256")
+    fakeConfig.getString("pekko.http.session.jws.alg") should equal("HS256")
 
     val config = SessionConfig.fromConfig(fakeConfig)
     config.jws.alg should equal(HmacSHA256(fakeServerSecret))
@@ -50,7 +50,7 @@ class SessionConfigTest extends AnyFlatSpec with Matchers with OptionValues {
     }
     val encodedPrivateKey: String = Base64.getEncoder.encodeToString(privateKey.getEncoded)
     val fakeConfig = configWith(s"""
-        |akka.http.session.jws {
+        |pekko.http.session.jws {
         |  alg = "RS256"
         |  rsa-private-key = "$encodedPrivateKey"
         |}
@@ -62,19 +62,19 @@ class SessionConfigTest extends AnyFlatSpec with Matchers with OptionValues {
 
   it should "fail to load config due to missing RSA private key (alg = RS256)" in {
     val fakeConfig = configWith(s"""
-         |akka.http.session.jws {
+         |pekko.http.session.jws {
          |  alg = "RS256"
          |}
       """.stripMargin)
     val ex = intercept[IllegalArgumentException] {
       SessionConfig.fromConfig(fakeConfig)
     }
-    ex.getMessage should equal("akka.http.session.jws.rsa-private-key must be defined in order to use alg = RS256")
+    ex.getMessage should equal("pekko.http.session.jws.rsa-private-key must be defined in order to use alg = RS256")
   }
 
   it should "fail to load config due to empty RSA private key (alg = RS256)" in {
     val fakeConfig = configWith(s"""
-         |akka.http.session.jws {
+         |pekko.http.session.jws {
          |  alg = "RS256"
          |  rsa-private-key = ""
          |}
@@ -82,12 +82,12 @@ class SessionConfigTest extends AnyFlatSpec with Matchers with OptionValues {
     val ex = intercept[IllegalArgumentException] {
       SessionConfig.fromConfig(fakeConfig)
     }
-    ex.getMessage should equal("akka.http.session.jws.rsa-private-key must be defined in order to use alg = RS256")
+    ex.getMessage should equal("pekko.http.session.jws.rsa-private-key must be defined in order to use alg = RS256")
   }
 
   it should "fail to load config due to invalid RSA private key (alg = RS256)" in {
     val fakeConfig = configWith(s"""
-         |akka.http.session.jws {
+         |pekko.http.session.jws {
          |  alg = "RS256"
          |  rsa-private-key = "an invalid RSA key"
          |}
@@ -99,7 +99,7 @@ class SessionConfigTest extends AnyFlatSpec with Matchers with OptionValues {
   }
 
   it should "fail to load config due to unsupported JWS alg" in {
-    val fakeConfig = configWith("""akka.http.session.jws.alg = "UNSUPPORTED1" """)
+    val fakeConfig = configWith("""pekko.http.session.jws.alg = "UNSUPPORTED1" """)
     val ex = intercept[IllegalArgumentException] {
       SessionConfig.fromConfig(fakeConfig)
     }
@@ -108,7 +108,7 @@ class SessionConfigTest extends AnyFlatSpec with Matchers with OptionValues {
 
   it should "load JWT config" in {
     val fakeConfig = configWith(
-      """akka.http.session.jwt {
+      """pekko.http.session.jwt {
         |iss = "testIssuer"
         |sub = "testSubject"
         |aud = "testAudience"
@@ -129,7 +129,7 @@ class SessionConfigTest extends AnyFlatSpec with Matchers with OptionValues {
   }
 
   it should "fallback to empty JWT config (with default exp-timeout) if absent" in {
-    val config = SessionConfig.fromConfig(configWith("akka.http.session.jwt = {}"))
+    val config = SessionConfig.fromConfig(configWith("pekko.http.session.jwt = {}"))
 
     config.jwt.issuer should not be defined
     config.jwt.subject should not be defined
@@ -143,7 +143,7 @@ class SessionConfigTest extends AnyFlatSpec with Matchers with OptionValues {
 
   it should "fallback to empty JWT config (without default exp-timeout) if absent" in {
     val config = SessionConfig.fromConfig(configWith(
-      """akka.http.session {
+      """pekko.http.session {
         |  jwt {}
         |  max-age = "none"
         |}""".stripMargin))
@@ -160,7 +160,7 @@ class SessionConfigTest extends AnyFlatSpec with Matchers with OptionValues {
 
   it should "use max-age as a default value for jwt.expirationTimeout" in {
     val config = SessionConfig.fromConfig(configWith(
-      """akka.http.session {
+      """pekko.http.session {
         |  max-age = 10 seconds
         |}""".stripMargin))
 

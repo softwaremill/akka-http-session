@@ -1,7 +1,7 @@
 package com.softwaremill.session.javadsl;
 
-import akka.http.javadsl.server.AllDirectives;
-import akka.http.javadsl.server.Route;
+import org.apache.pekko.http.javadsl.server.AllDirectives;
+import org.apache.pekko.http.javadsl.server.Route;
 import com.softwaremill.session.CsrfCheckMode;
 import com.softwaremill.session.GetSessionTransport;
 import com.softwaremill.session.SessionContinuity;
