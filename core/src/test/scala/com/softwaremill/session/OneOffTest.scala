@@ -55,7 +55,7 @@ class OneOffTest extends AnyFlatSpec with ScalatestRouteTest with Matchers with 
   "Using cookies" should "set the correct session cookie name" in {
     Get("/set") ~> createRoutes(TestUsingCookies) ~> check {
       val sessionCookieOption = header[`Set-Cookie`]
-      sessionCookieOption should be('defined)
+      sessionCookieOption shouldBe defined
       val Some(sessionCookie) = sessionCookieOption
 
       sessionCookie.cookie.name should be(TestUsingCookies.sessionCookieName)
@@ -71,7 +71,7 @@ class OneOffTest extends AnyFlatSpec with ScalatestRouteTest with Matchers with 
         responseAs[String] should be("ok")
 
         val sessionOption = using.getSession
-        sessionOption should be('defined)
+        sessionOption shouldBe defined
 
         using.isSessionExpired should be(false)
       }
@@ -188,7 +188,7 @@ class OneOffTest extends AnyFlatSpec with ScalatestRouteTest with Matchers with 
         val legacySession = Legacy.encodeV0_5_1(data, now, sessionConfig)
 
         Get("/getReq") ~> addHeader(using.setSessionHeader(legacySession)) ~> routes(manager_tokenMigrationFromV0_5_1) ~> check {
-          using.getSession should be('defined)
+          using.getSession shouldBe defined
           responseAs[String] should be(data.toString)
         }
       }
@@ -213,7 +213,7 @@ class OneOffTest extends AnyFlatSpec with ScalatestRouteTest with Matchers with 
         val legacySession = Legacy.encodeV0_5_2(data, now, sessionConfig)
 
         Get("/getReq") ~> addHeader(using.setSessionHeader(legacySession)) ~> routes(manager_tokenMigrationFromV0_5_2) ~> check {
-          using.getSession should be('defined)
+          using.getSession shouldBe defined
           responseAs[String] should be(data.toString)
         }
       }

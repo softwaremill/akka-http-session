@@ -64,9 +64,9 @@ class RefreshableTest extends AnyFlatSpec with ScalatestRouteTest with Matchers 
       Get("/set") ~> routes ~> check {
         responseAs[String] should be("ok")
 
-        using.getSession should be('defined)
+        using.getSession shouldBe defined
         using.countSessionHeaders should be(1)
-        using.getRefreshToken should be('defined)
+        using.getRefreshToken shouldBe defined
         using.countRefreshTokenHeaders should be(1)
       }
     }
@@ -120,7 +120,7 @@ class RefreshableTest extends AnyFlatSpec with ScalatestRouteTest with Matchers 
       Get("/set") ~> routes ~> check {
         val Some(token1) = using.getRefreshToken
         val session1 = using.getSession
-        session1 should be('defined)
+        session1 shouldBe defined
 
         Get("/getOpt") ~>
           addHeader(using.setRefreshTokenHeader(token1)) ~>
@@ -129,7 +129,7 @@ class RefreshableTest extends AnyFlatSpec with ScalatestRouteTest with Matchers 
             using.countSessionHeaders should be(1)
             using.countRefreshTokenHeaders should be(1)
             val session2 = using.getSession
-            session2 should be('defined)
+            session2 shouldBe defined
             session2 should not be (session1)
           }
       }
@@ -275,7 +275,7 @@ class RefreshableTest extends AnyFlatSpec with ScalatestRouteTest with Matchers 
 
                 // new token should be generated
                 session1 should not be (session3)
-                token3Opt should be('defined)
+                token3Opt shouldBe defined
               }
           }
       }

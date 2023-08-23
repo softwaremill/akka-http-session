@@ -20,19 +20,10 @@ val akkaStreamsTestkit = "com.typesafe.akka" %% "akka-stream-testkit" % akkaStre
 
 val scalaTest = "org.scalatest" %% "scalatest" % "3.2.16" % "test"
 
-lazy val akkaRootProject = (project in file("."))
-  .settings(commonSettings: _*)
-  .settings(publish / skip := true, name := "akka-http-session", scalaVersion := scala2_13)
-  .aggregate(core.projectRefs ++ jwt.projectRefs ++ example.projectRefs ++ javaTests.projectRefs: _*)
-
-lazy val pekkoRootProject = (project in file("."))
-  .settings(pekkoCommonSettings: _*)
-  .settings(publish / skip := true, name := "pekko-http-session", scalaVersion := scala2_13)
-  .aggregate(pekkoCore.projectRefs ++ pekkoJwt.projectRefs ++ pekkoExample.projectRefs ++ pekkoJavaTests.projectRefs: _*)
-
 lazy val rootProject = (project in file("."))
   .settings(publish / skip := true, name := "akka-http-session-root", scalaVersion := scala2_13)
-  .aggregate(akkaRootProject, pekkoRootProject)
+  .aggregate(core.projectRefs ++ jwt.projectRefs ++ example.projectRefs ++ javaTests.projectRefs ++
+    pekkoCore.projectRefs ++ pekkoJwt.projectRefs ++ pekkoExample.projectRefs ++ pekkoJavaTests.projectRefs: _*)
 
 lazy val core = (projectMatrix in file("core"))
   .settings(commonSettings: _*)

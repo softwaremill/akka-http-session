@@ -43,7 +43,7 @@ class CsrfDirectivesTest extends AnyFlatSpec with ScalatestRouteTest with Matche
       responseAs[String] should be("ok")
 
       val csrfCookieOption = header[`Set-Cookie`]
-      csrfCookieOption should be('defined)
+      csrfCookieOption shouldBe defined
       val Some(csrfCookie) = csrfCookieOption
 
       csrfCookie.cookie.name should be(cookieName)
