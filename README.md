@@ -5,7 +5,8 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.softwaremill.akka-http-session/core_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.softwaremill.akka-http-session/core_2.12)
 
 [`akka-http`](https://doc.akka.io/docs/akka-http/current/index.html) is an Akka 
-module, originating from [spray.io](http://spray.io), for building *reactive* REST services with an elegant DSL.
+module, originating from [spray.io](http://spray.io), for building *reactive* REST services with an elegant DSL. 
+[`pekko-http`](https://pekko.apache.org/docs/pekko-http/current/) is an open-source fork of akka-http.
 
 `akka-http` is a great toolkit for building backends for single-page or mobile applications. In almost all apps there 
 is a need to maintain user sessions, make sure session data is secure and cannot be tampered with.
@@ -14,6 +15,9 @@ is a need to maintain user sessions, make sure session data is secure and cannot
 or custom headers + local storage, with optional [Json Web Tokens](http://jwt.io/) format support. 
 
 A [comprehensive FAQ](https://github.com/softwaremill/akka-http-session-faq) is available, along with code examples (in Java, but easy to translate to Scala) which answers many common questions on how sessions work, how to secure them and implement using akka-http.
+
+Each `akka-http-session` module for `akka-http` has a corresponding `pekko-http` module, with a different group id
+(see bottom of the readme).
 
 ## What is a session?
 
@@ -305,6 +309,13 @@ libraryDependencies += "com.softwaremill.akka-http-session" %% "core" % "0.7.0"
 libraryDependencies += "com.softwaremill.akka-http-session" %% "jwt"  % "0.7.0" // optional
 ````
 
+For `pekko-http`:
+
+````scala
+libraryDependencies += "com.softwaremill.pekko-http-session" %% "core" % "0.7.0"
+libraryDependencies += "com.softwaremill.pekko-http-session" %% "jwt"  % "0.7.0" // optional
+````
+
 ## Updating
 
 Certain releases changed the client token encoding/serialization. In those cases, it's important to enable the appropriate
@@ -328,4 +339,4 @@ We offer commercial support for akka-http-session and related technologies, as w
 
 ## Copyright
 
-Copyright (C) 2016-2021 SoftwareMill [https://softwaremill.com](https://softwaremill.com).
+Copyright (C) 2016-2023 SoftwareMill [https://softwaremill.com](https://softwaremill.com).
