@@ -1,10 +1,10 @@
-package com.softwaremill.session
+package com.softwaremill.pekkohttpsession
 
-import akka.http.scaladsl.server.AuthorizationFailedRejection
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.testkit.ScalatestRouteTest
-import com.softwaremill.session.SessionDirectives._
-import com.softwaremill.session.SessionOptions._
+import org.apache.pekko.http.scaladsl.server.AuthorizationFailedRejection
+import org.apache.pekko.http.scaladsl.server.Directives._
+import org.apache.pekko.http.scaladsl.testkit.ScalatestRouteTest
+import SessionDirectives._
+import SessionOptions._
 import org.scalatest._
 import matchers.should._
 import org.scalatest.flatspec.AnyFlatSpec
@@ -13,11 +13,11 @@ class RefreshableTest extends AnyFlatSpec with ScalatestRouteTest with Matchers 
 
   import TestData._
 
-  implicit val storage = new InMemoryRefreshTokenStorage[Map[String, String]] {
+  implicit val storage: InMemoryRefreshTokenStorage[Map[String, String]] = new InMemoryRefreshTokenStorage[Map[String, String]] {
     override def log(msg: String) = println(msg)
   }
 
-  def createRoutes(using: TestUsingTransport)(implicit manager: SessionManager[Map[String, String]]) = get {
+  def createRoutes(`using`: TestUsingTransport)(implicit manager: SessionManager[Map[String, String]]) = get {
     path("set") {
       setSession(refreshable, using.setSessionTransport, Map("k1" -> "v1")) {
         complete { "ok" }
@@ -56,29 +56,29 @@ class RefreshableTest extends AnyFlatSpec with ScalatestRouteTest with Matchers 
     }
   }
 
-  List(TestUsingCookies, TestUsingHeaders).foreach { using =>
-    val p = s"Using ${using.transportName}"
-    def routes(implicit manager: SMan) = createRoutes(using)(manager)
+  List(TestUsingCookies, TestUsingHeaders).foreach { usingValue =>
+    val p = s"Using ${usingValue.transportName}"
+    def routes(implicit manager: SMan) = createRoutes(usingValue)(manager)
 
     p should "set both the session and refresh token" in {
       Get("/set") ~> routes ~> check {
         responseAs[String] should be("ok")
 
-        using.getSession shouldBe defined
-        using.countSessionHeaders should be(1)
-        using.getRefreshToken shouldBe defined
-        using.countRefreshTokenHeaders should be(1)
+        usingValue.getSession shouldBe defined
+        usingValue.countSessionHeaders should be(1)
+        usingValue.getRefreshToken shouldBe defined
+        usingValue.countRefreshTokenHeaders should be(1)
       }
     }
 
     p should "set a new refresh token when the session is set again" in {
       Get("/set") ~> routes ~> check {
-        val Some(token1) = using.getRefreshToken
+        val Some(token1) = usingValue.getRefreshToken
 
         Get("/set") ~>
           routes ~>
           check {
-            val Some(token2) = using.getRefreshToken
+            val Some(token2) = usingValue.getRefreshToken
             token1 should not be (token2)
           }
       }
@@ -86,16 +86,16 @@ class RefreshableTest extends AnyFlatSpec with ScalatestRouteTest with Matchers 
 
     p should "read an optional session when both the session and refresh token are set" in {
       Get("/set") ~> routes ~> check {
-        val Some(session) = using.getSession
-        val Some(token) = using.getRefreshToken
+        val Some(session) = usingValue.getSession
+        val Some(token) = usingValue.getRefreshToken
 
         Get("/getOpt") ~>
-          addHeader(using.setSessionHeader(session)) ~>
-          addHeader(using.setRefreshTokenHeader(token)) ~>
+          addHeader(usingValue.setSessionHeader(session)) ~>
+          addHeader(usingValue.setRefreshTokenHeader(token)) ~>
           routes ~>
           check {
-            using.countSessionHeaders should be(0)
-            using.countRefreshTokenHeaders should be(0)
+            usingValue.countSessionHeaders should be(0)
+            usingValue.countRefreshTokenHeaders should be(0)
             responseAs[String] should be("Some(Map(k1 -> v1))")
           }
       }
@@ -103,14 +103,14 @@ class RefreshableTest extends AnyFlatSpec with ScalatestRouteTest with Matchers 
 
     p should "read an optional session when only the session is set" in {
       Get("/set") ~> routes ~> check {
-        val Some(session) = using.getSession
+        val Some(session) = usingValue.getSession
 
         Get("/getOpt") ~>
-          addHeader(using.setSessionHeader(session)) ~>
+          addHeader(usingValue.setSessionHeader(session)) ~>
           routes ~>
           check {
-            using.countSessionHeaders should be(0)
-            using.countRefreshTokenHeaders should be(0)
+            usingValue.countSessionHeaders should be(0)
+            usingValue.countRefreshTokenHeaders should be(0)
             responseAs[String] should be("Some(Map(k1 -> v1))")
           }
       }
@@ -118,17 +118,17 @@ class RefreshableTest extends AnyFlatSpec with ScalatestRouteTest with Matchers 
 
     p should "set a new session after the session is re-created" in {
       Get("/set") ~> routes ~> check {
-        val Some(token1) = using.getRefreshToken
-        val session1 = using.getSession
+        val Some(token1) = usingValue.getRefreshToken
+        val session1 = usingValue.getSession
         session1 shouldBe defined
 
         Get("/getOpt") ~>
-          addHeader(using.setRefreshTokenHeader(token1)) ~>
+          addHeader(usingValue.setRefreshTokenHeader(token1)) ~>
           routes ~>
           check {
-            using.countSessionHeaders should be(1)
-            using.countRefreshTokenHeaders should be(1)
-            val session2 = using.getSession
+            usingValue.countSessionHeaders should be(1)
+            usingValue.countRefreshTokenHeaders should be(1)
+            val session2 = usingValue.getSession
             session2 shouldBe defined
             session2 should not be (session1)
           }
@@ -137,22 +137,22 @@ class RefreshableTest extends AnyFlatSpec with ScalatestRouteTest with Matchers 
 
     p should "read an optional session when none is set" in {
       Get("/getOpt") ~> routes ~> check {
-        using.countSessionHeaders should be(0)
-        using.countRefreshTokenHeaders should be(0)
+        usingValue.countSessionHeaders should be(0)
+        usingValue.countRefreshTokenHeaders should be(0)
         responseAs[String] should be("None")
       }
     }
 
     p should "read an optional session when only the refresh token is set (re-create the session)" in {
       Get("/set") ~> routes ~> check {
-        val Some(token) = using.getRefreshToken
+        val Some(token) = usingValue.getRefreshToken
 
         Get("/getOpt") ~>
-          addHeader(using.setRefreshTokenHeader(token)) ~>
+          addHeader(usingValue.setRefreshTokenHeader(token)) ~>
           routes ~>
           check {
-            using.countSessionHeaders should be(1)
-            using.countRefreshTokenHeaders should be(1)
+            usingValue.countSessionHeaders should be(1)
+            usingValue.countRefreshTokenHeaders should be(1)
             responseAs[String] should be("Some(Map(k1 -> v1))")
           }
       }
@@ -160,15 +160,15 @@ class RefreshableTest extends AnyFlatSpec with ScalatestRouteTest with Matchers 
 
     p should "set a new refresh token after the session is re-created" in {
       Get("/set") ~> routes ~> check {
-        val Some(token1) = using.getRefreshToken
+        val Some(token1) = usingValue.getRefreshToken
 
         Get("/getOpt") ~>
-          addHeader(using.setRefreshTokenHeader(token1)) ~>
+          addHeader(usingValue.setRefreshTokenHeader(token1)) ~>
           routes ~>
           check {
-            using.countSessionHeaders should be(1)
-            using.countRefreshTokenHeaders should be(1)
-            val Some(token2) = using.getRefreshToken
+            usingValue.countSessionHeaders should be(1)
+            usingValue.countRefreshTokenHeaders should be(1)
+            val Some(token2) = usingValue.getRefreshToken
             token1 should not be (token2)
           }
       }
@@ -176,16 +176,16 @@ class RefreshableTest extends AnyFlatSpec with ScalatestRouteTest with Matchers 
 
     p should "read a required session when both the session and refresh token are set" in {
       Get("/set") ~> routes ~> check {
-        val Some(session) = using.getSession
-        val Some(token) = using.getRefreshToken
+        val Some(session) = usingValue.getSession
+        val Some(token) = usingValue.getRefreshToken
 
         Get("/getReq") ~>
-          addHeader(using.setSessionHeader(session)) ~>
-          addHeader(using.setRefreshTokenHeader(token)) ~>
+          addHeader(usingValue.setSessionHeader(session)) ~>
+          addHeader(usingValue.setRefreshTokenHeader(token)) ~>
           routes ~>
           check {
-            using.countSessionHeaders should be(0)
-            using.countRefreshTokenHeaders should be(0)
+            usingValue.countSessionHeaders should be(0)
+            usingValue.countRefreshTokenHeaders should be(0)
             responseAs[String] should be("Map(k1 -> v1)")
           }
       }
@@ -193,18 +193,18 @@ class RefreshableTest extends AnyFlatSpec with ScalatestRouteTest with Matchers 
 
     p should "invalidate a session" in {
       Get("/set") ~> routes ~> check {
-        val Some(session) = using.getSession
-        val Some(token) = using.getRefreshToken
+        val Some(session) = usingValue.getSession
+        val Some(token) = usingValue.getRefreshToken
 
         Get("/invalidate") ~>
-          addHeader(using.setSessionHeader(session)) ~>
-          addHeader(using.setRefreshTokenHeader(token)) ~>
+          addHeader(usingValue.setSessionHeader(session)) ~>
+          addHeader(usingValue.setRefreshTokenHeader(token)) ~>
           routes ~>
           check {
-            using.countSessionHeaders should be(1)
-            using.countRefreshTokenHeaders should be(1)
-            using.isSessionExpired should be(true)
-            using.isRefreshTokenExpired should be(true)
+            usingValue.countSessionHeaders should be(1)
+            usingValue.countRefreshTokenHeaders should be(1)
+            usingValue.isSessionExpired should be(true)
+            usingValue.isRefreshTokenExpired should be(true)
           }
       }
     }
@@ -216,31 +216,31 @@ class RefreshableTest extends AnyFlatSpec with ScalatestRouteTest with Matchers 
     }
 
     p should "reject the request if the session is invalid" in {
-      Get("/getReq") ~> addHeader(using.setSessionHeader("invalid")) ~> routes ~> check {
+      Get("/getReq") ~> addHeader(usingValue.setSessionHeader("invalid")) ~> routes ~> check {
         rejection should be(AuthorizationFailedRejection)
       }
     }
 
     p should "reject the request if the refresh token is invalid" in {
-      Get("/getReq") ~> addHeader(using.setRefreshTokenHeader("invalid")) ~> routes ~> check {
+      Get("/getReq") ~> addHeader(usingValue.setRefreshTokenHeader("invalid")) ~> routes ~> check {
         rejection should be(AuthorizationFailedRejection)
       }
     }
 
     p should "touch the session, keeping the refresh token token intact" in {
       Get("/set") ~> routes(manager_expires60_fixedTime) ~> check {
-        val Some(session1) = using.getSession
-        val Some(token1) = using.getRefreshToken
+        val Some(session1) = usingValue.getSession
+        val Some(token1) = usingValue.getRefreshToken
 
         Get("/touchReq") ~>
-          addHeader(using.setSessionHeader(session1)) ~>
-          addHeader(using.setRefreshTokenHeader(token1)) ~>
+          addHeader(usingValue.setSessionHeader(session1)) ~>
+          addHeader(usingValue.setRefreshTokenHeader(token1)) ~>
           routes(manager_expires60_fixedTime_plus30s) ~>
           check {
             responseAs[String] should be("Map(k1 -> v1)")
 
-            val Some(session2) = using.getSession
-            val token2Opt = using.getRefreshToken
+            val Some(session2) = usingValue.getSession
+            val token2Opt = usingValue.getRefreshToken
 
             // The session should be modified with a new expiry date
             session1 should not be (session2)
@@ -250,28 +250,28 @@ class RefreshableTest extends AnyFlatSpec with ScalatestRouteTest with Matchers 
 
             // 70 seconds from the initial session, only the touched one should work
             Get("/touchReq") ~>
-              addHeader(using.setSessionHeader(session2)) ~>
-              addHeader(using.setRefreshTokenHeader(token1)) ~>
+              addHeader(usingValue.setSessionHeader(session2)) ~>
+              addHeader(usingValue.setRefreshTokenHeader(token1)) ~>
               routes(manager_expires60_fixedTime_plus70s) ~>
               check {
                 responseAs[String] should be("Map(k1 -> v1)")
               }
             Get("/touchReq") ~>
-              addHeader(using.setSessionHeader(session1)) ~>
+              addHeader(usingValue.setSessionHeader(session1)) ~>
               routes(manager_expires60_fixedTime_plus70s) ~>
               check {
                 rejection should be(AuthorizationFailedRejection)
               }
             // When sending the expired session and refresh token token, a new session should start
             Get("/touchReq") ~>
-              addHeader(using.setSessionHeader(session1)) ~>
-              addHeader(using.setRefreshTokenHeader(token1)) ~>
+              addHeader(usingValue.setSessionHeader(session1)) ~>
+              addHeader(usingValue.setRefreshTokenHeader(token1)) ~>
               routes(manager_expires60_fixedTime_plus70s) ~>
               check {
                 responseAs[String] should be("Map(k1 -> v1)")
 
-                val Some(session3) = using.getSession
-                val token3Opt = using.getRefreshToken
+                val Some(session3) = usingValue.getSession
+                val token3Opt = usingValue.getRefreshToken
 
                 // new token should be generated
                 session1 should not be (session3)
@@ -283,38 +283,38 @@ class RefreshableTest extends AnyFlatSpec with ScalatestRouteTest with Matchers 
 
     p should "re-create an expired session and send back new tokens without duplicate headers" in {
       Get("/set") ~> routes(manager_expires60_fixedTime) ~> check {
-        val Some(session1) = using.getSession
-        val Some(token1) = using.getRefreshToken
+        val Some(session1) = usingValue.getSession
+        val Some(token1) = usingValue.getRefreshToken
 
         Get("/touchReq") ~>
-          addHeader(using.setSessionHeader(session1)) ~>
-          addHeader(using.setRefreshTokenHeader(token1)) ~>
+          addHeader(usingValue.setSessionHeader(session1)) ~>
+          addHeader(usingValue.setRefreshTokenHeader(token1)) ~>
           routes(manager_expires60_fixedTime_plus70s) ~>
           check {
-            using.countSessionHeaders should be(1)
-            using.countRefreshTokenHeaders should be(1)
+            usingValue.countSessionHeaders should be(1)
+            usingValue.countRefreshTokenHeaders should be(1)
 
-            using.getSession should not be session1
-            using.getRefreshToken should not be token1
+            usingValue.getSession should not be session1
+            usingValue.getRefreshToken should not be token1
           }
       }
     }
 
     p should "touch the session and send back session without duplicate headers" in {
       Get("/set") ~> routes(manager_expires60_fixedTime) ~> check {
-        val Some(session1) = using.getSession
-        val Some(token1) = using.getRefreshToken
+        val Some(session1) = usingValue.getSession
+        val Some(token1) = usingValue.getRefreshToken
 
         Get("/touchReq") ~>
-          addHeader(using.setSessionHeader(session1)) ~>
-          addHeader(using.setRefreshTokenHeader(token1)) ~>
+          addHeader(usingValue.setSessionHeader(session1)) ~>
+          addHeader(usingValue.setRefreshTokenHeader(token1)) ~>
           routes(manager_expires60_fixedTime_plus30s) ~>
           check {
-            using.countSessionHeaders should be(1)
-            using.countRefreshTokenHeaders should be(0)
+            usingValue.countSessionHeaders should be(1)
+            usingValue.countRefreshTokenHeaders should be(0)
 
-            using.getSession should not be session1
-            using.getRefreshToken should not be defined
+            usingValue.getSession should not be session1
+            usingValue.getRefreshToken should not be defined
           }
       }
     }

@@ -1,12 +1,12 @@
-package com.softwaremill.session
+package com.softwaremill.pekkohttpsession
 
-import akka.http.scaladsl.model.FormData
-import akka.http.scaladsl.model.headers.{Cookie, `Set-Cookie`}
-import akka.http.scaladsl.server.AuthorizationFailedRejection
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.testkit.ScalatestRouteTest
-import com.softwaremill.session.CsrfDirectives._
-import com.softwaremill.session.CsrfOptions._
+import org.apache.pekko.http.scaladsl.model.FormData
+import org.apache.pekko.http.scaladsl.model.headers.{Cookie, `Set-Cookie`}
+import org.apache.pekko.http.scaladsl.server.AuthorizationFailedRejection
+import org.apache.pekko.http.scaladsl.server.Directives._
+import org.apache.pekko.http.scaladsl.testkit.ScalatestRouteTest
+import CsrfDirectives._
+import CsrfOptions._
 import org.scalatest._
 import matchers.should._
 import org.scalatest.flatspec.AnyFlatSpec
@@ -15,7 +15,7 @@ class CsrfDirectivesTest extends AnyFlatSpec with ScalatestRouteTest with Matche
 
   import TestData._
   val cookieName = sessionConfig.csrfCookieConfig.name
-  implicit val csrfCheckMode = checkHeader
+  implicit val csrfCheckMode: CheckHeader[Map[String, String]] = checkHeader
 
   def routes[T](implicit manager: SessionManager[T], checkMode: CsrfCheckMode[T]) =
     hmacTokenCsrfProtection(checkMode) {
