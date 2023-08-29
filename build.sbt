@@ -8,7 +8,6 @@ val scala2 = List(scala2_12, scala2_13)
 val scala2And3 = List(scala2_12, scala2_13, scala3)
 
 lazy val commonSettings = commonSmlBuildSettings ++ ossPublishSettings ++ Seq(
-  organization := "com.softwaremill.akka-http-session",
   versionScheme := Some("early-semver")
 )
 
@@ -21,12 +20,19 @@ val akkaStreamsTestkit = "com.typesafe.akka" %% "akka-stream-testkit" % akkaStre
 val scalaTest = "org.scalatest" %% "scalatest" % "3.2.16" % "test"
 
 lazy val rootProject = (project in file("."))
+  .settings(akkaCommonSettings: _*)
   .settings(publish / skip := true, name := "akka-http-session-root", scalaVersion := scala2_13)
   .aggregate(core.projectRefs ++ jwt.projectRefs ++ example.projectRefs ++ javaTests.projectRefs ++
     pekkoCore.projectRefs ++ pekkoJwt.projectRefs ++ pekkoExample.projectRefs ++ pekkoJavaTests.projectRefs: _*)
 
+//
+
+lazy val akkaCommonSettings = commonSettings ++ Seq(
+  organization := "com.softwaremill.akka-http-session"
+)
+
 lazy val core = (projectMatrix in file("core"))
-  .settings(commonSettings: _*)
+  .settings(akkaCommonSettings: _*)
   .settings(
     name := "core",
     libraryDependencies ++= Seq(
@@ -41,7 +47,7 @@ lazy val core = (projectMatrix in file("core"))
   .jvmPlatform(scalaVersions = scala2)
 
 lazy val jwt = (projectMatrix in file("jwt"))
-  .settings(commonSettings: _*)
+  .settings(akkaCommonSettings: _*)
   .settings(
     name := "jwt",
     libraryDependencies ++= Seq(
@@ -58,7 +64,7 @@ lazy val jwt = (projectMatrix in file("jwt"))
   .dependsOn(core)
 
 lazy val example = (projectMatrix in file("example"))
-  .settings(commonSettings: _*)
+  .settings(akkaCommonSettings: _*)
   .settings(
     publishArtifact := false,
     libraryDependencies ++= Seq(
@@ -72,7 +78,7 @@ lazy val example = (projectMatrix in file("example"))
   .dependsOn(core, jwt)
 
 lazy val javaTests = (projectMatrix in file("javaTests"))
-  .settings(commonSettings: _*)
+  .settings(akkaCommonSettings: _*)
   .settings(
     name := "javaTests",
     Test / testOptions := Seq(Tests.Argument(TestFrameworks.JUnit, "-a")), // required for javadsl JUnit tests
@@ -93,9 +99,8 @@ lazy val javaTests = (projectMatrix in file("javaTests"))
 
 // Pekko build
 
-lazy val pekkoCommonSettings = commonSmlBuildSettings ++ ossPublishSettings ++ Seq(
-  organization := "com.softwaremill.pekko-http-session",
-  versionScheme := Some("early-semver")
+lazy val pekkoCommonSettings = commonSettings ++ Seq(
+  organization := "com.softwaremill.pekko-http-session"
 )
 
 val pekkoHttpVersion = "1.0.0"
