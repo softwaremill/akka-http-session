@@ -305,15 +305,15 @@ stored in Rails
 For `akka-http` version `10+`:
 
 ````scala
-libraryDependencies += "com.softwaremill.akka-http-session" %% "core" % "0.7.0"
-libraryDependencies += "com.softwaremill.akka-http-session" %% "jwt"  % "0.7.0" // optional
+libraryDependencies += "com.softwaremill.akka-http-session" %% "core" % "0.7.1"
+libraryDependencies += "com.softwaremill.akka-http-session" %% "jwt"  % "0.7.1" // optional
 ````
 
 For `pekko-http`:
 
 ````scala
-libraryDependencies += "com.softwaremill.pekko-http-session" %% "core" % "0.7.0"
-libraryDependencies += "com.softwaremill.pekko-http-session" %% "jwt"  % "0.7.0" // optional
+libraryDependencies += "com.softwaremill.pekko-http-session" %% "core" % "0.7.1"
+libraryDependencies += "com.softwaremill.pekko-http-session" %% "jwt"  % "0.7.1" // optional
 ````
 
 ## Updating
